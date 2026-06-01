@@ -1,0 +1,1740 @@
+﻿<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-50 dark:bg-slate-900">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Financiero - Wara GPS</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SheetJS — Parser de Excel para el navegador -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .gradient-bg {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #475569;
+    }
+  </style>
+</head>
+<body class="h-full text-slate-800 dark:text-slate-100 transition-colors duration-200">
+
+  <div class="min-h-full flex flex-col">
+    <!-- Top Navigation Header -->
+    <header class="gradient-bg text-white shadow-lg sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16 sm:h-20">
+          <div class="flex items-center space-x-3">
+            <!-- Wara GPS Logo -->
+            <div class="flex items-center justify-center">
+              <img
+                src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTU4IiBoZWlnaHQ9IjQ0IiB2aWV3Qm94PSIwIDAgMTU4IDQ0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBpZD0iR3JvdXAgMTQ4Ij4KPHBhdGggaWQ9IlZlY3RvciIgZD0iTTE0LjY0NTUgMTcuMDQ4MlYyNS4yNTUyTDIxLjk2ODIgMjAuNTI5NlYxMi4wNzQzTDE0LjY0NTUgMTcuMDQ4MloiIGZpbGw9IiNFNjJDNTgiPjwvcGF0aD4KPGcgaWQ9Ikdyb3VwIj4KPHBhdGggaWQ9IlZlY3Rvcl8yIiBkPSJNMTcuMDQzOCAzMC44MjY1QzE3LjA1NzIgMjguMjc5MyAxOS4yODgyIDI2LjE4NzcgMjEuOTgxNiAyNi4xOTQyQzIxLjk3ODkgMjYuMTk0MiAyMS45NzQ5IDI2LjE5NDIgMjEuOTcyMiAyNi4xOTQyQzE5LjI3MjEgMjYuMTc5OSAxNy4wMzMgMjguMjc1NCAxNy4wMTk2IDMwLjgyNjVDMTcuMDA2MiAzMy40MjcyIDE5LjE5NjggMzUuNTM4NCAyMS45MzMyIDM1LjU1MjhDMjEuOTM4NiAzNS41NTI4IDIxLjk0NTMgMzUuNTUyOCAyMS45NTA3IDM1LjU1MjhDMTkuMjE1NyAzNS41MzQ1IDE3LjAzMDMgMzMuNDI1OSAxNy4wNDI0IDMwLjgyNjVIMTcuMDQzOFoiIGZpbGw9IiNFNjJDNTgiPjwvcGF0aD4KPHBhdGggaWQ9IlZlY3Rvcl8zIiBkPSJNMjkuMTMwMiAyOS4xMDk2QzI4Ljc4NjIgMjcuNTk5MSAyNy45NTI5IDI2LjM2NzkgMjYuNzA0MyAyNS4zOUMyNS4zMjU0IDI0LjMxMDMgMjMuNzE4IDIzLjgxMjggMjEuOTM4NiAyMy43OTA2QzIxLjQ3MDggMjMuNzkwNiAyMS4wMDg1IDIzLjgyODUgMjAuNTUwMiAyMy45MDk0QzE5LjM1MTQgMjQuMTIyMyAxOC4yNjI4IDI0LjU3MTQgMTcuMzAzMSAyNS4yODY4QzE2LjA4ODIgMjYuMTkyOSAxNS4yODQ1IDI3LjM1NjIgMTQuODk0NyAyOC43NzAyQzE0LjU3ODkgMjkuOTEzOSAxNC41ODAyIDMxLjA2OTMgMTQuODAzMyAzMi4yMjc0QzE0Ljk5NjkgMzMuMjM2NiAxNS4zMzY5IDM0LjIwMjggMTUuNzczNyAzNS4xMzg5QzE2LjM3MDQgMzYuNDE4NCAxNy4xMTYzIDM3LjYxODIgMTcuOTM0OCAzOC43ODE1QzE4LjU4OCAzOS43MTExIDE5LjMwNyA0MC41OTM3IDIwLjAyNDcgNDEuNDc4OEMyMC4zMTIzIDQxLjgzMjcgMjAuNjA1MyA0Mi4xODI2IDIwLjk4MDMgNDIuNDU5NEMyMS43NjUyIDQzLjAzNzcgMjIuNTc0MyA0Mi45MDcyIDIzLjEzNiA0Mi4yODdDMjMuOTM5NyA0MS40MDA1IDI0LjY5MSA0MC40NzIyIDI1LjQwNzQgMzkuNTE5MkMyNi4zNzc3IDM4LjIyNjYgMjcuMjY4OCAzNi44ODk3IDI3Ljk3NzEgMzUuNDQ5NkMyOC42MDM0IDM0LjE3OTMgMjkuMDc5MSAzMi44NjU4IDI5LjIzOTEgMzEuNDYyM0MyOS4zMjkxIDMwLjY3MzcgMjkuMzA3NiAyOS44ODc4IDI5LjEzMDIgMjkuMTA5NlpNMjEuOTUwNiAzNS41NTI4QzIxLjk1MDYgMzUuNTUyOCAyMS45Mzg2IDM1LjU1MjggMjEuOTMzMiAzNS41NTI4QzE5LjE5NTUgMzUuNTM4NCAxNy4wMDYxIDMzLjQyNzIgMTcuMDE5NiAzMC44MjY1QzE3LjAzMyAyOC4yNzU0IDE5LjI3MjEgMjYuMTc5OSAyMS45NzIyIDI2LjE5NDJDMjEuOTc0OCAyNi4xOTQyIDIxLjk3ODkgMjYuMTk0MiAyMS45ODE2IDI2LjE5NDJDMjEuOTg2OSAyNi4xOTQyIDIxLjk5MSAyNi4xOTQyIDIxLjk5NjMgMjYuMTk0MkMyNC43NTk2IDI2LjE5MDMgMjcgMjguMzU4OSAyNi45NDA5IDMwLjk3NjZDMjYuODg0NCAzMy40NjUxIDI0LjcyMzMgMzUuNTY4NCAyMS45NTc0IDM1LjU1NDFDMjEuOTU0NyAzNS41NTQxIDIxLjk1MzMgMzUuNTU0MSAyMS45NTA2IDM1LjU1NDFWMzUuNTUyOFoiIGZpbGw9IiM4QzE2MkMiPjwvcGF0aD4KPHBhdGggaWQ9IlZlY3Rvcl80IiBkPSJNMjEuOTk0OSAyNi4xOTQzQzIxLjk5NDkgMjYuMTk0MyAyMS45ODU1IDI2LjE5NDMgMjEuOTgwMSAyNi4xOTQzQzI0LjczOTMgMjYuMTk0MyAyNi45NzQ0IDI4LjM2MTYgMjYuOTE1MiAzMC45NzU0QzI2Ljg1ODggMzMuNDU4NiAyNC43MDcxIDM1LjU1OCAyMS45NDkyIDM1LjU1MTVDMjEuOTUxOSAzNS41NTE1IDIxLjk1MzIgMzUuNTUxNSAyMS45NTU5IDM1LjU1MTVDMjQuNzIxOSAzNS41NjcyIDI2Ljg4MyAzMy40NjI1IDI2LjkzOTQgMzAuOTc0MUMyNi45OTg2IDI4LjM1NjQgMjQuNzU4MSAyNi4xODkxIDIxLjk5NDkgMjYuMTkzVjI2LjE5NDNaIiBmaWxsPSIjRTYyQzU4Ij48L3BhdGg+CjxwYXRoIGlkPSJWZWN0b3JfNSIgZD0iTTI2LjY2OTUgMjUuMzlDMjUuMzQ4NCAyNC4zNTQ3IDIzLjgxMzUgMjMuODU5OSAyMi4xMjAxIDIzLjgwMTFWMjYuMjAyMUMyNC44MDk0IDI2LjI4MDQgMjYuOTYzOCAyOC40MDk5IDI2LjkwNjEgMzAuOTc2N0MyNi44NTA5IDMzLjQwNTEgMjQuNzkwNiAzNS40NjE0IDIyLjEyMDEgMzUuNTQ0OVY0Mi44MTk3QzIyLjQ4NTcgNDIuNzc3OSAyMi44MjMgNDIuNTkyNSAyMy4wOTk5IDQyLjI4N0MyMy45MDM2IDQxLjQwMDUgMjQuNjU0OSA0MC40NzIzIDI1LjM3MTIgMzkuNTE5MkMyNi4zNDE2IDM4LjIyNjYgMjcuMjMyNiAzNi44ODk3IDI3Ljk0MDkgMzUuNDQ5NkMyOC41NjcyIDM0LjE3OTMgMjkuMDQzIDMyLjg2NTkgMjkuMjAyOSAzMS40NjIzQzI5LjI5MyAzMC42NzM4IDI5LjI3MTUgMjkuODg3OCAyOS4wOTQxIDI5LjEwOTdDMjguNzUgMjcuNTk5MSAyNy45MTY3IDI2LjM2NzkgMjYuNjY4MiAyNS4zOUgyNi42Njk1WiIgZmlsbD0iI0U2MkM1OCI+PC9wYXRoPgo8L2c+CjxnIGlkPSJHcm91cF8yIj4KPHBhdGggaWQ9IlZlY3Rvcl82IiBkPSJNOS44ODE5IDI3Ljc4MlYwLjM1Nzg4TDAgNy4zMjM2NFYzNC44ODU4TDkuODgxOSAyNy43ODJaIiBmaWxsPSIjRTYyQzU4Ij48L3BhdGg+CjxwYXRoIGlkPSJWZWN0b3JfNyIgZD0iTTAgMzYuODI5M1YzNi44MzhMOS44ODE5IDQzLjY0MjFWMjkuNzI1NUwwIDM2LjgyOTNaIiBmaWxsPSIjRTYyQzU4Ij48L3BhdGg+CjwvZz4KPHBhdGggaWQ9IlZlY3Rvcl84IiBkPSJNMjkuMjkwNSAxNy4wNDgyVjI1LjI1NTJMMjEuOTY3OCAyMC41Mjk2VjEyLjA3NDNMMjkuMjkwNSAxNy4wNDgyWiIgZmlsbD0iIzhDMTYyQyI+PC9wYXRoPgo8ZyBpZD0iR3JvdXBfMyI+CjxwYXRoIGlkPSJWZWN0b3JfOSIgZD0iTTMyLjU4OTggMjcuNzgyVjAuMzU3ODhMNDIuNDcxNyA3LjMyMzY0VjM0Ljg4NThMMzIuNTg5OCAyNy43ODJaIiBmaWxsPSIjOEMxNjJDIj48L3BhdGg+CjxwYXRoIGlkPSJWZWN0b3JfMTAiIGQ9Ik00Mi40NzE3IDM2LjgyOTNWMzYuODM4TDMyLjU4OTggNDMuNjQyMVYyOS43MjU1TDQyLjQ3MTcgMzYuODI5M1oiIGZpbGw9IiM4QzE2MkMiPjwvcGF0aD4KPC9nPgo8cGF0aCBpZD0iVmVjdG9yIChTdHJva2UpIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZD0iTTUyLjcyMzYgOS4xNDUxN0g1OC4yMDcxTDU4LjI2MjIgMjYuNzA0N0w1OC4yNjE2IDI2LjcwNjdDNTguMjk1MyAyOC41NjcyIDU4LjczOTYgMjkuOTk5OSA1OS41MDU5IDMxLjA5MzVMNTkuNTA4OCAzMS4wOTc2QzYwLjIzMjEgMzIuMTM3NiA2MS4yMTY3IDMyLjY4MTQgNjIuNjE4NyAzMi43MzY1QzY0LjA1MjUgMzIuNzU5OSA2NS4xMDM1IDMyLjI4NTEgNjUuOTIyMyAzMS4zMzc2QzY2Ljc1OTUgMzAuMzY0MiA2Ny4yNTUxIDI4Ljk4MzkgNjcuMjU1MSAyNy4wMzk4VjkuMjQ5MzlINzIuNzQzMVYyNi41MjQ3QzcyLjc0MzEgMjguODM0MyA3My4yNjIzIDMwLjM2OSA3NC4wODc3IDMxLjM0OTRDNzQuODk2MyAzMi4zMTE1IDc1Ljk3MTUgMzIuODA3NiA3Ny40NzgyIDMyLjc4NDdDNzguNzM4NCAzMi43Mjg0IDc5LjgwNTkgMzIuMjY0NiA4MC43NDM1IDMxLjM0NzdDODEuNjUzMiAzMC40NTgyIDgyLjA5NTEgMjkuNDExMiA4Mi4wOTUxIDI4LjEyMlY5LjI0OTM5SDg3LjU4MzJWMjcuODExNEM4Ny41ODMyIDMwLjUxODMgODYuNTcxIDMyLjg2MjIgODQuNjAyNSAzNC43NjE1QzgyLjc0MzEgMzYuNTU1NyA4MC42MTg0IDM3LjYyMzIgNzguMjQ4MiAzNy44NTc0Qzc4LjA3NzUgMzcuODk5NSA3Ny44OTM0IDM3LjkyNTggNzcuNjk4OSAzNy45MjU4SDc3LjQzMjhDNzUuNTQ2NiAzNy45NjI0IDczLjgxMTkgMzcuNTIzNyA3Mi4yNzQzIDM2LjU3NTVDNzEuNDMyMSAzNi4wNTUzIDcwLjY4NDUgMzUuNDQ5MyA3MC4wNDEyIDM0Ljc1NzhDNjkuNDQxOSAzNS4zOTI1IDY4Ljc1MTIgMzUuOTU4NiA2Ny45NzYgMzYuNDU2OEM2Ni41MTczIDM3LjM5NTUgNjQuOTExIDM3Ljg3MzcgNjMuMTkzNCAzNy44NzM3SDYyLjU3NzhMNjIuNTI1OCAzNy44N0M1OS4zMTE1IDM3LjY0MTIgNTYuNzI1NyAzNi40NTEzIDU1LjA0NzcgMzQuMTI1Nkw1NS4wNDg5IDM0LjEyNzJMNTYuMjM1NCAzMy4yNjg3TDU1LjA0NzcgMzQuMTI1NkM1My40ODcyIDMxLjk2ODMgNTIuNzIzNiAyOS40NjQyIDUyLjcyMzYgMjYuNjc3VjkuMTQ1MTdaIiBmaWxsPSIjOTgxNzM2Ij48L3BhdGg+CjxwYXRoIGlkPSJWZWN0b3JfMTEiIGQ9Ik0xMDMuNjAzIDExLjQ2NzZDMTA0Ljg5OSAxMS40Njc2IDEwNi4wNDIgMTEuNjEzOSAxMDcuMDMyIDExLjkwNjVDMTA4LjAyMSAxMi4xOTkyIDEwOC45NTcgMTIuODA4NCAxMDkuODQ2IDEzLjczNDNDMTA5Ljk0NyAxMy44Mzg1IDExMC4wNDEgMTMuOTMyNyAxMTAuMTI2IDE0LjAxNjlDMTEwLjIxMiAxNC4xMDMxIDExMC4yODggMTQuMTk3MyAxMTAuMzU3IDE0LjMwMTVDMTEwLjkzNyAxNC45ODg5IDExMS4zNjMgMTUuNzA4NCAxMTEuNjM2IDE2LjQ2NEMxMTEuOTExIDE3LjIxOTYgMTEyLjA0NiAxOC4wOTU0IDExMi4wNDYgMTkuMDkxNFYzNi43MDM5SDk4LjQ4NjVDOTYuMjM0MiAzNi42Njk4IDk0LjM0MjQgMzUuNzY4IDkyLjgwNSAzNC4wMDAzQzkxLjI3MTYgMzIuMjMyNyA5MC41MDI5IDMwLjE5ODQgOTAuNTAyOSAyNy44OTc3VjI3LjU4OUM5MC42MDY1IDI1LjA4MTggOTEuNjA0MiAyMy4wNjU3IDkzLjQ5NiAyMS41Mzg1Qzk1LjM4OTkgMjAuMDExMyA5Ny42ODIgMTkuMjQ1NyAxMDAuMzc4IDE5LjI0NTdIMTA5LjU5MUMxMDkuNTkxIDE4LjM4OCAxMDkuNDUzIDE3LjY0MjQgMTA5LjE4IDE3LjAwNTFDMTA4LjkwNiAxNi4zNjk4IDEwOC40OCAxNS43Nzg2IDEwNy45IDE1LjIyOTRDMTA3LjgzIDE1LjE2MTMgMTA3Ljc2NSAxNS4xMDEyIDEwNy42OTUgMTUuMDQ5MUMxMDcuNjI3IDE0Ljk5OSAxMDcuNTc3IDE0Ljk1NDkgMTA3LjU0NCAxNC45MjA4QzEwNy4wNjQgMTQuNTc4MSAxMDYuNTk4IDE0LjMxOTUgMTA2LjEzNiAxNC4xNDcyQzEwNS42NzYgMTMuOTc2OCAxMDUuMTU0IDEzLjg5MDcgMTA0LjU3NCAxMy44OTA3SDkyLjc1MzJWMTEuNDY5NkgxMDMuNjAzVjExLjQ2NzZaTTk5Ljc2NSAyMS43NjlDOTcuOTU0OCAyMS43NjkgOTYuMzUxNyAyMi4zNzgyIDk0Ljk1MTggMjMuNTk2OEM5My41NTM4IDI0LjgxNzMgOTIuODU0OCAyNi4zMzY0IDkyLjg1NDggMjguMTU2MkM5Mi44NTQ4IDI5Ljk3NiA5My40MjYzIDMxLjUyOTIgOTQuNTcxNCAzMi43MTM2Qzk1LjcxNDUgMzMuODk4MSA5Ny41MzA3IDM0LjQ4OTMgMTAwLjAyIDM0LjQ4OTNIMTA5LjY0MVYyMS44MjExTDk5Ljc2NSAyMS43NzFWMjEuNzY5WiIgZmlsbD0iI0U0MTc0MSI+PC9wYXRoPgo8cGF0aCBpZD0iVmVjdG9yIChTdHJva2UpXzIiIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMTAyLjEzOSA5LjE0NzE4SDkxLjI4OTRWMTQuNDk3M0gxMDQuNTc1QzEwNS4wMDkgMTQuNDk3MyAxMDUuMzU1IDE0LjU2MTggMTA1LjYyNiAxNC42NjIxQzEwNS45MjIgMTQuNzcyNiAxMDYuMjUgMTQuOTQ2MiAxMDYuNjIgMTUuMjAzQzEwNi42ODEgMTUuMjU3IDEwNi43NDcgMTUuMzEwNSAxMDYuODE3IDE1LjM2M0MxMDYuODE4IDE1LjM2NCAxMDYuODIxIDE1LjM2NjQgMTA2LjgyNiAxNS4zNzA0QzEwNi44MzYgMTUuMzc5NyAxMDYuODUyIDE1LjM5NDMgMTA2Ljg3NyAxNS40MTg3TDEwNi44ODUgMTUuNDI2N0wxMDYuODkzIDE1LjQzNDZDMTA3LjM1IDE1Ljg2NzIgMTA3LjY1MSAxNi4yOTg4IDEwNy44MzYgMTYuNzI2MkMxMDcuODYzIDE2Ljc4OTEgMTA3Ljg4OCAxNi44NTQ3IDEwNy45MTIgMTYuOTIzM0gxMDAuMzc5Qzk3LjM4NTQgMTYuOTIzMyA5NC43NTkyIDE3Ljc4MTEgOTIuNTc3NCAxOS41NDA1QzkwLjM0NTkgMjEuMzQxOSA4OS4xNjA2IDIzLjc1NzUgODkuMDQwMyAyNi42NzA3TDg5LjAzOTEgMjYuNzAwOVYyNy4wMzk4Qzg5LjAzOTEgMjkuNzAwNiA4OS45Mzk5IDMyLjA3MzggOTEuNjk5NCAzNC4xMDIxTDkxLjcwMDYgMzQuMTAzNUM5My40OTc5IDM2LjE3IDk1Ljc3NzEgMzcuMjY5NyA5OC40NjUxIDM3LjMxMDRMOTguNDc2MSAzNy4zMTA1SDExMy41MTFWMTguMjMzNUMxMTMuNTExIDE3LjEwOTEgMTEzLjM1OSAxNi4wNTc3IDExMy4wMTQgMTUuMTA3MUMxMTIuNjgzIDE0LjE5MTkgMTEyLjE3OSAxMy4zNDMyIDExMS41MjUgMTIuNTU2NEMxMTEuNDIxIDEyLjQwODQgMTExLjMwMyAxMi4yNjQzIDExMS4xNjYgMTIuMTI2N0wxMTEuMTU0IDEyLjExNDZDMTExLjA3OCAxMi4wNDAxIDExMC45OTMgMTEuOTU0OCAxMTAuODk5IDExLjg1ODFDMTA5Ljg3OSAxMC43OTYxIDEwOC43MzQgMTAuMDI0NCAxMDcuNDQ4IDkuNjQ0MTdDMTA2LjI5NCA5LjMwMzA1IDEwNS4wMDYgOS4xNDUxNyAxMDMuNjAzIDkuMTQ1MTdIMTAyLjEzOVY5LjE0NzE4Wk05OS42MzI3IDIyLjM3N0M5OC4yNDE3IDIyLjQwNTMgOTcuMDIwNCAyMi44ODA3IDk1LjkxNDYgMjMuODQzQzk0LjgyODUgMjQuNzkxNyA5NC4zMiAyNS45MTE2IDk0LjMyIDI3LjI5ODNDOTQuMzIgMjguNzk0NiA5NC43ODA4IDI5Ljk2NDUgOTUuNjI1IDMwLjgzNzhDOTYuMzc3NyAzMS42MTc3IDk3LjcyNjUgMzIuMTY2OSAxMDAuMDIxIDMyLjE2NjlIMTA4LjE3N1YyMi40MjAzTDk5LjYzMjcgMjIuMzc3WiIgZmlsbD0iIzk4MTczNiI+PC9wYXRoPgo8cGF0aCBpZD0iVmVjdG9yIChTdHJva2UpXzMiIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMTE3LjE2NCAzNi45MTkzSDExOC42MjlIMTIyLjQzN1YxOS42Mjk2QzEyMi40MzcgMTguNjU5NyAxMjIuNTc2IDE3Ljg0MDkgMTIyLjgyNyAxNy4xNTA3QzEyMy4wMzkgMTYuNTY4OCAxMjMuNDQ1IDE2LjAwMTcgMTI0LjEyNCAxNS40NTY5TDEyNC4xNjkgMTUuNDIxM0wxMjQuMjEgMTUuMzgyNEMxMjQuNTkyIDE1LjAyMzkgMTI0Ljk4OSAxNC43OTczIDEyNS40MTMgMTQuNjcxQzEyNS45MTYgMTQuNTIwNSAxMjYuNDkzIDE0LjQzNzQgMTI3LjE1MiAxNC40Mzc0SDEzMS44MVY5LjE0NTE3SDEyNi45MzhDMTI1LjUzNyA5LjE0NTE3IDEyNC4yMTUgOS4zNjkxOSAxMjIuOTg5IDkuODMwMTFNMTE3LjE2NCAzNi45MTkzSDExNy4xNjZWMTguMzQyNkMxMTcuMTY2IDE2Ljk5NTkgMTE3LjQzOCAxNS43MzEzIDExOC4wMTEgMTQuNTc2NkMxMTguNTI1IDEzLjU0MTcgMTE5LjEzNSAxMi42Mjk0IDExOS44NTIgMTEuODY0OUwxMTkuODUzIDExLjg2MzNDMTIwLjcwMSAxMC45NjE0IDEyMS43NTkgMTAuMjkyNCAxMjIuOTg5IDkuODMwMTEiIGZpbGw9IiM5ODE3MzYiPjwvcGF0aD4KPHBhdGggaWQ9IlZlY3Rvcl8xMiIgZD0iTTE0Ny41NTggMTEuNDY3NkMxNDguODU0IDExLjQ2NzYgMTQ5Ljk5NyAxMS42MTM5IDE1MC45ODcgMTEuOTA2NUMxNTEuOTc1IDEyLjE5OTIgMTUyLjkxMyAxMi44MDg0IDE1My44MDEgMTMuNzM0M0MxNTMuOTAyIDEzLjgzODUgMTUzLjk5NiAxMy45MzI3IDE1NC4wODIgMTQuMDE2OUMxNTQuMTY3IDE0LjEwMzEgMTU0LjI0MyAxNC4xOTczIDE1NC4zMTMgMTQuMzAxNUMxNTQuODkyIDE0Ljk4ODkgMTU1LjMxOCAxNS43MDg0IDE1NS41OTEgMTYuNDY0QzE1NS44NjYgMTcuMjE5NiAxNTYuMDAxIDE4LjA5NTQgMTU2LjAwMSAxOS4wOTE0VjM2LjcwMzlIMTQyLjQ0MkMxNDAuMTg5IDM2LjY2OTggMTM4LjI5OCAzNS43NjggMTM2Ljc2MiAzNC4wMDAzQzEzNS4yMjcgMzIuMjMyNyAxMzQuNDU2IDMwLjE5ODQgMTM0LjQ1NiAyNy44OTc3VjI3LjU4OUMxMzQuNTYgMjUuMDgxOCAxMzUuNTU3IDIzLjA2NTcgMTM3LjQ0OSAyMS41Mzg1QzEzOS4zNDMgMjAuMDExMyAxNDEuNjM1IDE5LjI0NTcgMTQ0LjMzMiAxOS4yNDU3SDE1My41NDRDMTUzLjU0NCAxOC4zODggMTUzLjQwNiAxNy42NDI0IDE1My4xMzQgMTcuMDA1MUMxNTIuODU5IDE2LjM2OTggMTUyLjQzMyAxNS43Nzg2IDE1MS44NTMgMTUuMjI5NEMxNTEuNzgzIDE1LjE2MTMgMTUxLjcxOCAxNS4xMDEyIDE1MS42NDggMTUuMDQ5MUMxNTEuNTggMTQuOTk5IDE1MS41MjkgMTQuOTU0OSAxNTEuNDk3IDE0LjkyMDhDMTUxLjAxNyAxNC41NzgxIDE1MC41NTEgMTQuMzE5NSAxNTAuMDg5IDE0LjE0NzJDMTQ5LjYyOSAxMy45NzY4IDE0OS4xMDcgMTMuODkwNyAxNDguNTI3IDEzLjg5MDdIMTM2LjcwNlYxMS40Njk2SDE0Ny41NTZMMTQ3LjU1OCAxMS40Njc2Wk0xNDMuNzE4IDIxLjc2OUMxNDEuOTEgMjEuNzY5IDE0MC4zMDcgMjIuMzc4MiAxMzguOTA3IDIzLjU5NjhDMTM3LjUwOSAyNC44MTczIDEzNi44MSAyNi4zMzY0IDEzNi44MSAyOC4xNTYyQzEzNi44MSAyOS45NzYgMTM3LjM4MSAzMS41MjkyIDEzOC41MjcgMzIuNzEzNkMxMzkuNjcgMzMuODk4MSAxNDEuNDg2IDM0LjQ4OTMgMTQzLjk3NSAzNC40ODkzSDE1My41OTZWMjEuODIxMUwxNDMuNzE4IDIxLjc3MVYyMS43NjlaIiBmaWxsPSIjRTQxNzQxIj48L3BhdGg+CjxwYXRoIGlkPSJWZWN0b3IgKFN0cm9rZSlfNCIgZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik0xNDYuOTQ4IDkuMTQ1MTdIMTQ3LjU1N0MxNDguOTYgOS4xNDUxNyAxNTAuMjQ4IDkuMzAzMDUgMTUxLjQwMiA5LjY0NDE3QzE1Mi42ODUgMTAuMDI0MiAxNTMuODMzIDEwLjc5NTQgMTU0Ljg1MyAxMS44NTgxQzE1NC45NDcgMTEuOTU0NyAxNTUuMDMyIDEyLjA0IDE1NS4xMDggMTIuMTE0NkwxNTUuMTIgMTIuMTI2NkMxNTUuMjU3IDEyLjI2NDIgMTU1LjM3NSAxMi40MDg0IDE1NS40OCAxMi41NTY0QzE1Ni4xMzMgMTMuMzQzMyAxNTYuNjM3IDE0LjE5MTkgMTU2Ljk2OCAxNS4xMDcxQzE1Ny4zMTMgMTYuMDU3NyAxNTcuNDY2IDE3LjEwOTEgMTU3LjQ2NiAxOC4yMzM1VjM3LjMxMDVIMTQyLjQzTDE0Mi40MTkgMzcuMzEwNEMxMzkuNzMxIDM3LjI2OTcgMTM3LjQ1MiAzNi4xNzAxIDEzNS42NTYgMzQuMTAyOEMxMzMuODk1IDMyLjA3NDkgMTMyLjk5MSAyOS43MDE1IDEzMi45OTEgMjcuMDM5OFYyNi43MDA5TDEzMi45OTIgMjYuNjcwN0MxMzMuMTEzIDIzLjc1NzUgMTM0LjI5NyAyMS4zNDIzIDEzNi41MjkgMTkuNTQxQzEzOC43MTEgMTcuNzgxNiAxNDEuMzM4IDE2LjkyMzMgMTQ0LjMzMSAxNi45MjMzSDE1MS44NjRDMTUxLjg0IDE2Ljg1NDcgMTUxLjgxNSAxNi43ODg5IDE1MS43ODggMTYuNzI2QzE1MS42MDMgMTYuMjk4NyAxNTEuMzAyIDE1Ljg2NzIgMTUwLjg0NSAxNS40MzQ2TDE1MC44MzcgMTUuNDI2N0wxNTAuODI5IDE1LjQxODdDMTUwLjgwNCAxNS4zOTQzIDE1MC43ODggMTUuMzc5NyAxNTAuNzc4IDE1LjM3MDRDMTUwLjc3MyAxNS4zNjY0IDE1MC43NzEgMTUuMzY0MSAxNTAuNzY5IDE1LjM2M0MxNTAuNzEyIDE1LjMyMDEgMTUwLjY0MSAxNS4yNjUxIDE1MC41NjggMTUuMjAwNEMxNTAuMiAxNC45NDUgMTQ5Ljg3MyAxNC43NzIyIDE0OS41NzggMTQuNjYyMUMxNDkuMzA3IDE0LjU2MTggMTQ4Ljk2MiAxNC40OTczIDE0OC41MjcgMTQuNDk3M0gxMzUuMjQyVjkuMTQ3MThIMTQ2Ljk0NkwxNDYuOTQ4IDkuMTQ1MTdaTTE0My41ODUgMjIuMzc3QzE0Mi4xOTYgMjIuNDA1MyAxNDAuOTc1IDIyLjg4MDYgMTM5Ljg2OSAyMy44NDI5QzEzOC43ODMgMjQuNzkxNiAxMzguMjc0IDI1LjkxMTYgMTM4LjI3NCAyNy4yOTgzQzEzOC4yNzQgMjguNzk0NiAxMzguNzM1IDI5Ljk2NDUgMTM5LjU3OSAzMC44Mzc4QzE0MC4zMzIgMzEuNjE3NyAxNDEuNjgxIDMyLjE2NjkgMTQzLjk3NSAzMi4xNjY5SDE1Mi4xMzFWMjIuNDIwM0wxNDMuNTg1IDIyLjM3N1oiIGZpbGw9IiM5ODE3MzYiPjwvcGF0aD4KPC9nPgo8L3N2Zz4="
+                alt="Wara GPS - Logo"
+                class="h-12 w-auto object-contain drop-shadow-md"
+                style="max-height: 48px;"
+              />
+            </div>
+            <div>
+              <span class="text-xl sm:text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-sky-200">WARA GPS</span>
+              <p class="text-xs text-sky-300 font-medium tracking-wider uppercase">Business Intelligence &amp; Finance</p>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-4">
+            <!-- Month Selector Quick Actions -->
+            <div class="relative inline-block text-left">
+              <select id="monthSelect" class="bg-slate-800/80 hover:bg-slate-800 text-white font-medium rounded-lg text-sm px-4 py-2.5 inline-flex items-center border border-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all cursor-pointer">
+                <!-- Will be populated dynamically -->
+              </select>
+            </div>
+
+            <!-- Dark Mode Toggle Button -->
+            <button id="themeToggle" class="p-2.5 rounded-lg bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 transition-colors focus:outline-none">
+              <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+              <i data-lucide="sun" class="w-5 h-5 hidden dark:block text-yellow-400"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Alerts & State Notification Banner -->
+      <div id="notificationArea" class="hidden mb-6"></div>
+
+      <!-- Top Financial Summary Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" id="quickMetricsGrid">
+      </div>
+
+      <!-- Dashboard Interactive Tabs -->
+      <div class="border-b border-slate-200 dark:border-slate-800 mb-8">
+        <nav class="flex flex-wrap -mb-px space-x-6" aria-label="Tabs">
+          <button onclick="switchTab('tab-general')" id="btn-tab-general" class="tab-btn border-b-2 border-brand-500 text-brand-600 dark:text-sky-400 pb-4 px-1 text-sm font-semibold flex items-center space-x-2">
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+            <span>Vista General (Enfoque Mensual)</span>
+          </button>
+          <button onclick="switchTab('tab-charts')" id="btn-tab-charts" class="tab-btn border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 pb-4 px-1 text-sm font-medium flex items-center space-x-2">
+            <i data-lucide="trending-up" class="w-4 h-4"></i>
+            <span>Gráficos y Tendencias</span>
+          </button>
+          <button onclick="switchTab('tab-semaphores')" id="btn-tab-semaphores" class="tab-btn border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 pb-4 px-1 text-sm font-medium flex items-center space-x-2">
+            <i data-lucide="traffic-cone" class="w-4 h-4"></i>
+            <span>Reglas de Semáforos</span>
+          </button>
+          <button onclick="switchTab('tab-table')" id="btn-tab-table" class="tab-btn border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 pb-4 px-1 text-sm font-medium flex items-center space-x-2">
+            <i data-lucide="table-2" class="w-4 h-4"></i>
+            <span>Matriz de Indicadores (2026)</span>
+          </button>
+          <button onclick="switchTab('tab-import')" id="btn-tab-import" class="tab-btn border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 pb-4 px-1 text-sm font-medium flex items-center space-x-2">
+            <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+            <span>Importar CSV</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- TAB 1: VISTA GENERAL -->
+      <section id="tab-general" class="tab-content block">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div class="lg:col-span-2 space-y-8">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+              <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold flex items-center space-x-2">
+                  <i data-lucide="pie-chart" class="text-sky-500 w-5 h-5"></i>
+                  <span>Análisis Operativo Mensual</span>
+                </h3>
+                <span class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded font-semibold text-slate-500 dark:text-slate-400" id="currentPeriodBadge">Abril 2026</span>
+              </div>
+
+              <div class="space-y-6">
+                <div>
+                  <div class="flex items-center justify-between text-sm mb-2">
+                    <span class="font-medium text-slate-600 dark:text-slate-400">Facturación Real vs. Objetivo</span>
+                    <span class="font-bold text-sky-500" id="facturacionPercentage">83.17%</span>
+                  </div>
+                  <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
+                    <div id="facturacionBar" class="bg-sky-500 h-3 rounded-full transition-all duration-500" style="width: 83.17%"></div>
+                  </div>
+                  <div class="flex justify-between items-center mt-2 text-xs text-slate-500">
+                    <span id="facturacionRealText">$457.452.518</span>
+                    <span id="facturacionObjText">Meta: $550.000.000</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between text-sm mb-2">
+                    <span class="font-medium text-slate-600 dark:text-slate-400">Cobranza Real vs. Objetivo</span>
+                    <span class="font-bold text-emerald-500" id="cobranzaPercentage">90.54%</span>
+                  </div>
+                  <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
+                    <div id="cobranzaBar" class="bg-emerald-500 h-3 rounded-full transition-all duration-500" style="width: 90.54%"></div>
+                  </div>
+                  <div class="flex justify-between items-center mt-2 text-xs text-slate-500">
+                    <span id="cobranzaRealText">$633.760.954</span>
+                    <span id="cobranzaObjText">Meta: $700.000.000</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+              <h3 class="text-lg font-bold mb-6 flex items-center space-x-2">
+                <i data-lucide="wallet" class="text-indigo-500 w-5 h-5"></i>
+                <span>Composición Patrimonial del Mes</span>
+              </h3>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-slate-500 uppercase">Caja, Bancos &amp; FCI</span>
+                    <span id="liquidezInmediataSemaforo" class="w-3 h-3 rounded-full bg-yellow-400"></span>
+                  </div>
+                  <p id="cajaBancosFciText" class="text-lg font-bold text-slate-900 dark:text-white">$183.389.638</p>
+                  <p class="text-xs text-slate-500 mt-1">Disponibilidad líquida inmediata</p>
+                </div>
+
+                <div class="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-slate-500 uppercase">Cheques Cartera</span>
+                    <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                  </div>
+                  <p id="chequesCarteraText" class="text-lg font-bold text-slate-900 dark:text-white">$154.745.767</p>
+                  <p class="text-xs text-slate-500 mt-1">Instrumentos negociables</p>
+                </div>
+
+                <div class="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-slate-500 uppercase">Cuentas por Cobrar</span>
+                    <span id="deudoresSemaforo" class="w-3 h-3 rounded-full bg-red-400"></span>
+                  </div>
+                  <p id="deudoresVentasText" class="text-lg font-bold text-slate-900 dark:text-white">$862.719.714</p>
+                  <p class="text-xs text-slate-500 mt-1">Top 20 Deudores: <span id="top20DeudoresText" class="font-medium">$640.817.809</span></p>
+                </div>
+              </div>
+
+              <div class="mt-6 flex flex-col md:flex-row items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-100 dark:border-slate-800/50">
+                <div class="w-full md:w-1/2 h-56 flex items-center justify-center">
+                  <canvas id="assetChart"></canvas>
+                </div>
+                <div class="w-full md:w-1/2 space-y-3 mt-4 md:mt-0 md:pl-6 text-sm">
+                  <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/50 pb-2">
+                    <span class="font-medium">Total Activo Corriente</span>
+                    <span id="totalActivoCorrienteText" class="font-bold text-brand-600 dark:text-sky-400">$1.841.672.927</span>
+                  </div>
+                  <div class="flex items-center justify-between text-xs text-slate-500">
+                    <span class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-sky-500 mr-2"></span>Caja y Bancos</span>
+                    <span id="cajaBancosPct" class="font-semibold">9.96%</span>
+                  </div>
+                  <div class="flex items-center justify-between text-xs text-slate-500">
+                    <span class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500 mr-2"></span>Cheques Cartera</span>
+                    <span id="chequesPct" class="font-semibold">8.40%</span>
+                  </div>
+                  <div class="flex items-center justify-between text-xs text-slate-500">
+                    <span class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2"></span>Deudores Ventas</span>
+                    <span id="deudoresPct" class="font-semibold">46.84%</span>
+                  </div>
+                  <div class="flex items-center justify-between text-xs text-slate-500">
+                    <span class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-teal-500 mr-2"></span>Plazos Fijos &amp; FCI</span>
+                    <span id="plazosFcpPct" class="font-semibold">0.00%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-8">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+              <div class="flex items-center space-x-2 mb-4 text-brand-500">
+                <i data-lucide="clipboard-check" class="w-5 h-5"></i>
+                <h3 class="text-lg font-bold">Diagnóstico Financiero</h3>
+              </div>
+              <div id="financialDiagnosisContent" class="space-y-4 text-sm text-slate-600 dark:text-slate-300">
+              </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-2xl p-6 shadow-md border border-slate-800">
+              <div class="flex items-center space-x-2 mb-4">
+                <i data-lucide="sparkles" class="w-5 h-5 text-indigo-300 animate-pulse"></i>
+                <h3 class="text-lg font-bold text-white">Recomendación Wara GPS</h3>
+              </div>
+              <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                El mes de <span class="text-indigo-200 font-semibold">abril</span> presenta una excelente recuperación en <span class="font-semibold text-emerald-300">Cobranzas ($633M)</span> impulsado probablemente por un récord de facturación anterior. Sin embargo, el <span class="font-semibold text-rose-300">83.17%</span> de cumplimiento en facturación sugiere que el esfuerzo de prospección y cierre debe redoblarse.
+              </p>
+              <div class="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50 space-y-2 text-xs">
+                <div class="flex items-start space-x-2 text-indigo-200">
+                  <span class="bg-indigo-500/20 px-1.5 py-0.5 rounded font-bold text-indigo-400">1</span>
+                  <span><strong>Movilizar Activos:</strong> Invertir la caja ociosa en FCI o plazos fijos remunerados a corto plazo.</span>
+                </div>
+                <div class="flex items-start space-x-2 text-indigo-200">
+                  <span class="bg-indigo-500/20 px-1.5 py-0.5 rounded font-bold text-indigo-400">2</span>
+                  <span><strong>Facturas por Cobrar:</strong> Los deudores por ventas representan $862M. Plan de cobro intensivo.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: GRÁFICOS Y TENDENCIAS -->
+      <section id="tab-charts" class="tab-content hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+            <h3 class="text-lg font-bold mb-4 flex items-center space-x-2">
+              <i data-lucide="line-chart" class="text-sky-500 w-5 h-5"></i>
+              <span>Tendencia de Facturación vs Cobranzas (2026)</span>
+            </h3>
+            <div class="h-80 w-full">
+              <canvas id="trendsChart"></canvas>
+            </div>
+            <p class="text-xs text-slate-500 mt-4 italic">
+              * Nota: Los errores del excel original de los primeros meses se filtraron para mantener la integridad de la curva.
+            </p>
+          </div>
+
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+            <h3 class="text-lg font-bold mb-4 flex items-center space-x-2">
+              <i data-lucide="shield-check" class="text-emerald-500 w-5 h-5"></i>
+              <span>Estructura de Capital y Solvencia</span>
+            </h3>
+            <div class="h-80 w-full">
+              <canvas id="solvencyChart"></canvas>
+            </div>
+            <p class="text-xs text-slate-500 mt-4 italic">
+              * Comparación entre activos corrientes disponibles contra las obligaciones operativas a corto y largo plazo.
+            </p>
+          </div>
+        </div>
+
+        <!-- Gráfico: Composición de Facturación por Canal -->
+        <div class="mt-8 bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+          <h3 class="text-lg font-bold mb-4 flex items-center space-x-2">
+            <i data-lucide="layers" class="text-amber-500 w-5 h-5"></i>
+            <span>Composición de Facturación por Canal (2026)</span>
+          </h3>
+          <div class="h-80 w-full">
+            <canvas id="compositionChart"></canvas>
+          </div>
+          <p class="text-xs text-slate-500 mt-4 italic">
+            * Distribución porcentual de la facturación por canal: Abonos recurrentes, Instalaciones y Envíos/Otros. Los datos se actualizan al importar el archivo Excel.
+          </p>
+        </div>
+      </section>
+
+      <!-- TAB 3: REGLAS DE SEMÁFOROS -->
+      <section id="tab-semaphores" class="tab-content hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 mb-8">
+          <div class="flex items-center space-x-3 mb-6">
+            <i data-lucide="traffic-cone" class="w-6 h-6 text-sky-500"></i>
+            <div>
+              <h3 class="text-lg font-bold">Configuración de Reglas de Semáforos Financieros</h3>
+              <p class="text-sm text-slate-500">Definiciones operacionales y umbrales diseñados para Wara GPS para auditar el desempeño financiero.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="border border-slate-100 dark:border-slate-700 rounded-xl p-5 space-y-3 bg-slate-50 dark:bg-slate-900/30">
+              <div class="flex items-center justify-between">
+                <h4 class="font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                  <span class="w-3 h-3 rounded-full bg-sky-500 mr-2"></span>
+                  <span>Cumplimiento de Objetivos (Facturación/Cobranza)</span>
+                </h4>
+              </div>
+              <p class="text-xs text-slate-500">Mide la efectividad real en contraste con la planificación presupuestaria de la dirección.</p>
+              <div class="space-y-2 mt-2 text-sm">
+                <div class="flex justify-between items-center bg-green-500/10 dark:bg-green-500/20 text-green-700 dark:text-green-300 p-2 rounded">
+                  <span>Verde (Excelente)</span>
+                  <span class="font-bold">&ge; 95%</span>
+                </div>
+                <div class="flex justify-between items-center bg-yellow-500/10 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 p-2 rounded">
+                  <span>Amarillo (Alerta/Estable)</span>
+                  <span class="font-bold">80% - 94.9%</span>
+                </div>
+                <div class="flex justify-between items-center bg-red-500/10 dark:bg-red-500/20 text-red-700 dark:text-red-300 p-2 rounded">
+                  <span>Rojo (Crítico)</span>
+                  <span class="font-bold">&lt; 80%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="border border-slate-100 dark:border-slate-700 rounded-xl p-5 space-y-3 bg-slate-50 dark:bg-slate-900/30">
+              <div class="flex items-center justify-between">
+                <h4 class="font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                  <span class="w-3 h-3 rounded-full bg-emerald-500 mr-2"></span>
+                  <span>Variación Intermensual (m/m)</span>
+                </h4>
+              </div>
+              <p class="text-xs text-slate-500">Evalúa la aceleración o desaceleración comercial del flujo de caja real respecto al mes anterior.</p>
+              <div class="space-y-2 mt-2 text-sm">
+                <div class="flex justify-between items-center bg-green-500/10 dark:bg-green-500/20 text-green-700 dark:text-green-300 p-2 rounded">
+                  <span>Verde (Expansión)</span>
+                  <span class="font-bold">&gt; 5%</span>
+                </div>
+                <div class="flex justify-between items-center bg-yellow-500/10 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 p-2 rounded">
+                  <span>Amarillo (Estable)</span>
+                  <span class="font-bold">-5% a +5%</span>
+                </div>
+                <div class="flex justify-between items-center bg-red-500/10 dark:bg-red-500/20 text-red-700 dark:text-red-300 p-2 rounded">
+                  <span>Rojo (Contracción)</span>
+                  <span class="font-bold">&lt; -5%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="border border-slate-100 dark:border-slate-700 rounded-xl p-5 space-y-3 bg-slate-50 dark:bg-slate-900/30">
+              <div class="flex items-center justify-between">
+                <h4 class="font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                  <span class="w-3 h-3 rounded-full bg-purple-500 mr-2"></span>
+                  <span>Ratio de Liquidez Corriente (Solvencia CP)</span>
+                </h4>
+              </div>
+              <p class="text-xs text-slate-500">Mide cuántos pesos de activo de corto plazo se tienen por cada peso de pasivo inmediato.</p>
+              <div class="space-y-2 mt-2 text-sm">
+                <div class="flex justify-between items-center bg-green-500/10 dark:bg-green-500/20 text-green-700 dark:text-green-300 p-2 rounded">
+                  <span>Verde (Excelente Solvencia)</span>
+                  <span class="font-bold">Ratio &ge; 1.5</span>
+                </div>
+                <div class="flex justify-between items-center bg-yellow-500/10 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 p-2 rounded">
+                  <span>Amarillo (Liquidez Ajustada)</span>
+                  <span class="font-bold">1.0 - 1.49</span>
+                </div>
+                <div class="flex justify-between items-center bg-red-500/10 dark:bg-red-500/20 text-red-700 dark:text-red-300 p-2 rounded">
+                  <span>Rojo (Riesgo Financiero)</span>
+                  <span class="font-bold">&lt; 1.0</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="border border-slate-100 dark:border-slate-700 rounded-xl p-5 space-y-3 bg-slate-50 dark:bg-slate-900/30">
+              <div class="flex items-center justify-between">
+                <h4 class="font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                  <span class="w-3 h-3 rounded-full bg-amber-500 mr-2"></span>
+                  <span>Composición de la Caja (Salud Inmediata)</span>
+                </h4>
+              </div>
+              <p class="text-xs text-slate-500">Mide la proporción de disponibilidad líquida inmediata frente al total de activos corrientes.</p>
+              <div class="space-y-2 mt-2 text-sm">
+                <div class="flex justify-between items-center bg-green-500/10 dark:bg-green-500/20 text-green-700 dark:text-green-300 p-2 rounded">
+                  <span>Verde (Excelente disponibilidad)</span>
+                  <span class="font-bold">&ge; 20%</span>
+                </div>
+                <div class="flex justify-between items-center bg-yellow-500/10 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 p-2 rounded">
+                  <span>Amarillo (Suficiente / Conservador)</span>
+                  <span class="font-bold">10% - 19.9%</span>
+                </div>
+                <div class="flex justify-between items-center bg-red-500/10 dark:bg-red-500/20 text-red-700 dark:text-red-300 p-2 rounded">
+                  <span>Rojo (Caja Crítica / Todo por cobrar)</span>
+                  <span class="font-bold">&lt; 10%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: MATRIZ DE INDICADORES -->
+      <section id="tab-table" class="tab-content hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+          <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+            <div>
+              <h3 class="text-lg font-bold">Matriz de Datos Financieros 2026</h3>
+              <p class="text-sm text-slate-500">Métricas consolidadas de Facturación, Cobranza, Activos y Pasivos de la empresa.</p>
+            </div>
+            <div class="bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-400 border border-amber-200 dark:border-amber-900/30 rounded-xl px-4 py-2 text-xs font-semibold flex items-center space-x-2">
+              <i data-lucide="info" class="w-4 h-4 text-amber-500 shrink-0"></i>
+              <span>Las celdas con errores de Excel muestran automáticamente la leyenda <strong>"trabajando datos"</strong>.</span>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left text-sm border-collapse">
+              <thead>
+                <tr class="bg-slate-50 dark:bg-slate-900/80 text-slate-500 border-b border-slate-100 dark:border-slate-700 uppercase tracking-wider text-xs">
+                  <th class="p-4 font-bold sticky left-0 bg-slate-50 dark:bg-slate-900 z-10 min-w-[220px]">Indicador / Cuenta</th>
+                  <th class="p-4 font-bold text-center">Ene</th>
+                  <th class="p-4 font-bold text-center">Feb</th>
+                  <th class="p-4 font-bold text-center">Mar</th>
+                  <th class="p-4 font-bold text-center font-semibold bg-indigo-50 dark:bg-indigo-950/20 border-x border-slate-200 dark:border-slate-700">Abr</th>
+                  <th class="p-4 font-bold text-center">May</th>
+                  <th class="p-4 font-bold text-center">Jun</th>
+                  <th class="p-4 font-bold text-center">Jul</th>
+                  <th class="p-4 font-bold text-center">Ago</th>
+                  <th class="p-4 font-bold text-center">Sep</th>
+                  <th class="p-4 font-bold text-center">Oct</th>
+                  <th class="p-4 font-bold text-center">Nov</th>
+                  <th class="p-4 font-bold text-center">Dic</th>
+                </tr>
+              </thead>
+              <tbody id="matrixTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/50">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: IMPORTAR CSV -->
+      <section id="tab-import" class="tab-content hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+          <div class="max-w-2xl mx-auto text-center py-10 space-y-6">
+            <div class="bg-brand-50 dark:bg-slate-900/80 w-16 h-16 rounded-full flex items-center justify-center mx-auto text-brand-600 dark:text-sky-400">
+              <i data-lucide="upload-cloud" class="w-8 h-8"></i>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold">Importa tu archivo de Control Financiero</h3>
+              <p class="text-sm text-slate-500 mt-2">Puedes arrastrar o seleccionar el archivo Excel <code class="bg-slate-100 dark:bg-slate-900 px-1 py-0.5 rounded text-rose-500">Dashboard Finance - 2026.xlsx</code> para cargar o actualizar de forma dinámica los indicadores financieros del sistema.</p>
+            </div>
+
+            <div id="dropZone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-brand-500 dark:hover:border-sky-500 rounded-2xl p-8 cursor-pointer transition-all bg-slate-50 dark:bg-slate-900/30 flex flex-col items-center justify-center space-y-2">
+              <i data-lucide="file-spreadsheet" class="w-10 h-10 text-slate-400"></i>
+              <span class="text-sm font-semibold">Haz clic para buscar o arrastra el archivo aquí</span>
+              <span class="text-xs text-slate-400">Formatos soportados: .xlsx, .xls</span>
+              <input type="file" id="csvFileInput" accept=".xlsx, .xls" class="hidden">
+            </div>
+
+            <div class="text-xs text-slate-400 mt-2 text-left bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200/50 dark:border-slate-700/50 space-y-2">
+              <p class="font-semibold text-slate-600 dark:text-slate-300">¿Cómo debe ser el formato del Excel?</p>
+              <ul class="list-disc pl-4 space-y-1">
+                <li>La <strong>primera fila</strong> debe tener los meses como encabezados: Enero, Febrero, Marzo... Diciembre.</li>
+                <li>La <strong>primera columna</strong> debe tener los nombres de los indicadores (ver lista completa abajo).</li>
+                <li>Indicadores reconocidos: <em>Facturación, Variación m/m, Objetivo, Cumplimiento, Cobranza Total, Variación m/m Cobranza, Objetivo Cobranza, Cumplimiento Cobranza, Activo Corriente, Caja y Bancos, FCI, Cheques Cartera, Deudores por Ventas, Top 20 Deudores, Plazo Fijo, Activo No Corriente, Pasivo Corriente, Proveedores, Facturas Pendientes, Pasivo No Corriente, Planes ARCA, Préstamos.</em></li>
+                <li>Los valores pueden tener formato moneda ($), puntos de miles y comas decimales (estilo argentino).</li>
+                <li>Las celdas vacías o con errores de Excel se manejan automáticamente.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-800 mt-12 py-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-400 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <p>© <span id="footerYear"></span> Blo, bienestar, logística y organización S.A. Todos los derechos reservados.</p>
+        <div class="flex space-x-4">
+          <a href="#" class="hover:text-slate-500">Términos de servicio</a>
+          <a href="#" class="hover:text-slate-500">Políticas de seguridad</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Global Financial Data object (Base: Dashboard Finance - 2026.csv)
+    let companyData = {
+      months: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
+      facturacion: {
+        real: [407370733, 457960477, 804459844, 457452518, 475158688, null, null, null, null, null, null, null],
+        variacion: ["#VALUE!", "12,42%", "75,66%", "-43,14%", "3,87%", null, null, null, null, null, null, null],
+        objetivo: [null, null, null, 550000000, 551395951, 550000000, null, null, null, null, null, null],
+        cumplimiento: ["#DIV/0!", "#DIV/0!", "#DIV/0!", "83,17%", "86,17%", "0,00%", null, null, null, null, null, null]
+      },
+      cobranza: {
+        real: [476386829, 311946619, 430619515, 633760954, 541585844, null, null, null, null, null, null, null],
+        variacion: ["#VALUE!", "-34,52%", "38,04%", "47,17%", "-14,54%", null, null, null, null, null, null, null],
+        objetivo: [null, null, null, 700000000, 750000000, 640918915, null, null, null, null, null, null],
+        cumplimiento: ["#DIV/0!", "#DIV/0!", "#DIV/0!", "90,54%", "72,21%", "0,00%", null, null, null, null, null, null]
+      },
+      activoCorriente: {
+        total: [0, 0, 0, 1841672927, 21000000, 0, null, null, null, null, null, null],
+        cajaBancos: [null, null, null, 183389638, null, null, null, null, null, null, null, null],
+        fci: [null, null, null, 0, null, null, null, null, null, null, null, null],
+        cheques: [null, null, null, 154745767, null, null, null, null, null, null, null, null],
+        deudores: [null, null, null, 862719714, null, null, null, null, null, null, null, null],
+        top20Deudores: [null, null, null, 640817809, null, null, null, null, null, null, null, null],
+        plazoFijo: [0, 0, 0, 0, 21000000, null, null, null, null, null, null, null]
+      },
+      activoNoCorriente: {
+        total: [0, 0, 0, 1901023034, 1901023034, 0, null, null, null, null, null, null],
+        participacionOrbitrix: [null, null, null, 28980000, null, null, null, null, null, null, null, null]
+      },
+      pasivoNoCorriente: {
+        total: [0, 0, 0, 676907663, 676907663, 0, null, null, null, null, null, null],
+        planesArca: [null, null, null, 150271902, 150271902, null, null, null, null, null, null, null],
+        prestamos: [null, null, null, 526635761, 526635761, null, null, null, null, null, null, null]
+      },
+      pasivoCorriente: {
+        total: [0, 0, 0, 29591017, 28054998, 0, null, null, null, null, null, null],
+        proveedores: [null, null, null, 28740506, 28054998, null, null, null, null, null, null, null],
+        facturasPendientes: [null, null, null, 850511, 0, null, null, null, null, null, null, null],
+        pagosComprometidos: [null, null, null, 0, null, null, null, null, null, null, null, null]
+      },
+      facturacionMix: {
+        ratioAbonos:        [83.63, 77.88, 47.00, 79.97, null, null, null, null, null, null, null, null],
+        ratioInstalaciones: [11.87, 22.59, 12.77,  5.62, null, null, null, null, null, null, null, null],
+        ratioOtros:         [ 6.44,  4.52, 47.00, 15.53, null, null, null, null, null, null, null, null],
+      },
+    };
+
+    let selectedMonthIndex = 3;
+    let activeTabId = 'tab-general';
+    let assetAllocationChart = null;
+    let trendsLineChart = null;
+    let solvencyBarChart = null;
+    let compositionBarChart = null;
+
+    function formatValue(val, type = 'currency') {
+      if (val === '#VALUE!' || val === '#DIV/0!' || val === '#N/A' || val === '#REF!') {
+        return `<span class="inline-flex items-center text-[11px] font-semibold text-amber-700 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400 px-2 py-0.5 rounded border border-amber-200/50 dark:border-amber-900/30">trabajando datos</span>`;
+      }
+      if (val === null || val === undefined || val === '') {
+        return `<span class="text-slate-400 dark:text-slate-600">-</span>`;
+      }
+      if (typeof val === 'string' && (val.includes('%') || val.includes(','))) {
+        return val;
+      }
+      if (typeof val === 'number') {
+        if (type === 'currency') {
+          return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(val);
+        }
+        if (type === 'percent') {
+          return new Intl.NumberFormat('es-AR', { style: 'percent', minimumFractionDigits: 2 }).format(val / 100);
+        }
+        return val.toString();
+      }
+      return val;
+    }
+
+    function isExcelError(val) {
+      return ['#VALUE!', '#DIV/0!', '#N/A', '#REF!'].includes(val);
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('border-brand-500', 'text-brand-600', 'dark:text-sky-400');
+        btn.classList.add('border-transparent', 'text-slate-500');
+      });
+
+      const activeBtn = document.getElementById(`btn-${tabId}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('border-transparent', 'text-slate-500');
+        activeBtn.classList.add('border-brand-500', 'text-brand-600', 'dark:text-sky-400');
+      }
+
+      activeTabId = tabId;
+
+      if (tabId === 'tab-charts') {
+        initCharts();
+      } else if (tabId === 'tab-general') {
+        updateAssetAllocationChart();
+      }
+    }
+
+    function getSemaphoreColor(type, value, rawValue = null) {
+      if (isExcelError(value) || isExcelError(rawValue)) {
+        return { color: 'text-amber-500 bg-amber-50 dark:bg-amber-950/20', label: 'Sin datos', border: 'border-amber-200', bg: 'bg-amber-400' };
+      }
+
+      if (type === 'cumplimiento') {
+        let numericValue = 0;
+        if (typeof value === 'string') {
+          numericValue = parseFloat(value.replace('%', '').replace(',', '.').trim());
+        } else if (typeof value === 'number') {
+          numericValue = value;
+        }
+
+        if (numericValue >= 95) {
+          return { color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800', label: 'Excelente (Verde)', border: 'border-emerald-500', bg: 'bg-emerald-500' };
+        } else if (numericValue >= 80) {
+          return { color: 'text-amber-700 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800', label: 'Aceptable (Amarillo)', border: 'border-amber-500', bg: 'bg-amber-400' };
+        } else {
+          return { color: 'text-rose-700 bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800', label: 'Crítico (Rojo)', border: 'border-rose-500', bg: 'bg-rose-500' };
+        }
+      }
+
+      if (type === 'variacion') {
+        let numericValue = 0;
+        if (typeof value === 'string') {
+          numericValue = parseFloat(value.replace('%', '').replace(',', '.').trim());
+        } else if (typeof value === 'number') {
+          numericValue = value;
+        }
+
+        if (numericValue > 5) {
+          return { color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800', label: 'Crecimiento (Verde)', border: 'border-emerald-500', bg: 'bg-emerald-500' };
+        } else if (numericValue >= -5) {
+          return { color: 'text-amber-700 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800', label: 'Estable (Amarillo)', border: 'border-amber-500', bg: 'bg-amber-400' };
+        } else {
+          return { color: 'text-rose-700 bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800', label: 'Caída (Rojo)', border: 'border-rose-500', bg: 'bg-rose-500' };
+        }
+      }
+
+      if (type === 'liquidez') {
+        let numericValue = parseFloat(value);
+        if (numericValue >= 1.5) {
+          return { color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800', label: 'Solvente (Verde)', border: 'border-emerald-500', bg: 'bg-emerald-500' };
+        } else if (numericValue >= 1.0) {
+          return { color: 'text-amber-700 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800', label: 'Ajustado (Amarillo)', border: 'border-amber-500', bg: 'bg-amber-400' };
+        } else {
+          return { color: 'text-rose-700 bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800', label: 'Crítico (Rojo)', border: 'border-rose-500', bg: 'bg-rose-500' };
+        }
+      }
+
+      return { color: 'text-slate-700 bg-slate-50 dark:bg-slate-800', label: 'Neutro', border: 'border-slate-200', bg: 'bg-slate-400' };
+    }
+
+    function populateMonthDropdown() {
+      const select = document.getElementById('monthSelect');
+      select.innerHTML = '';
+      companyData.months.forEach((month, idx) => {
+        const option = document.createElement('option');
+        option.value = idx;
+        option.textContent = `Periodo: ${month}`;
+        if (idx === selectedMonthIndex) option.selected = true;
+        select.appendChild(option);
+      });
+
+      select.addEventListener('change', (e) => {
+        selectedMonthIndex = parseInt(e.target.value);
+        updateDashboardView();
+      });
+    }
+
+    function renderQuickMetrics() {
+      const parent = document.getElementById('quickMetricsGrid');
+      parent.innerHTML = '';
+
+      const factValue = companyData.facturacion.real[selectedMonthIndex];
+      const factObj = companyData.facturacion.objetivo[selectedMonthIndex];
+      const factCumplimiento = companyData.facturacion.cumplimiento[selectedMonthIndex];
+
+      const cobValue = companyData.cobranza.real[selectedMonthIndex];
+      const cobObj = companyData.cobranza.objetivo[selectedMonthIndex];
+      const cobCumplimiento = companyData.cobranza.cumplimiento[selectedMonthIndex];
+
+      const actCorr = companyData.activoCorriente.total[selectedMonthIndex];
+      const pasCorr = companyData.pasivoCorriente.total[selectedMonthIndex];
+      const ratioLiquidez = (actCorr && pasCorr) ? (actCorr / pasCorr).toFixed(2) : "0.00";
+
+      const varFact = companyData.facturacion.variacion[selectedMonthIndex];
+
+      const factSem = getSemaphoreColor('cumplimiento', factCumplimiento);
+      const cobSem = getSemaphoreColor('cumplimiento', cobCumplimiento);
+      const varSem = getSemaphoreColor('variacion', varFact);
+      const liqSem = getSemaphoreColor('liquidez', ratioLiquidez);
+
+      const metrics = [
+        {
+          title: "Facturación Real",
+          value: formatValue(factValue),
+          subtitle: factObj ? `Objetivo: ${formatValue(factObj)}` : "Objetivo sin definir",
+          badge: isExcelError(factCumplimiento) ? "trabajando datos" : `${factCumplimiento || '0,00%'} Cumplimiento`,
+          badgeClass: factSem.color,
+          icon: "dollar-sign",
+          iconColor: "text-sky-500 bg-sky-50 dark:bg-sky-950/50"
+        },
+        {
+          title: "Cobranza Real",
+          value: formatValue(cobValue),
+          subtitle: cobObj ? `Objetivo: ${formatValue(cobObj)}` : "Objetivo sin definir",
+          badge: isExcelError(cobCumplimiento) ? "trabajando datos" : `${cobCumplimiento || '0,00%'} Cumplimiento`,
+          badgeClass: cobSem.color,
+          icon: "credit-card",
+          iconColor: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/50"
+        },
+        {
+          title: "Variación m/m Facturación",
+          value: isExcelError(varFact) ? "trabajando datos" : varFact || "0,00%",
+          subtitle: "Vs. mes anterior",
+          badge: isExcelError(varFact) ? "Revisando" : (parseFloat(varFact) < 0 ? "Contracción" : "Aumento"),
+          badgeClass: varSem.color,
+          icon: "percent",
+          iconColor: "text-amber-500 bg-amber-50 dark:bg-amber-950/50"
+        },
+        {
+          title: "Ratio Liquidez Corriente",
+          value: isExcelError(actCorr) || isExcelError(pasCorr) ? "trabajando datos" : (ratioLiquidez + "x"),
+          subtitle: "Activo Corriente / Pasivo Corriente",
+          badge: isExcelError(actCorr) || isExcelError(pasCorr) ? "trabajando datos" : liqSem.label,
+          badgeClass: liqSem.color,
+          icon: "activity",
+          iconColor: "text-indigo-500 bg-indigo-50 dark:bg-indigo-950/50"
+        }
+      ];
+
+      metrics.forEach(m => {
+        const card = document.createElement('div');
+        card.className = "bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800/80 flex flex-col justify-between hover:shadow-md transition-all";
+        card.innerHTML = `
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">${m.title}</span>
+            <div class="${m.iconColor} p-2.5 rounded-xl">
+              <i data-lucide="${m.icon}" class="w-5 h-5"></i>
+            </div>
+          </div>
+          <div class="mb-4">
+            <h4 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">${m.value}</h4>
+            <p class="text-xs text-slate-500 mt-1">${m.subtitle}</p>
+          </div>
+          <div class="pt-3 border-t border-slate-50 dark:border-slate-700/50">
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${m.badgeClass}">${m.badge}</span>
+          </div>
+        `;
+        parent.appendChild(card);
+      });
+
+      lucide.createIcons();
+    }
+
+    function updateAssetAllocationChart() {
+      const caja = companyData.activoCorriente.cajaBancos[selectedMonthIndex] || 0;
+      const fci = companyData.activoCorriente.fci[selectedMonthIndex] || 0;
+      const cheques = companyData.activoCorriente.cheques[selectedMonthIndex] || 0;
+      const deudores = companyData.activoCorriente.deudores[selectedMonthIndex] || 0;
+      const plazoFijo = companyData.activoCorriente.plazoFijo[selectedMonthIndex] || 0;
+
+      const actTotal = companyData.activoCorriente.total[selectedMonthIndex] || 1;
+
+      document.getElementById('currentPeriodBadge').textContent = `${companyData.months[selectedMonthIndex]} 2026`;
+
+      const factReal = companyData.facturacion.real[selectedMonthIndex];
+      const factObj = companyData.facturacion.objetivo[selectedMonthIndex];
+      const factPct = factObj ? ((factReal / factObj) * 100).toFixed(2) : 0;
+      document.getElementById('facturacionPercentage').textContent = factReal === null ? "Sin datos" : `${factPct}%`;
+      document.getElementById('facturacionBar').style.width = `${Math.min(factPct, 100)}%`;
+      document.getElementById('facturacionRealText').textContent = formatValue(factReal);
+      document.getElementById('facturacionObjText').textContent = factObj ? `Meta: ${formatValue(factObj)}` : "Meta no presupuestada";
+
+      const cobReal = companyData.cobranza.real[selectedMonthIndex];
+      const cobObj = companyData.cobranza.objetivo[selectedMonthIndex];
+      const cobPct = cobObj ? ((cobReal / cobObj) * 100).toFixed(2) : 0;
+      document.getElementById('cobranzaPercentage').textContent = cobReal === null ? "Sin datos" : `${cobPct}%`;
+      document.getElementById('cobranzaBar').style.width = `${Math.min(cobPct, 100)}%`;
+      document.getElementById('cobranzaRealText').textContent = formatValue(cobReal);
+      document.getElementById('cobranzaObjText').textContent = cobObj ? `Meta: ${formatValue(cobObj)}` : "Meta no presupuestada";
+
+      document.getElementById('cajaBancosFciText').textContent = formatValue(caja + fci);
+      document.getElementById('chequesCarteraText').textContent = formatValue(cheques);
+      document.getElementById('deudoresVentasText').textContent = formatValue(deudores);
+      document.getElementById('top20DeudoresText').textContent = formatValue(companyData.activoCorriente.top20Deudores[selectedMonthIndex]);
+      document.getElementById('totalActivoCorrienteText').textContent = formatValue(actTotal);
+
+      document.getElementById('cajaBancosPct').textContent = `${((caja / actTotal) * 100).toFixed(2)}%`;
+      document.getElementById('chequesPct').textContent = `${((cheques / actTotal) * 100).toFixed(2)}%`;
+      document.getElementById('deudoresPct').textContent = `${((deudores / actTotal) * 100).toFixed(2)}%`;
+      document.getElementById('plazosFcpPct').textContent = `${(((plazoFijo + fci) / actTotal) * 100).toFixed(2)}%`;
+
+      const liquiInmPct = ((caja + cheques) / actTotal) * 100;
+      const liqInmSem = document.getElementById('liquidezInmediataSemaforo');
+      if (liquiInmPct >= 20) {
+        liqInmSem.className = "w-3 h-3 rounded-full bg-emerald-500";
+      } else if (liquiInmPct >= 10) {
+        liqInmSem.className = "w-3 h-3 rounded-full bg-amber-500";
+      } else {
+        liqInmSem.className = "w-3 h-3 rounded-full bg-rose-500";
+      }
+
+      const deudoresPctValue = (deudores / actTotal) * 100;
+      const deudSem = document.getElementById('deudoresSemaforo');
+      if (deudoresPctValue > 50) {
+        deudSem.className = "w-3 h-3 rounded-full bg-rose-500";
+      } else if (deudoresPctValue > 30) {
+        deudSem.className = "w-3 h-3 rounded-full bg-amber-500";
+      } else {
+        deudSem.className = "w-3 h-3 rounded-full bg-emerald-500";
+      }
+
+      const isDark = document.documentElement.classList.contains('dark');
+      const chartCanvas = document.getElementById('assetChart');
+      if (!chartCanvas) return;
+
+      if (assetAllocationChart) {
+        assetAllocationChart.destroy();
+      }
+
+      const hasData = (caja + fci + cheques + deudores + plazoFijo) > 0;
+
+      assetAllocationChart = new Chart(chartCanvas, {
+        type: 'doughnut',
+        data: {
+          labels: ['Caja y Bancos', 'FCI / Inversión', 'Cheques Cartera', 'Deudores Ventas', 'Plazo Fijo'],
+          datasets: [{
+            data: hasData ? [caja, fci, cheques, deudores, plazoFijo] : [0, 0, 0, 0, 0, 1],
+            backgroundColor: hasData ? [
+              '#0284c7',
+              '#14b8a6',
+              '#6366f1',
+              '#f59e0b',
+              '#10b981'
+            ] : ['#94a3b8'],
+            borderWidth: isDark ? 2 : 1,
+            borderColor: isDark ? '#1e293b' : '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  if (!hasData) return "Sin datos disponibles para este periodo";
+                  return ` ${context.label}: ${formatValue(context.raw)}`;
+                }
+              }
+            }
+          },
+          cutout: '70%'
+        }
+      });
+    }
+
+    function updateFinancialDiagnosis() {
+      const container = document.getElementById('financialDiagnosisContent');
+      const monthName = companyData.months[selectedMonthIndex];
+      const factReal = companyData.facturacion.real[selectedMonthIndex];
+      const factObj = companyData.facturacion.objetivo[selectedMonthIndex];
+      const factCumplimiento = companyData.facturacion.cumplimiento[selectedMonthIndex];
+      const cobReal = companyData.cobranza.real[selectedMonthIndex];
+      const cobObj = companyData.cobranza.objetivo[selectedMonthIndex];
+      const cobCumplimiento = companyData.cobranza.cumplimiento[selectedMonthIndex];
+      const actCorr = companyData.activoCorriente.total[selectedMonthIndex] || 0;
+      const pasCorr = companyData.pasivoCorriente.total[selectedMonthIndex] || 0;
+      const ratioLiquidez = pasCorr > 0 ? (actCorr / pasCorr).toFixed(2) : "0.00";
+
+      let factSemaforoInfo = getSemaphoreColor('cumplimiento', factCumplimiento);
+      let cobSemaforoInfo = getSemaphoreColor('cumplimiento', cobCumplimiento);
+
+      let contentHtml = '';
+
+      if (factReal === null && cobReal === null) {
+        contentHtml = `
+          <div class="flex items-start space-x-3 text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-4 rounded-xl border border-amber-100 dark:border-amber-900/30">
+            <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0 mt-0.5"></i>
+            <div>
+              <p class="font-bold">Periodo sin datos registrados</p>
+              <p class="text-xs mt-1">Actualmente no existen registros operativos para el mes de <strong>${monthName}</strong>. El departamento de administración y finanzas se encuentra "trabajando datos" para este periodo.</p>
+            </div>
+          </div>
+        `;
+      } else {
+        contentHtml += `
+          <div class="space-y-4">
+            <p class="leading-relaxed">
+              Durante el periodo de <strong>${monthName}</strong>, la empresa presenta un comportamiento operativo de relevancia estratégica:
+            </p>
+            <div class="space-y-3">
+              <div class="flex items-start space-x-2">
+                <span class="w-2 h-2 rounded-full mt-2 ${factSemaforoInfo.bg}"></span>
+                <div>
+                  <span class="font-semibold block">Facturación: ${factSemaforoInfo.label}</span>
+                  <span class="text-xs text-slate-500">Facturado: <strong>${formatValue(factReal)}</strong> frente a un objetivo de ${formatValue(factObj)}. Cumplimiento del ${factCumplimiento || '0,00%'}.</span>
+                </div>
+              </div>
+              <div class="flex items-start space-x-2">
+                <span class="w-2 h-2 rounded-full mt-2 ${cobSemaforoInfo.bg}"></span>
+                <div>
+                  <span class="font-semibold block">Cobranzas: ${cobSemaforoInfo.label}</span>
+                  <span class="text-xs text-slate-500">Recaudado: <strong>${formatValue(cobReal)}</strong> frente a un objetivo de ${formatValue(cobObj)}. Cumplimiento del ${cobCumplimiento || '0,00%'}.</span>
+                </div>
+              </div>
+              <div class="flex items-start space-x-2">
+                <span class="w-2 h-2 rounded-full mt-2 ${parseFloat(ratioLiquidez) >= 1.5 ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
+                <div>
+                  <span class="font-semibold block">Ratio de Liquidez Corriente: ${parseFloat(ratioLiquidez) >= 1.5 ? 'Fuerte' : 'Ajustado'} (${ratioLiquidez}x)</span>
+                  <span class="text-xs text-slate-500">Activo corriente de <strong>${formatValue(actCorr)}</strong> respalda con creces el pasivo de corto plazo de <strong>${formatValue(pasCorr)}</strong>.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = contentHtml;
+      lucide.createIcons();
+    }
+
+    function initCharts() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const textColor = isDark ? '#94a3b8' : '#64748b';
+      const gridColor = isDark ? 'rgba(148, 163, 184, 0.08)' : 'rgba(100, 116, 139, 0.05)';
+
+      const trendCanvas = document.getElementById('trendsChart');
+      if (trendCanvas) {
+        if (trendsLineChart) trendsLineChart.destroy();
+
+        const activeMonths = [];
+        const factData = [];
+        const cobData = [];
+
+        companyData.months.forEach((m, idx) => {
+          if (companyData.facturacion.real[idx] !== null || companyData.cobranza.real[idx] !== null) {
+            activeMonths.push(m);
+            factData.push(companyData.facturacion.real[idx]);
+            cobData.push(companyData.cobranza.real[idx]);
+          }
+        });
+
+        trendsLineChart = new Chart(trendCanvas, {
+          type: 'line',
+          data: {
+            labels: activeMonths,
+            datasets: [
+              {
+                label: 'Facturación Real',
+                data: factData,
+                borderColor: '#0284c7',
+                backgroundColor: 'rgba(2, 132, 199, 0.05)',
+                borderWidth: 3,
+                tension: 0.35,
+                fill: true,
+                pointBackgroundColor: '#0284c7'
+              },
+              {
+                label: 'Cobranza Real',
+                data: cobData,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                borderWidth: 3,
+                tension: 0.35,
+                fill: true,
+                pointBackgroundColor: '#10b981'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 11, weight: '500' } }
+              },
+              tooltip: {
+                padding: 12,
+                backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                titleColor: isDark ? '#ffffff' : '#0f172a',
+                bodyColor: isDark ? '#cbd5e1' : '#334155',
+                borderColor: isDark ? '#334155' : '#e2e8f0',
+                borderWidth: 1,
+                callbacks: {
+                  label: function(context) {
+                    return ` ${context.dataset.label}: ${formatValue(context.raw)}`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { color: textColor, font: { family: 'Plus Jakarta Sans' } }
+              },
+              y: {
+                grid: { color: gridColor },
+                ticks: {
+                  color: textColor,
+                  font: { family: 'Plus Jakarta Sans' },
+                  callback: function(value) {
+                    return '$' + (value / 1000000) + 'M';
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+
+      const solvencyCanvas = document.getElementById('solvencyChart');
+      if (solvencyCanvas) {
+        if (solvencyBarChart) solvencyBarChart.destroy();
+
+        const balanceMonths = ["Abril", "Mayo"];
+        const actCorriente = [companyData.activoCorriente.total[3], companyData.activoCorriente.total[4]];
+        const pasCorriente = [companyData.pasivoCorriente.total[3], companyData.pasivoCorriente.total[4]];
+        const pasNoCorriente = [companyData.pasivoNoCorriente.total[3], companyData.pasivoNoCorriente.total[4]];
+
+        solvencyBarChart = new Chart(solvencyCanvas, {
+          type: 'bar',
+          data: {
+            labels: balanceMonths,
+            datasets: [
+              {
+                label: 'Activo Corriente',
+                data: actCorriente,
+                backgroundColor: '#6366f1',
+                borderRadius: 6
+              },
+              {
+                label: 'Pasivo Corriente',
+                data: pasCorriente,
+                backgroundColor: '#f43f5e',
+                borderRadius: 6
+              },
+              {
+                label: 'Pasivo No Corriente',
+                data: pasNoCorriente,
+                backgroundColor: '#f59e0b',
+                borderRadius: 6
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 11, weight: '500' } }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return ` ${context.dataset.label}: ${formatValue(context.raw)}`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { color: textColor, font: { family: 'Plus Jakarta Sans' } }
+              },
+              y: {
+                grid: { color: gridColor },
+                ticks: {
+                  color: textColor,
+                  font: { family: 'Plus Jakarta Sans' },
+                  callback: function(value) {
+                    return '$' + (value / 1000000) + 'M';
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // Inicializar gráfico de composición de facturación
+      initCompositionChart(isDark, textColor, gridColor);
+    }
+
+    // Gráfico de composición de facturación por canal
+    function initCompositionChart(isDark, textColor, gridColor) {
+      const canvas = document.getElementById('compositionChart');
+      if (!canvas) return;
+
+      if (compositionBarChart) compositionBarChart.destroy();
+
+      // Filtrar solo meses con datos en alguno de los tres canales
+      const activeMonths = [];
+      const abonosData = [];
+      const instalacionesData = [];
+      const otrosData = [];
+
+      companyData.months.forEach((month, idx) => {
+        const abonos        = companyData.facturacionMix?.ratioAbonos?.[idx];
+        const instalaciones = companyData.facturacionMix?.ratioInstalaciones?.[idx];
+        const otros         = companyData.facturacionMix?.ratioOtros?.[idx];
+
+        if (abonos !== null && abonos !== undefined) {
+          activeMonths.push(month);
+          abonosData.push(parseFloat(abonos.toFixed(2)));
+          instalacionesData.push(parseFloat((instalaciones || 0).toFixed(2)));
+          otrosData.push(parseFloat((otros || 0).toFixed(2)));
+        }
+      });
+
+      if (activeMonths.length === 0) {
+        canvas.parentElement.innerHTML = `
+          <div class="h-80 flex items-center justify-center text-slate-400 dark:text-slate-600 text-sm">
+            <div class="text-center">
+              <p class="font-semibold">Sin datos de composición disponibles</p>
+              <p class="text-xs mt-1">Importá un Excel que incluya las filas "Ratio Abonos", "Ratio Instalaciones" y "Ratio Otros".</p>
+            </div>
+          </div>`;
+        return;
+      }
+
+      compositionBarChart = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels: activeMonths,
+          datasets: [
+            {
+              label: 'Abonos Recurrentes',
+              data: abonosData,
+              backgroundColor: '#0284c7',
+              borderRadius: 4,
+              stack: 'total',
+            },
+            {
+              label: 'Instalaciones',
+              data: instalacionesData,
+              backgroundColor: '#f59e0b',
+              borderRadius: 4,
+              stack: 'total',
+            },
+            {
+              label: 'Envíos / Otros',
+              data: otrosData,
+              backgroundColor: '#14b8a6',
+              borderRadius: 4,
+              stack: 'total',
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                color: textColor,
+                font: { family: 'Plus Jakarta Sans', size: 11, weight: '500' },
+                padding: 16,
+              }
+            },
+            tooltip: {
+              padding: 12,
+              backgroundColor: isDark ? '#0f172a' : '#ffffff',
+              titleColor: isDark ? '#ffffff' : '#0f172a',
+              bodyColor: isDark ? '#cbd5e1' : '#334155',
+              borderColor: isDark ? '#334155' : '#e2e8f0',
+              borderWidth: 1,
+              callbacks: {
+                label: function(context) {
+                  return ` ${context.dataset.label}: ${context.raw?.toFixed(1)}%`;
+                },
+                footer: function(items) {
+                  const total = items.reduce((sum, i) => sum + (i.raw || 0), 0);
+                  return `Total: ${total.toFixed(1)}%`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              stacked: true,
+              grid: { display: false },
+              ticks: {
+                color: textColor,
+                font: { family: 'Plus Jakarta Sans' }
+              }
+            },
+            y: {
+              stacked: true,
+              min: 0,
+              max: 105,
+              grid: { color: gridColor },
+              ticks: {
+                color: textColor,
+                font: { family: 'Plus Jakarta Sans' },
+                callback: function(value) {
+                  return value + '%';
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderDetailedMatrix() {
+      const tbody = document.getElementById('matrixTableBody');
+      tbody.innerHTML = '';
+
+      const rows = [
+        { label: "Facturación Real", key: "facturacion.real", isHeader: false, type: 'currency' },
+        { label: "Variación m/m", key: "facturacion.variacion", isHeader: false, type: 'percent' },
+        { label: "Objetivo Facturación", key: "facturacion.objetivo", isHeader: false, type: 'currency' },
+        { label: "Cumplimiento Fact.", key: "facturacion.cumplimiento", isHeader: false, type: 'percent' },
+        { label: "Cobranza Total", key: "cobranza.real", isHeader: false, type: 'currency', isSectionBreak: true },
+        { label: "Variación m/m Cobranza", key: "cobranza.variacion", isHeader: false, type: 'percent' },
+        { label: "Objetivo Cobranza", key: "cobranza.objetivo", isHeader: false, type: 'currency' },
+        { label: "Cumplimiento Cob.", key: "cobranza.cumplimiento", isHeader: false, type: 'percent' },
+        { label: "ACTIVOS", key: "header.activos", isHeader: true, isSectionBreak: true },
+        { label: "Activo Corriente", key: "activoCorriente.total", isHeader: false, type: 'currency', fontClass: "font-semibold text-slate-900 dark:text-white" },
+        { label: "• Caja y Bancos", key: "activoCorriente.cajaBancos", isHeader: false, type: 'currency', indent: true },
+        { label: "• FCI", key: "activoCorriente.fci", isHeader: false, type: 'currency', indent: true },
+        { label: "• Cheques en Cartera", key: "activoCorriente.cheques", isHeader: false, type: 'currency', indent: true },
+        { label: "• Deudores por Ventas", key: "activoCorriente.deudores", isHeader: false, type: 'currency', indent: true },
+        { label: "• Plazo Fijos", key: "activoCorriente.plazoFijo", isHeader: false, type: 'currency', indent: true },
+        { label: "Activo No Corriente", key: "activoNoCorriente.total", isHeader: false, type: 'currency', fontClass: "font-semibold text-slate-900 dark:text-white" },
+        { label: "• Part. Orbitrix Arg", key: "activoNoCorriente.participacionOrbitrix", isHeader: false, type: 'currency', indent: true },
+        { label: "PASIVOS", key: "header.pasivos", isHeader: true, isSectionBreak: true },
+        { label: "Pasivo Corriente", key: "pasivoCorriente.total", isHeader: false, type: 'currency', fontClass: "font-semibold text-slate-900 dark:text-white" },
+        { label: "• Proveedores/Sueldos", key: "pasivoCorriente.proveedores", isHeader: false, type: 'currency', indent: true },
+        { label: "• Facturas Pendientes", key: "pasivoCorriente.facturasPendientes", isHeader: false, type: 'currency', indent: true },
+        { label: "• Pagos Comprometidos", key: "pasivoCorriente.pagosComprometidos", isHeader: false, type: 'currency', indent: true },
+        { label: "Pasivo No Corriente", key: "pasivoNoCorriente.total", isHeader: false, type: 'currency', fontClass: "font-semibold text-slate-900 dark:text-white" },
+        { label: "• Planes de Pago ARCA", key: "pasivoNoCorriente.planesArca", isHeader: false, type: 'currency', indent: true },
+        { label: "• Préstamos", key: "pasivoNoCorriente.prestamos", isHeader: false, type: 'currency', indent: true }
+      ];
+
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        if (r.isHeader) {
+          tr.className = "bg-slate-100/50 dark:bg-slate-900/50 font-bold text-slate-900 dark:text-slate-100 uppercase text-xs tracking-wider border-y border-slate-200 dark:border-slate-800";
+          tr.innerHTML = `<td colspan="13" class="p-3 pl-4">${r.label}</td>`;
+        } else {
+          let rowClass = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors";
+          if (r.isSectionBreak) rowClass += " border-t-2 border-slate-200 dark:border-slate-700";
+          tr.className = rowClass;
+
+          let labelHtml = `<td class="p-3 pl-4 font-medium sticky left-0 bg-white dark:bg-slate-800 z-10 ${r.indent ? 'pl-8 text-slate-500 dark:text-slate-400 text-xs' : ''} ${r.fontClass || ''}">${r.label}</td>`;
+
+          let monthsHtml = '';
+          for (let mIdx = 0; mIdx < 12; mIdx++) {
+            const rawVal = getNestedValue(companyData, r.key, mIdx);
+            const formattedVal = formatValue(rawVal, r.type);
+            const isApril = mIdx === 3;
+            const bgClass = isApril ? 'bg-indigo-50/40 dark:bg-indigo-950/10 border-x border-slate-200 dark:border-slate-700/50 font-medium' : '';
+            monthsHtml += `<td class="p-3 text-center text-xs text-slate-600 dark:text-slate-300 ${bgClass}">${formattedVal}</td>`;
+          }
+
+          tr.innerHTML = labelHtml + monthsHtml;
+        }
+        tbody.appendChild(tr);
+      });
+    }
+
+    function getNestedValue(obj, keyPath, index) {
+      const parts = keyPath.split('.');
+      let current = obj;
+      for (let p of parts) {
+        if (current[p] !== undefined) {
+          current = current[p];
+        } else {
+          return null;
+        }
+      }
+      return Array.isArray(current) ? current[index] : null;
+    }
+
+    function setNestedValue(obj, keyPath, index, value) {
+      const parts = keyPath.split('.');
+      let current = obj;
+      for (let i = 0; i < parts.length - 1; i++) {
+        if (!current[parts[i]]) current[parts[i]] = {};
+        current = current[parts[i]];
+      }
+      current[parts[parts.length - 1]][index] = value;
+    }
+
+    function showAlert(type, title, message) {
+      const banner = document.getElementById('notificationArea');
+      banner.className = "mb-6 p-4 rounded-xl border flex items-start space-x-3 transition-all";
+
+      let icon = "info";
+      if (type === 'success') {
+        banner.classList.add('bg-emerald-50', 'text-emerald-800', 'border-emerald-200', 'dark:bg-emerald-950/20', 'dark:text-emerald-400', 'dark:border-emerald-900/30');
+        icon = "check-circle";
+      } else if (type === 'error') {
+        banner.classList.add('bg-rose-50', 'text-rose-800', 'border-rose-200', 'dark:bg-rose-950/20', 'dark:text-rose-400', 'dark:border-rose-900/30');
+        icon = "alert-triangle";
+      } else {
+        banner.classList.add('bg-blue-50', 'text-blue-800', 'border-blue-200', 'dark:bg-blue-950/20', 'dark:text-blue-400', 'dark:border-blue-900/30');
+        icon = "info";
+      }
+
+      banner.innerHTML = `
+        <div class="mt-0.5"><i data-lucide="${icon}" class="w-5 h-5"></i></div>
+        <div class="flex-1">
+          <p class="font-bold text-sm">${title}</p>
+          <p class="text-xs mt-1 leading-relaxed">${message}</p>
+        </div>
+        <button onclick="document.getElementById('notificationArea').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      `;
+
+      banner.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    // Parser de Excel corregido — v2
+    // Fixes: (1) números con comas múltiples, (2) labels duplicadas por sección, (3) porcentajes decimales
+    function handleXLSXUpload(arrayBuffer) {
+      try {
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+
+        // raw: true → recibimos los valores numéricos reales de JS, sin formateo de locale
+        const rows = XLSX.utils.sheet_to_json(sheet, {
+          header: 1,
+          defval: null,
+          raw: true
+        });
+
+        if (rows.length < 2) {
+          showAlert('error', 'Archivo vacío', 'El documento no tiene datos legibles.');
+          return;
+        }
+
+        // --- Detectar columnas de meses en la fila de encabezado ---
+        const headers = rows[0];
+        const monthMap = {};
+        const monthNamesLower = companyData.months.map(m => m.toLowerCase());
+
+        headers.forEach((h, idx) => {
+          const cleanH = String(h || '').toLowerCase().trim();
+          const mIdx = monthNamesLower.indexOf(cleanH);
+          if (mIdx !== -1) monthMap[mIdx] = idx;
+        });
+
+        if (Object.keys(monthMap).length === 0) {
+          showAlert('error', 'Formato Inválido', 'No se encontraron columnas de meses. Verificá que la primera fila contenga encabezados como "Enero", "Febrero", "Marzo", etc.');
+          return;
+        }
+
+        // --- Resetear todos los datos del modelo ---
+        companyData.months.forEach((_, mIdx) => {
+          companyData.facturacion.real[mIdx]         = null;
+          companyData.facturacion.variacion[mIdx]    = null;
+          companyData.facturacion.objetivo[mIdx]     = null;
+          companyData.facturacion.cumplimiento[mIdx] = null;
+
+          companyData.cobranza.real[mIdx]            = null;
+          companyData.cobranza.variacion[mIdx]       = null;
+          companyData.cobranza.objetivo[mIdx]        = null;
+          companyData.cobranza.cumplimiento[mIdx]    = null;
+
+          companyData.activoCorriente.total[mIdx]         = null;
+          companyData.activoCorriente.cajaBancos[mIdx]    = null;
+          companyData.activoCorriente.fci[mIdx]           = null;
+          companyData.activoCorriente.cheques[mIdx]       = null;
+          companyData.activoCorriente.deudores[mIdx]      = null;
+          companyData.activoCorriente.top20Deudores[mIdx] = null;
+          companyData.activoCorriente.plazoFijo[mIdx]     = null;
+
+          companyData.activoNoCorriente.total[mIdx]                 = null;
+          companyData.activoNoCorriente.participacionOrbitrix[mIdx] = null;
+
+          companyData.pasivoCorriente.total[mIdx]              = null;
+          companyData.pasivoCorriente.proveedores[mIdx]        = null;
+          companyData.pasivoCorriente.facturasPendientes[mIdx] = null;
+          companyData.pasivoCorriente.pagosComprometidos[mIdx] = null;
+
+          companyData.pasivoNoCorriente.total[mIdx]      = null;
+          companyData.pasivoNoCorriente.planesArca[mIdx] = null;
+          companyData.pasivoNoCorriente.prestamos[mIdx]  = null;
+          if (companyData.facturacionMix) {
+            companyData.facturacionMix.ratioAbonos[mIdx]        = null;
+            companyData.facturacionMix.ratioInstalaciones[mIdx] = null;
+            companyData.facturacionMix.ratioOtros[mIdx]         = null;
+          }
+        });
+
+        // --- parseNumber corregido ---
+        // Con raw:true, los números llegan como JS numbers.
+        // isPercent: si true, el valor en Excel es decimal (0.7566 = 75.66%) → multiplicar x100
+        const parseNumber = (val, isPercent) => {
+          if (val === null || val === undefined) return null;
+
+          // Valor ya es un número JS (raw:true) — ruta más común y limpia
+          if (typeof val === 'number') {
+            if (isNaN(val)) return null;
+            // Los porcentajes en Excel se almacenan como decimales: 0.8317 = 83.17%
+            return isPercent ? parseFloat((val * 100).toFixed(4)) : val;
+          }
+
+          // Valor es string (celdas de texto, errores de Excel, etc.)
+          const strVal = String(val).trim();
+          if (!strVal) return null;
+
+          // Errores de Excel → devolver string para que el dashboard los muestre como "trabajando datos"
+          const excelErrors = ['#value!', '#div/0!', '#n/a', '#ref!', '#name?', '#null!'];
+          if (excelErrors.includes(strVal.toLowerCase())) return strVal.toUpperCase();
+
+          // Texto no numérico → null
+          if (!/\d/.test(strVal)) return null;
+
+          // Limpiar símbolo de moneda y espacios
+          let clean = strVal.replace(/\$/g, '').replace(/\s/g, '').trim();
+          const hasPercentSign = clean.includes('%');
+          clean = clean.replace(/%/g, '');
+
+          // Detectar separadores numéricos — 3 casos:
+
+          // Caso 1: ambos punto Y coma presentes
+          if (clean.includes('.') && clean.includes(',')) {
+            const lastDot   = clean.lastIndexOf('.');
+            const lastComma = clean.lastIndexOf(',');
+            if (lastComma > lastDot) {
+              // Coma es decimal: "1.234.567,89" → "1234567.89"
+              clean = clean.replace(/\./g, '').replace(',', '.');
+            } else {
+              // Punto es decimal: "1,234,567.89" → "1234567.89"
+              clean = clean.replace(/,/g, '');
+            }
+          }
+          // Caso 2: solo comas, sin puntos
+          else if (clean.includes(',') && !clean.includes('.')) {
+            const commas = (clean.match(/,/g) || []).length;
+            if (commas > 1) {
+              // Múltiples comas → separadores de miles → "804,459,844" → "804459844"
+              clean = clean.replace(/,/g, '');
+            } else {
+              // Una sola coma → decimal argentino → "75,66" → "75.66"
+              clean = clean.replace(',', '.');
+            }
+          }
+          // Caso 3: solo puntos, sin comas
+          else if (clean.includes('.') && !clean.includes(',')) {
+            const parts = clean.split('.');
+            const allThreeDigits = parts.slice(1).every(p => p.length === 3);
+            if (parts.length > 2 && allThreeDigits) {
+              // "804.459.844" → "804459844"
+              clean = clean.replace(/\./g, '');
+            } else if (parts.length === 2 && parts[1].length === 3 && parseInt(parts[0]) >= 10) {
+              // "804.459" → probablemente miles → remover punto
+              clean = clean.replace('.', '');
+            }
+          }
+
+          const num = parseFloat(clean);
+          if (isNaN(num)) return null;
+
+          // Si el string tenía signo % → ya está en escala 0-100
+          // Si isPercent pero sin signo → Excel decimal → multiplicar x100
+          return (isPercent && !hasPercentSign) ? parseFloat((num * 100).toFixed(4)) : num;
+        };
+
+        // --- Mapeo CONSCIENTE DE SECCIÓN (fix del bug de labels duplicadas) ---
+        //
+        // "Variación m/m", "Objetivo" y "Cumplimiento" aparecen tanto para Facturación como Cobranza.
+        // Solución: rastreamos en qué sección estamos según filas "anchor".
+
+        // Mapeos globales (etiquetas únicas, no dependientes de sección)
+        // IMPORTANTE: null = fila a ignorar explícitamente (evita sobreescritura por substring)
+        const globalMappings = {
+          // Facturación principal — 'facturación desagregada' tiene clave más larga → se ignora correctamente
+          'facturación desagregada':      null,   // IGNORAR — no es la facturación principal
+          'facturación':                  { key: 'facturacion.real',                         isPercent: false },
+          'facturacion':                  { key: 'facturacion.real',                         isPercent: false },
+
+          // Cobranza
+          'cobranza total':               { key: 'cobranza.real',                            isPercent: false },
+
+          // Activo Corriente y sub-cuentas
+          'activo corriente':             { key: 'activoCorriente.total',                    isPercent: false },
+          'caja y bancos':                { key: 'activoCorriente.cajaBancos',               isPercent: false },
+          'fci':                          { key: 'activoCorriente.fci',                      isPercent: false },
+          'cheques en cartera':           { key: 'activoCorriente.cheques',                  isPercent: false },
+          'cheques cartera':              { key: 'activoCorriente.cheques',                  isPercent: false },
+          'deudores por ventas':          { key: 'activoCorriente.deudores',                 isPercent: false },
+          'top 20 deudores por ventas':   { key: 'activoCorriente.top20Deudores',            isPercent: false },
+          'top 20 deudores':              { key: 'activoCorriente.top20Deudores',            isPercent: false },
+          'plazo fijos':                  { key: 'activoCorriente.plazoFijo',                isPercent: false },
+          'plazo fijo':                   { key: 'activoCorriente.plazoFijo',                isPercent: false },
+
+          // Activo No Corriente
+          'activo no corriente':          { key: 'activoNoCorriente.total',                  isPercent: false },
+          'participación en orbitrix':    { key: 'activoNoCorriente.participacionOrbitrix',  isPercent: false },
+          'part. orbitrix':               { key: 'activoNoCorriente.participacionOrbitrix',  isPercent: false },
+
+          // Pasivo Corriente
+          'pasivo corriente':             { key: 'pasivoCorriente.total',                    isPercent: false },
+          'cheques pendientes de pago':   { key: 'pasivoCorriente.proveedores',              isPercent: false },
+          'cheques pendientes':           { key: 'pasivoCorriente.proveedores',              isPercent: false },
+          'facturas pendientes de pago':  { key: 'pasivoCorriente.facturasPendientes',       isPercent: false },
+          'facturas pendientes':          { key: 'pasivoCorriente.facturasPendientes',       isPercent: false },
+          'pagos comprometidos':          { key: 'pasivoCorriente.pagosComprometidos',       isPercent: false },
+
+          // Pasivo No Corriente
+          'pasivo no corriente':          { key: 'pasivoNoCorriente.total',                  isPercent: false },
+          'planes de pago arca':          { key: 'pasivoNoCorriente.planesArca',             isPercent: false },
+          'planes arca':                  { key: 'pasivoNoCorriente.planesArca',             isPercent: false },
+          'préstamos':                    { key: 'pasivoNoCorriente.prestamos',              isPercent: false },
+          'prestamos':                    { key: 'pasivoNoCorriente.prestamos',              isPercent: false },
+
+          // Composición de facturación por canal — NUEVOS
+          'ratio abonos':                 { key: 'facturacionMix.ratioAbonos',               isPercent: true  },
+          'ratio instalaciones':          { key: 'facturacionMix.ratioInstalaciones',        isPercent: true  },
+          'ratio otros':                  { key: 'facturacionMix.ratioOtros',                isPercent: true  },
+        };
+
+        // Mapeos dependientes de sección
+        const sectionMappings = {
+          'variación m/m': {
+            facturacion: { key: 'facturacion.variacion',    isPercent: true  },
+            cobranza:    { key: 'cobranza.variacion',       isPercent: true  },
+          },
+          'variacion m/m': {
+            facturacion: { key: 'facturacion.variacion',    isPercent: true  },
+            cobranza:    { key: 'cobranza.variacion',       isPercent: true  },
+          },
+          'objetivo': {
+            facturacion: { key: 'facturacion.objetivo',     isPercent: false },
+            cobranza:    { key: 'cobranza.objetivo',        isPercent: false },
+          },
+          'cumplimiento': {
+            facturacion: { key: 'facturacion.cumplimiento', isPercent: true  },
+            cobranza:    { key: 'cobranza.cumplimiento',    isPercent: true  },
+          },
+        };
+
+        // Filas que marcan el inicio de una nueva sección
+        const sectionAnchors = {
+          'facturación':        'facturacion',
+          'facturacion':        'facturacion',
+          'cobranza total':     'cobranza',
+          'activo corriente':   'activos',
+          'activo no corriente':'activos',
+          'pasivo corriente':   'pasivos',
+          'pasivo no corriente':'pasivos',
+        };
+
+        let currentSection = null;
+        let rowsMatched = 0;
+
+        // --- Procesar cada fila ---
+        for (let i = 1; i < rows.length; i++) {
+          const cells = rows[i];
+          if (!cells || !cells[0]) continue;
+
+          const rowLabel = String(cells[0]).trim().toLowerCase().replace(/\s+/g, ' ');
+
+          // 1. Actualizar sección actual
+          for (const [anchor, section] of Object.entries(sectionAnchors)) {
+            if (rowLabel === anchor || rowLabel.startsWith(anchor + ' ') || rowLabel.includes(anchor)) {
+              currentSection = section;
+              break;
+            }
+          }
+
+          // 2. Buscar mapping global (preferir el más específico/largo)
+          let mapping = null;
+          let bestLen = 0;
+          for (const [key, value] of Object.entries(globalMappings)) {
+            if ((rowLabel === key || rowLabel.startsWith(key + ' ') || rowLabel.includes(key)) && key.length > bestLen) {
+              mapping = value;
+              bestLen = key.length;
+            }
+          }
+
+          // 3. Si no hay match global, buscar en dependientes de sección
+          if (!mapping) {
+            for (const [key, sectionMap] of Object.entries(sectionMappings)) {
+              if (rowLabel === key || rowLabel.includes(key)) {
+                if (currentSection && sectionMap[currentSection]) {
+                  mapping = sectionMap[currentSection];
+                }
+                break;
+              }
+            }
+          }
+
+          // 4. Aplicar mapping (mapping===null significa fila a ignorar explícitamente)
+          if (mapping && mapping.key) {
+            rowsMatched++;
+            Object.entries(monthMap).forEach(([mIdxStr, colIdx]) => {
+              const mIdx = parseInt(mIdxStr);
+              const rawVal = cells[colIdx];
+              if (rawVal !== undefined && rawVal !== null) {
+                const parsedVal = parseNumber(rawVal, mapping.isPercent);
+                if (parsedVal !== null) {
+                  setNestedValue(companyData, mapping.key, mIdx, parsedVal);
+                }
+              }
+            });
+          }
+        }
+
+        if (rowsMatched === 0) {
+          showAlert('error', 'Sin indicadores reconocidos', 'Se encontraron columnas de meses pero ninguna fila coincidió con los indicadores conocidos. Verificá que los nombres de filas sean correctos (Facturación, Cobranza Total, Activo Corriente, etc.).');
+          return;
+        }
+
+        showAlert('success', 'Importación Exitosa', `Archivo Excel procesado. ${Object.keys(monthMap).length} mes/es cargados con ${rowsMatched} indicadores reconocidos.`);
+        updateDashboardView();
+        switchTab('tab-general');
+
+      } catch (err) {
+        console.error('Error procesando XLSX:', err);
+        showAlert('error', 'Error de Procesamiento', 'Ocurrió un error al leer el archivo Excel. Verificá que sea .xlsx o .xls válido y no esté protegido con contraseña.');
+      }
+    }
+
+    function updateDashboardView() {
+      renderQuickMetrics();
+      updateAssetAllocationChart();
+      updateFinancialDiagnosis();
+      renderDetailedMatrix();
+      if (activeTabId === 'tab-charts') {
+        initCharts();
+      }
+    }
+
+    function setupDragAndDrop() {
+      const zone = document.getElementById('dropZone');
+      const input = document.getElementById('csvFileInput');
+
+      zone.addEventListener('click', () => input.click());
+
+      const processFile = (file) => {
+        if (!file) return;
+        const validTypes = [
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'application/vnd.ms-excel',
+        ];
+        const validExtensions = ['.xlsx', '.xls'];
+        const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+
+        if (!validTypes.includes(file.type) && !validExtensions.includes(ext)) {
+          showAlert('error', 'Formato no soportado', 'Por favor seleccioná un archivo Excel (.xlsx o .xls).');
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (evt) => handleXLSXUpload(evt.target.result);
+        reader.onerror = () => showAlert('error', 'Error de lectura', 'No se pudo leer el archivo. Intentá nuevamente.');
+        reader.readAsArrayBuffer(file);
+      };
+
+      input.addEventListener('change', (e) => processFile(e.target.files[0]));
+
+      zone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        zone.classList.add('border-brand-500', 'bg-brand-50/50', 'dark:bg-slate-800');
+      });
+
+      zone.addEventListener('dragleave', () => {
+        zone.classList.remove('border-brand-500', 'bg-brand-50/50', 'dark:bg-slate-800');
+      });
+
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('border-brand-500', 'bg-brand-50/50', 'dark:bg-slate-800');
+        processFile(e.dataTransfer.files[0]);
+      });
+    }
+
+    function setupThemeToggle() {
+      const toggle = document.getElementById('themeToggle');
+
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+
+      toggle.addEventListener('click', () => {
+        if (document.documentElement.classList.contains('dark')) {
+          document.documentElement.classList.remove('dark');
+          localStorage.theme = 'light';
+        } else {
+          document.documentElement.classList.add('dark');
+          localStorage.theme = 'dark';
+        }
+        updateDashboardView();
+      });
+    }
+
+    window.onload = function() {
+      lucide.createIcons();
+      populateMonthDropdown();
+      setupThemeToggle();
+      setupDragAndDrop();
+      document.getElementById('footerYear').textContent = new Date().getFullYear();
+      updateDashboardView();
+    };
+  </script>
+</body>
+</html>
