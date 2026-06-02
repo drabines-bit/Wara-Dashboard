@@ -734,11 +734,11 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
                         { sem: cobSem,  title: `Cobranzas: ${cobSem.label}`,    detail: `Recaudado: ${formatValueText(cobReal)} frente a objetivo de ${formatValueText(cobObj)}. Cumplimiento del ${cobCumpl || "0,00%"}.` },
                         { sem: { bg: parseFloat(ratioLiquidez) >= 1.5 ? "bg-emerald-500" : "bg-rose-500" }, title: `Ratio Liquidez: ${parseFloat(ratioLiquidez) >= 1.5 ? "Fuerte" : "Ajustado"} (${ratioLiquidez}x)`, detail: `Activo corriente de ${formatValueText(actCorr)} respalda el pasivo de ${formatValueText(pasCorr)}.` },
                       ].map(({ sem, title, detail }, i) => (
-                        <div key={i} className="flex items-start space-x-2">
-                          <span className={`w-2 h-2 rounded-full mt-2 ${sem.bg}`} />
+                        <div key={i} className="flex items-start gap-3">
+                          <span className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${sem.bg}`} />
                           <div>
-                            <span className="font-semibold block">{title}</span>
-                            <span className="text-xs text-slate-500">{detail}</span>
+                            <p className="font-bold text-sm text-slate-800 dark:text-slate-200">{title}</p>
+                            <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">{detail}</p>
                           </div>
                         </div>
                       ))}
