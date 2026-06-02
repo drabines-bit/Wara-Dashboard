@@ -35,7 +35,7 @@ export default function DashboardFooter({ links }) {
               target={key === "email" ? "_self" : "_blank"}
               rel="noopener noreferrer"
               title={links[key].label}
-              className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:border-slate-400 transition"
+              className="w-8 h-8 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-500 transition"
             >
               <i className={`ti ${ICONS[key]} text-base`} aria-hidden="true" />
               <span className="sr-only">{links[key].label}</span>
