@@ -1,5 +1,6 @@
 import ConfigEditor from "@/components/admin/ConfigEditor";
 import LinksEditor from "@/components/admin/LinksEditor";
+import CustomVariablesEditor from "@/components/admin/CustomVariablesEditor";
 import { getDashboardConfig } from "@/lib/kv";
 
 export default async function ConfigPage() {
@@ -15,6 +16,9 @@ export default async function ConfigPage() {
       <ConfigEditor initialConfig={config} />
       <div className="mt-6">
         <LinksEditor initialLinks={config.links} />
+      </div>
+      <div className="mt-6">
+        <CustomVariablesEditor initialVariables={config.customVariables ?? []} />
       </div>
     </div>
   );
