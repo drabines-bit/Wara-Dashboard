@@ -3,6 +3,7 @@
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
+import CotizacionHeader from "@/components/CotizacionHeader";
 
 export default function DashboardHeader({ user, isAdmin }) {
   return (
@@ -28,6 +29,9 @@ export default function DashboardHeader({ user, isAdmin }) {
               </p>
             </div>
           </div>
+
+          {/* Cotizaciones */}
+          <CotizacionHeader />
 
           {/* Right side */}
           <div className="flex items-center space-x-3">
