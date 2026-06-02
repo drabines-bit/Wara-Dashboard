@@ -183,7 +183,7 @@ function parseAndExtractXLSX(arrayBuffer) {
     const cells = rows[i];
     if (!cells || !cells[0]) continue;
 
-    const label = String(cells[0]).trim().toLowerCase().replace(/\s+/g, ' ');
+    const label = String(cells[0]).trim().toLowerCase().normalize('NFC').replace(/\s+/g, ' ');
 
     // Ignorar filas explícitas
     if (ignorar.some(ig => label.includes(ig))) continue;
@@ -194,10 +194,15 @@ function parseAndExtractXLSX(arrayBuffer) {
     }
 
     // Buscar mapeo global (match más largo gana)
+    // sinAcentos garantiza que diferencias de normalización Unicode no rompan el match
+    const sinAcentos = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const labelSA = sinAcentos(label);
+
     let mapping = null;
     let bestLen = 0;
     for (const [key, val] of Object.entries(global)) {
-      if (label.includes(key) && key.length > bestLen) {
+      const keySA = sinAcentos(key);
+      if ((label.includes(key) || labelSA.includes(keySA)) && key.length > bestLen) {
         mapping = val; bestLen = key.length;
       }
     }
