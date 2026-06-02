@@ -217,6 +217,8 @@ function parseAndExtractXLSX(arrayBuffer) {
       }
     }
 
+    console.log(`[PARSER] label="${label}" | labelSA="${sinAcentos(label)}" | mapping=${mapping ? mapping.key : 'NONE'}`);
+
     // Aplicar mapeo
     if (mapping) {
       for (const [mIdxStr, colIdx] of Object.entries(monthMap)) {
