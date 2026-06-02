@@ -24,6 +24,24 @@ export async function PUT(req) {
   if (!body.config || typeof body.config !== "object") {
     return NextResponse.json({ error: "Payload inválido" }, { status: 400 });
   }
-  await setDashboardConfig(body.config);
+
+  const current = await getDashboardConfig();
+  const updated = deepMergeConfig(current, body.config);
+  await setDashboardConfig(updated);
+
   return NextResponse.json({ ok: true });
+}
+
+function deepMergeConfig(base, patch) {
+  const result = { ...base };
+  for (const key of Object.keys(patch || {})) {
+    const isPlainObject =
+      typeof patch[key] === 'object' &&
+      patch[key] !== null &&
+      !Array.isArray(patch[key]);
+    result[key] = isPlainObject
+      ? deepMergeConfig(base[key] || {}, patch[key])
+      : patch[key];
+  }
+  return result;
 }
