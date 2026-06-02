@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { generateMonthlyReport } from '@/lib/generatePDF';
 import { Chart, registerables } from "chart.js";
 import Link from "next/link";
 import {
@@ -163,6 +164,7 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
   const [activeTab, setActiveTab] = useState("tab-general");
   const [isDark, setIsDark] = useState(false);
   const [alert, setAlert] = useState(null);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   // Chart canvas refs
   const assetCanvasRef = useRef(null);
@@ -435,20 +437,62 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
     { id: "tab-table",      label: "Matriz de Indicadores (2026)",    Icon: Table2          },
   ];
 
+  async function handleExportPDF() {
+    setGeneratingPDF(true);
+    try {
+      await generateMonthlyReport({
+        companyData,
+        config,
+        selectedMonthIdx,
+        chartRefs: {
+          trends:      trendsCanvasRef?.current      ?? null,
+          solvency:    solvencyCanvasRef?.current    ?? null,
+          composition: compositionCanvasRef?.current ?? null,
+        },
+      });
+    } catch (err) {
+      console.error('Error generando PDF:', err);
+      alert('Error al generar el PDF. Intentá nuevamente.');
+    } finally {
+      setGeneratingPDF(false);
+    }
+  }
+
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div>
-      {/* Controls: month selector + dark mode */}
+      {/* Controls: month selector + export + dark mode */}
       <div className="flex items-center justify-between mb-6">
-        <select
-          value={selectedMonthIdx}
-          onChange={(e) => setSelectedMonthIdx(parseInt(e.target.value))}
-          className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white font-medium rounded-lg text-sm px-4 py-2.5 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all cursor-pointer"
-        >
-          {companyData.months.map((m, i) => (
-            <option key={i} value={i}>Periodo: {m}</option>
-          ))}
-        </select>
+        <div className="flex items-center gap-3">
+          <select
+            value={selectedMonthIdx}
+            onChange={(e) => setSelectedMonthIdx(parseInt(e.target.value))}
+            className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white font-medium rounded-lg text-sm px-4 py-2.5 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all cursor-pointer"
+          >
+            {companyData.months.map((m, i) => (
+              <option key={i} value={i}>Periodo: {m}</option>
+            ))}
+          </select>
+
+          <button
+            onClick={handleExportPDF}
+            disabled={generatingPDF}
+            className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 text-slate-700 dark:text-slate-300 hover:text-indigo-600 font-medium px-4 py-2 rounded-xl text-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Exportar reporte mensual en PDF"
+          >
+            {generatingPDF ? (
+              <>
+                <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                <span>Generando...</span>
+              </>
+            ) : (
+              <>
+                <i className="ti ti-file-type-pdf text-base" aria-hidden="true" />
+                <span>Exportar PDF</span>
+              </>
+            )}
+          </button>
+        </div>
 
         <button
           onClick={() => { const d = !isDark; setIsDark(d); localStorage.theme = d ? "dark" : "light"; }}
