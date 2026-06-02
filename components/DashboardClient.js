@@ -46,6 +46,18 @@ function formatValueText(val, type = "currency") {
   return String(val);
 }
 
+function formatCustomValue(val, dataType) {
+  if (val === null || val === undefined) return '–';
+  if (typeof val === 'string') return val;
+  if (dataType === 'currency') {
+    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(val);
+  }
+  if (dataType === 'percent') {
+    return new Intl.NumberFormat('es-AR', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val / 100);
+  }
+  return new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(val);
+}
+
 function getNestedValue(obj, keyPath, index) {
   const parts = keyPath.split(".");
   let cur = obj;
@@ -243,14 +255,28 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
     // Trends
     if (trendsCanvasRef.current) {
       if (trendsChart.current) trendsChart.current.destroy();
-      const labels = [], factArr = [], cobArr = [];
+      const labels = [], activeIdxs = [], factArr = [], cobArr = [];
       companyData.months.forEach((m, i) => {
         if (companyData.facturacion.real[i] !== null || companyData.cobranza.real[i] !== null) {
           labels.push(m);
+          activeIdxs.push(i);
           factArr.push(companyData.facturacion.real[i]);
           cobArr.push(companyData.cobranza.real[i]);
         }
       });
+      const customDatasets = (config?.customVariables ?? [])
+        .filter(cv => cv.enabled && cv.showInChart)
+        .map(cv => ({
+          label: cv.displayName,
+          data: activeIdxs.map(i => companyData.custom?.[cv.id]?.[i] ?? null),
+          borderColor: cv.chartColor,
+          backgroundColor: cv.chartColor + '20',
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.4,
+          spanGaps: true,
+        }));
       trendsChart.current = new Chart(trendsCanvasRef.current, {
         type: "line",
         data: {
@@ -258,6 +284,7 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
           datasets: [
             { label: "Facturación Real", data: factArr, borderColor: "#0284c7", backgroundColor: "rgba(2,132,199,0.05)", borderWidth: 3, tension: 0.35, fill: true, pointBackgroundColor: "#0284c7" },
             { label: "Cobranza Real",    data: cobArr,  borderColor: "#10b981", backgroundColor: "rgba(16,185,129,0.05)", borderWidth: 3, tension: 0.35, fill: true, pointBackgroundColor: "#10b981" },
+            ...customDatasets,
           ],
         },
         options: {
@@ -488,6 +515,36 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
           </div>
         ))}
       </div>
+
+      {/* ── KPI Cards de variables custom ── */}
+      {(config?.customVariables ?? []).filter(cv => cv.enabled && cv.showAsKPI).length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {(config?.customVariables ?? [])
+            .filter(cv => cv.enabled && cv.showAsKPI)
+            .map(cv => {
+              const val = companyData.custom?.[cv.id]?.[selectedMonthIdx] ?? null;
+              const hasData = val !== null && val !== undefined;
+              return (
+                <div key={cv.id} className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800/80 flex flex-col justify-between hover:shadow-md transition-all">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{cv.displayName}</span>
+                    <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700">
+                      <span className="w-5 h-5 block rounded-full" style={{ background: cv.chartColor }} />
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <h4 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                      {hasData ? formatCustomValue(val, cv.dataType) : '–'}
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {cv.dataType === 'currency' ? 'Moneda local' : cv.dataType === 'percent' ? 'Porcentaje' : 'Valor numérico'}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      )}
 
       {/* Tab navigation */}
       <div className="border-b border-slate-200 dark:border-slate-800 mb-8">
@@ -788,6 +845,38 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
                       ))}
                     </tr>
                   )
+                )}
+                {/* ── Variables personalizadas en la tabla ── */}
+                {(config?.customVariables ?? []).filter(cv => cv.enabled && cv.showInMatrix).length > 0 && (
+                  <>
+                    <tr>
+                      <td colSpan={13} className="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-900/50">
+                        Indicadores personalizados
+                      </td>
+                    </tr>
+                    {(config?.customVariables ?? [])
+                      .filter(cv => cv.enabled && cv.showInMatrix)
+                      .map(cv => (
+                        <tr key={cv.id} className="border-t border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                          <td className="px-4 py-3 text-sm text-slate-400 font-medium whitespace-nowrap sticky left-0 bg-white dark:bg-slate-800 z-10">
+                            <div className="flex items-center gap-2">
+                              {cv.showInChart && (
+                                <span className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: cv.chartColor }} />
+                              )}
+                              {cv.displayName}
+                            </div>
+                          </td>
+                          {companyData.months.map((_, mIdx) => {
+                            const val = companyData.custom?.[cv.id]?.[mIdx] ?? null;
+                            return (
+                              <td key={mIdx} className={`px-3 py-3 text-sm text-center whitespace-nowrap ${mIdx === selectedMonthIdx ? "bg-indigo-50/40 dark:bg-indigo-950/10 border-x border-slate-200 dark:border-slate-700/50 font-medium text-slate-900 dark:text-slate-100" : "text-slate-300"}`}>
+                                {val !== null ? formatCustomValue(val, cv.dataType) : <span className="text-slate-600">–</span>}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                  </>
                 )}
               </tbody>
             </table>
