@@ -165,7 +165,7 @@ function parseAndExtractXLSX(arrayBuffer) {
 
     // Composición de facturación
     'ratio abonos':        { key: 'facturacionMix.ratioAbonos',        ip: true },
-    'ratio otros':         { key: 'facturacionMix.ratioOtros',         ip: true },
+    'ratio otros conceptos': { key: 'facturacionMix.ratioOtros',       ip: true },
     'ratio instalaciones': { key: 'facturacionMix.ratioInstalaciones', ip: true },
   };
 
