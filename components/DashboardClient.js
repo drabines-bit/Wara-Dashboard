@@ -795,16 +795,6 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-800 mt-12 py-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center text-xs text-slate-400 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p>© {new Date().getFullYear()} Blo, bienestar, logística y organización S.A. Todos los derechos reservados.</p>
-          <div className="flex space-x-4">
-            <a href="#" className="hover:text-slate-500">Términos de servicio</a>
-            <a href="#" className="hover:text-slate-500">Políticas de seguridad</a>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
