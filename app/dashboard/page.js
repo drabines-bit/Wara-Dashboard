@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getDashboardData, getDashboardConfig } from "@/lib/kv";
 import DashboardClient from "@/components/DashboardClient";
 import DashboardHeader from "@/components/DashboardHeader";
+import DashboardFooter from "@/components/DashboardFooter";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -27,6 +28,7 @@ export default async function DashboardPage() {
           isAdmin={session.user.role === "admin"}
         />
       </main>
+      <DashboardFooter links={config?.links} />
     </div>
   );
 }

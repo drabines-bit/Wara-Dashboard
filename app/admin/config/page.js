@@ -1,4 +1,5 @@
 import ConfigEditor from "@/components/admin/ConfigEditor";
+import LinksEditor from "@/components/admin/LinksEditor";
 import { getDashboardConfig } from "@/lib/kv";
 
 export default async function ConfigPage() {
@@ -12,6 +13,9 @@ export default async function ConfigPage() {
         Los cambios se aplican al dashboard inmediatamente después de guardar.
       </p>
       <ConfigEditor initialConfig={config} />
+      <div className="mt-6">
+        <LinksEditor initialLinks={config.links} />
+      </div>
     </div>
   );
 }
