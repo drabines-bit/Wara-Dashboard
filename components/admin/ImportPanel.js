@@ -105,13 +105,14 @@ function parseAndExtractXLSX(arrayBuffer) {
   const ignorar = [
     'facturación por tipo de productos',
     'facturación desagregada',
+    'variación m/m resultado',
   ];
 
   // Anclajes de sección — detectan en qué bloque estamos
   const sectionAnchors = {
-    'facturación real': 'facturacion',
-    'facturación':      'facturacion',
-    'cobranza total':   'cobranza',
+    'facturación total': 'facturacion',
+    'facturación':       'facturacion',
+    'cobranza total':    'cobranza',
     'activo corriente':    'activos',
     'activo no corriente': 'activos',
     'pasivo corriente':    'pasivos',
@@ -120,34 +121,50 @@ function parseAndExtractXLSX(arrayBuffer) {
 
   // Mapeos únicos (no dependen de la sección)
   const global = {
-    'facturación real':              { key: 'facturacion.real',                        ip: false },
-    'facturación':                   { key: 'facturacion.real',                        ip: false },
-    'cobranza total':                { key: 'cobranza.real',                           ip: false },
-    'objetivo del mes':              { key: 'cobranza.objetivo',                       ip: false },
-    'activo corriente':              { key: 'activoCorriente.total',                   ip: false },
-    'caja y bancos':                 { key: 'activoCorriente.cajaBancos',              ip: false },
-    'fci':                           { key: 'activoCorriente.fci',                     ip: false },
-    'cheques en cartera':            { key: 'activoCorriente.cheques',                 ip: false },
-    'deudores por ventas':           { key: 'activoCorriente.deudores',                ip: false },
-    'top 20 deudores por ventas':    { key: 'activoCorriente.top20Deudores',           ip: false },
-    'top 20 deudores':               { key: 'activoCorriente.top20Deudores',           ip: false },
-    'plazo fijos':                   { key: 'activoCorriente.plazoFijo',               ip: false },
-    'plazo fijo':                    { key: 'activoCorriente.plazoFijo',               ip: false },
+    // Facturación
+    'facturación total':                     { key: 'facturacion.real',         ip: false },
+    'objetivo de ventas':                    { key: 'facturacion.objetivo',     ip: false },
+    'cumplimiento de objetivo de ventas':    { key: 'facturacion.cumplimiento', ip: true  },
+
+    // Cobranza
+    'cobranza total':                        { key: 'cobranza.real',            ip: false },
+    'variación mensual':                     { key: 'cobranza.variacion',       ip: true  },
+    'objetivo del mes':                      { key: 'cobranza.objetivo',        ip: false },
+    'cumplimiento de objetivo de cobranzas': { key: 'cobranza.cumplimiento',    ip: true  },
+
+    // Activo Corriente
+    'activo corriente':           { key: 'activoCorriente.total',         ip: false },
+    'caja y bancos':              { key: 'activoCorriente.cajaBancos',    ip: false },
+    'fci':                        { key: 'activoCorriente.fci',           ip: false },
+    'cheques en cartera':         { key: 'activoCorriente.cheques',       ip: false },
+    'deudores por ventas':        { key: 'activoCorriente.deudores',      ip: false },
+    'top 20 deudores por ventas': { key: 'activoCorriente.top20Deudores', ip: false },
+    'top 20 deudores':            { key: 'activoCorriente.top20Deudores', ip: false },
+    'plazo fijos':                { key: 'activoCorriente.plazoFijo',     ip: false },
+    'plazo fijo':                 { key: 'activoCorriente.plazoFijo',     ip: false },
+
+    // Activo No Corriente
     'activo no corriente':           { key: 'activoNoCorriente.total',                 ip: false },
     'participación en orbitrix arg': { key: 'activoNoCorriente.participacionOrbitrix', ip: false },
     'participación en orbitrix':     { key: 'activoNoCorriente.participacionOrbitrix', ip: false },
-    'pasivo corriente':              { key: 'pasivoCorriente.total',                   ip: false },
-    'cheques pendientes de pago':    { key: 'pasivoCorriente.proveedores',             ip: false },
-    'facturas pendientes de pago':   { key: 'pasivoCorriente.facturasPendientes',      ip: false },
-    'pagos comprometidos':           { key: 'pasivoCorriente.pagosComprometidos',      ip: false },
-    'pasivo no corriente':           { key: 'pasivoNoCorriente.total',                 ip: false },
-    'planes de pago arca':           { key: 'pasivoNoCorriente.planesArca',            ip: false },
-    'planes arca':                   { key: 'pasivoNoCorriente.planesArca',            ip: false },
-    'préstamos':                     { key: 'pasivoNoCorriente.prestamos',             ip: false },
-    'prestamos':                     { key: 'pasivoNoCorriente.prestamos',             ip: false },
-    'ratio abonos':                  { key: 'facturacionMix.ratioAbonos',              ip: true  },
-    'ratio otros':                   { key: 'facturacionMix.ratioOtros',               ip: true  },
-    'ratio instalaciones':           { key: 'facturacionMix.ratioInstalaciones',       ip: true  },
+
+    // Pasivo Corriente
+    'pasivo corriente':           { key: 'pasivoCorriente.total',              ip: false },
+    'cheques pendientes de pago': { key: 'pasivoCorriente.proveedores',        ip: false },
+    'facturas pendientes':        { key: 'pasivoCorriente.facturasPendientes', ip: false },
+    'pagos comprometidos':        { key: 'pasivoCorriente.pagosComprometidos', ip: false },
+
+    // Pasivo No Corriente
+    'pasivo no corriente':  { key: 'pasivoNoCorriente.total',      ip: false },
+    'planes de pago arca':  { key: 'pasivoNoCorriente.planesArca', ip: false },
+    'planes arca':          { key: 'pasivoNoCorriente.planesArca', ip: false },
+    'préstamos':            { key: 'pasivoNoCorriente.prestamos',  ip: false },
+    'prestamos':            { key: 'pasivoNoCorriente.prestamos',  ip: false },
+
+    // Composición de facturación
+    'ratio abonos':        { key: 'facturacionMix.ratioAbonos',        ip: true },
+    'ratio otros':         { key: 'facturacionMix.ratioOtros',         ip: true },
+    'ratio instalaciones': { key: 'facturacionMix.ratioInstalaciones', ip: true },
   };
 
   // Mapeos dependientes de sección (mismo label en distintos bloques)
@@ -155,14 +172,6 @@ function parseAndExtractXLSX(arrayBuffer) {
     'variación m/m': {
       facturacion: { key: 'facturacion.variacion', ip: true },
       cobranza:    { key: 'cobranza.variacion',    ip: true },
-    },
-    'objetivo': {
-      facturacion: { key: 'facturacion.objetivo',     ip: false },
-      cobranza:    { key: 'cobranza.objetivo',         ip: false },
-    },
-    'cumplimiento': {
-      facturacion: { key: 'facturacion.cumplimiento', ip: true },
-      cobranza:    { key: 'cobranza.cumplimiento',    ip: true },
     },
   };
 
