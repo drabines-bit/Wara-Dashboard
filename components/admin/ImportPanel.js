@@ -106,37 +106,52 @@ function parseAndExtractXLSX(arrayBuffer) {
   };
 
   const globalMappings = {
-    "facturación desagregada":     null,
-    "facturación":                 { key: "facturacion.real",                        isPercent: false },
-    "facturacion":                 { key: "facturacion.real",                        isPercent: false },
-    "cobranza total":              { key: "cobranza.real",                           isPercent: false },
-    "activo corriente":            { key: "activoCorriente.total",                   isPercent: false },
-    "caja y bancos":               { key: "activoCorriente.cajaBancos",              isPercent: false },
-    "fci":                         { key: "activoCorriente.fci",                     isPercent: false },
-    "cheques en cartera":          { key: "activoCorriente.cheques",                 isPercent: false },
-    "cheques cartera":             { key: "activoCorriente.cheques",                 isPercent: false },
-    "deudores por ventas":         { key: "activoCorriente.deudores",                isPercent: false },
-    "top 20 deudores por ventas":  { key: "activoCorriente.top20Deudores",           isPercent: false },
-    "top 20 deudores":             { key: "activoCorriente.top20Deudores",           isPercent: false },
-    "plazo fijos":                 { key: "activoCorriente.plazoFijo",               isPercent: false },
-    "plazo fijo":                  { key: "activoCorriente.plazoFijo",               isPercent: false },
-    "activo no corriente":         { key: "activoNoCorriente.total",                 isPercent: false },
-    "participación en orbitrix":   { key: "activoNoCorriente.participacionOrbitrix", isPercent: false },
-    "part. orbitrix":              { key: "activoNoCorriente.participacionOrbitrix", isPercent: false },
-    "pasivo corriente":            { key: "pasivoCorriente.total",                   isPercent: false },
-    "cheques pendientes de pago":  { key: "pasivoCorriente.proveedores",             isPercent: false },
-    "cheques pendientes":          { key: "pasivoCorriente.proveedores",             isPercent: false },
-    "facturas pendientes de pago": { key: "pasivoCorriente.facturasPendientes",      isPercent: false },
-    "facturas pendientes":         { key: "pasivoCorriente.facturasPendientes",      isPercent: false },
-    "pagos comprometidos":         { key: "pasivoCorriente.pagosComprometidos",      isPercent: false },
-    "pasivo no corriente":         { key: "pasivoNoCorriente.total",                 isPercent: false },
-    "planes de pago arca":         { key: "pasivoNoCorriente.planesArca",            isPercent: false },
-    "planes arca":                 { key: "pasivoNoCorriente.planesArca",            isPercent: false },
-    "préstamos":                   { key: "pasivoNoCorriente.prestamos",             isPercent: false },
-    "prestamos":                   { key: "pasivoNoCorriente.restamos",              isPercent: false },
-    "ratio abonos":                { key: "facturacionMix.ratioAbonos",              isPercent: true  },
-    "ratio instalaciones":         { key: "facturacionMix.ratioInstalaciones",       isPercent: true  },
-    "ratio otros":                 { key: "facturacionMix.ratioOtros",               isPercent: true  },
+    // --- Filas a ignorar explícitamente (clave más larga gana) ---
+    "facturación por tipo de productos": null,
+    "facturación desagregada":           null,
+    "variación m/m resultado":           null,
+
+    // --- Facturación ---
+    "facturación real": { key: "facturacion.real", isPercent: false },
+    "facturación":      { key: "facturacion.real", isPercent: false },
+
+    // --- Cobranza ---
+    "cobranza total":   { key: "cobranza.real",      isPercent: false },
+    "objetivo del mes": { key: "cobranza.objetivo",  isPercent: false },
+
+    // --- Activo Corriente ---
+    "activo corriente":           { key: "activoCorriente.total",         isPercent: false },
+    "caja y bancos":              { key: "activoCorriente.cajaBancos",    isPercent: false },
+    "fci":                        { key: "activoCorriente.fci",           isPercent: false },
+    "cheques en cartera":         { key: "activoCorriente.cheques",       isPercent: false },
+    "deudores por ventas":        { key: "activoCorriente.deudores",      isPercent: false },
+    "top 20 deudores por ventas": { key: "activoCorriente.top20Deudores", isPercent: false },
+    "top 20 deudores":            { key: "activoCorriente.top20Deudores", isPercent: false },
+    "plazo fijos":                { key: "activoCorriente.plazoFijo",     isPercent: false },
+    "plazo fijo":                 { key: "activoCorriente.plazoFijo",     isPercent: false },
+
+    // --- Activo No Corriente ---
+    "activo no corriente":           { key: "activoNoCorriente.total",                 isPercent: false },
+    "participación en orbitrix arg": { key: "activoNoCorriente.participacionOrbitrix", isPercent: false },
+    "participación en orbitrix":     { key: "activoNoCorriente.participacionOrbitrix", isPercent: false },
+
+    // --- Pasivo Corriente ---
+    "pasivo corriente":            { key: "pasivoCorriente.total",              isPercent: false },
+    "cheques pendientes de pago":  { key: "pasivoCorriente.proveedores",        isPercent: false },
+    "facturas pendientes de pago": { key: "pasivoCorriente.facturasPendientes", isPercent: false },
+    "pagos comprometidos":         { key: "pasivoCorriente.pagosComprometidos", isPercent: false },
+
+    // --- Pasivo No Corriente ---
+    "pasivo no corriente": { key: "pasivoNoCorriente.total",      isPercent: false },
+    "planes de pago arca": { key: "pasivoNoCorriente.planesArca", isPercent: false },
+    "planes arca":         { key: "pasivoNoCorriente.planesArca", isPercent: false },
+    "préstamos":           { key: "pasivoNoCorriente.prestamos",  isPercent: false },
+    "prestamos":           { key: "pasivoNoCorriente.prestamos",  isPercent: false },
+
+    // --- Composición de facturación ---
+    "ratio abonos":        { key: "facturacionMix.ratioAbonos",       isPercent: true },
+    "ratio otros":         { key: "facturacionMix.ratioOtros",         isPercent: true },
+    "ratio instalaciones": { key: "facturacionMix.ratioInstalaciones", isPercent: true },
   };
 
   const sectionMappings = {
@@ -159,8 +174,8 @@ function parseAndExtractXLSX(arrayBuffer) {
   };
 
   const sectionAnchors = {
+    "facturación real":    "facturacion",
     "facturación":         "facturacion",
-    "facturacion":         "facturacion",
     "cobranza total":      "cobranza",
     "activo corriente":    "activos",
     "activo no corriente": "activos",
