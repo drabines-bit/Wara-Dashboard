@@ -28,7 +28,7 @@ function setNestedValue(obj, keyPath, index, value) {
   cur[parts[parts.length - 1]][index] = value;
 }
 
-function parseAndExtractXLSX(arrayBuffer) {
+function parseAndExtractXLSX(arrayBuffer, customVariables = []) {
   const workbook = XLSX.read(arrayBuffer, { type: 'array' });
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null, raw: true });
@@ -61,7 +61,13 @@ function parseAndExtractXLSX(arrayBuffer) {
                          facturasPendientes: empty(), pagosComprometidos: empty() },
     pasivoNoCorriente: { total: empty(), planesArca: empty(), prestamos: empty() },
     facturacionMix:    { ratioAbonos: empty(), ratioInstalaciones: empty(), ratioOtros: empty() },
+    custom: {},
   };
+
+  const enabledCustom = (customVariables ?? []).filter(cv => cv.enabled && cv.id);
+  enabledCustom.forEach(cv => {
+    data.custom[cv.id] = Array(12).fill(null);
+  });
 
   // Parser de valores numéricos con formato argentino
   function parseVal(val, isPercent) {
@@ -219,6 +225,23 @@ function parseAndExtractXLSX(arrayBuffer) {
 
     console.log(`[PARSER] label="${label}" | labelSA="${sinAcentos(label)}" | mapping=${mapping ? mapping.key : 'NONE'}`);
 
+    // Si tampoco hay mapeo fijo, buscar en variables custom
+    if (!mapping && enabledCustom.length > 0) {
+      for (const cv of enabledCustom) {
+        const cvSA = sinAcentos(cv.sheetLabel.toLowerCase().trim().replace(/\s+/g, ' '));
+        if (cvSA.length > 0 && labelSA.includes(cvSA)) {
+          const isPercent = cv.dataType === 'percent';
+          for (const [mIdxStr, colIdx] of Object.entries(monthMap)) {
+            const mIdx = parseInt(mIdxStr);
+            const rawVal = cells[colIdx] ?? null;
+            const v = parseVal(rawVal, isPercent);
+            if (v !== null) data.custom[cv.id][mIdx] = v;
+          }
+          break;
+        }
+      }
+    }
+
     // Aplicar mapeo
     if (mapping) {
       for (const [mIdxStr, colIdx] of Object.entries(monthMap)) {
@@ -252,7 +275,17 @@ export default function ImportPanel() {
 
     try {
       const arrayBuffer = await file.arrayBuffer();
-      const data = parseAndExtractXLSX(arrayBuffer);
+
+      let customVariables = [];
+      try {
+        const cfgRes = await fetch("/api/config");
+        if (cfgRes.ok) {
+          const cfgJson = await cfgRes.json();
+          customVariables = cfgJson.config?.customVariables ?? [];
+        }
+      } catch { /* continuar sin variables custom */ }
+
+      const data = parseAndExtractXLSX(arrayBuffer, customVariables);
 
       const res = await fetch("/api/data", {
         method: "POST",

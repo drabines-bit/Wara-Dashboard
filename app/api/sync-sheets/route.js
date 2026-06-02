@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import { getServerSession } from 'next-auth';
 import { NextResponse } from 'next/server';
-import { setDashboardData } from '@/lib/kv';
+import { setDashboardData, getDashboardConfig } from '@/lib/kv';
 
 export async function POST() {
   const session = await getServerSession();
@@ -45,7 +45,10 @@ export async function POST() {
       return NextResponse.json({ error: 'La hoja está vacía o no tiene datos' }, { status: 422 });
     }
 
-    const data = parseSheetRows(rows);
+    const config = await getDashboardConfig();
+    const customVariables = config.customVariables ?? [];
+
+    const data = parseSheetRows(rows, customVariables);
     await setDashboardData(data);
 
     return NextResponse.json({ ok: true });
@@ -63,7 +66,7 @@ export async function POST() {
 
 // Parser de filas — misma lógica que parseAndExtractXLSX en ImportPanel.js
 // pero recibe directamente el array de rows de la Sheets API
-function parseSheetRows(rows) {
+function parseSheetRows(rows, customVariables = []) {
   const monthNames = ['enero','febrero','marzo','abril','mayo','junio',
                       'julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const monthMap = {};
@@ -88,7 +91,13 @@ function parseSheetRows(rows) {
                          facturasPendientes: empty(), pagosComprometidos: empty() },
     pasivoNoCorriente: { total: empty(), planesArca: empty(), prestamos: empty() },
     facturacionMix:    { ratioAbonos: empty(), ratioInstalaciones: empty(), ratioOtros: empty() },
+    custom: {},
   };
+
+  const enabledCustom = (customVariables ?? []).filter(cv => cv.enabled && cv.id);
+  enabledCustom.forEach(cv => {
+    data.custom[cv.id] = Array(12).fill(null);
+  });
 
   function parseVal(val, isPercent) {
     if (val === null || val === undefined) return null;
@@ -210,6 +219,22 @@ function parseSheetRows(rows) {
       for (const [key, secMap] of Object.entries(porSeccion)) {
         if (label === key || label.includes(key)) {
           if (seccion && secMap[seccion]) mapping = secMap[seccion];
+          break;
+        }
+      }
+    }
+
+    if (!mapping && enabledCustom.length > 0) {
+      for (const cv of enabledCustom) {
+        const cvSA = sinAcentos(cv.sheetLabel.toLowerCase().trim().replace(/\s+/g, ' '));
+        if (cvSA.length > 0 && labelSA.includes(cvSA)) {
+          const isPercent = cv.dataType === 'percent';
+          for (const [mIdxStr, colIdx] of Object.entries(monthMap)) {
+            const mIdx = parseInt(mIdxStr);
+            const rawVal = cells[colIdx] ?? null;
+            const v = parseVal(rawVal, isPercent);
+            if (v !== null) data.custom[cv.id][mIdx] = v;
+          }
           break;
         }
       }
