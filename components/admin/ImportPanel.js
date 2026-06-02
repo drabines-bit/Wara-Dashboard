@@ -28,222 +28,189 @@ function setNestedValue(obj, keyPath, index, value) {
   cur[parts[parts.length - 1]][index] = value;
 }
 
-// Portado 1:1 de handleXLSXUpload del dashboard original.
-// Diferencias: no muta global companyData — construye y retorna un objeto nuevo.
 function parseAndExtractXLSX(arrayBuffer) {
-  const workbook = XLSX.read(arrayBuffer, { type: "array" });
+  const workbook = XLSX.read(arrayBuffer, { type: 'array' });
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
-
   const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null, raw: true });
-  if (rows.length < 2) throw new Error("El archivo está vacío o no tiene datos legibles.");
 
-  const data = buildEmptyData();
-  const monthNamesLower = data.months.map((m) => m.toLowerCase());
+  if (rows.length < 2) throw new Error('Archivo sin datos suficientes');
 
-  // Detectar columnas de meses en la fila de encabezado
+  // Detectar columnas de meses
+  const monthNames = ['enero','febrero','marzo','abril','mayo','junio',
+                      'julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const monthMap = {};
-  rows[0].forEach((h, idx) => {
-    const clean = String(h || "").toLowerCase().trim();
-    const mIdx = monthNamesLower.indexOf(clean);
-    if (mIdx !== -1) monthMap[mIdx] = idx;
+  (rows[0] || []).forEach((h, idx) => {
+    const m = monthNames.indexOf(String(h || '').toLowerCase().trim());
+    if (m !== -1) monthMap[m] = idx;
   });
 
-  if (Object.keys(monthMap).length === 0) {
-    throw new Error(
-      'No se encontraron columnas de meses. Verificá que la primera fila contenga encabezados como "Enero", "Febrero", "Marzo", etc.'
-    );
-  }
+  if (Object.keys(monthMap).length === 0)
+    throw new Error('No se encontraron columnas de meses en la primera fila');
 
-  // parseNumber — portado exacto del HTML (v2, corregido)
-  const parseNumber = (val, isPercent) => {
+  // Estructura vacía
+  const empty = () => Array(12).fill(null);
+  const data = {
+    months: ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+             'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+    facturacion:       { real: empty(), variacion: empty(), objetivo: empty(), cumplimiento: empty() },
+    cobranza:          { real: empty(), variacion: empty(), objetivo: empty(), cumplimiento: empty() },
+    activoCorriente:   { total: empty(), cajaBancos: empty(), fci: empty(), cheques: empty(),
+                         deudores: empty(), top20Deudores: empty(), plazoFijo: empty() },
+    activoNoCorriente: { total: empty(), participacionOrbitrix: empty() },
+    pasivoCorriente:   { total: empty(), proveedores: empty(),
+                         facturasPendientes: empty(), pagosComprometidos: empty() },
+    pasivoNoCorriente: { total: empty(), planesArca: empty(), prestamos: empty() },
+    facturacionMix:    { ratioAbonos: empty(), ratioInstalaciones: empty(), ratioOtros: empty() },
+  };
+
+  // Parser de valores numéricos con formato argentino
+  function parseVal(val, isPercent) {
     if (val === null || val === undefined) return null;
-
-    if (typeof val === "number") {
-      if (isNaN(val)) return null;
-      return isPercent ? parseFloat((val * 100).toFixed(4)) : val;
+    if (typeof val === 'number') {
+      return isNaN(val) ? null : (isPercent ? parseFloat((val * 100).toFixed(4)) : val);
     }
-
-    const strVal = String(val).trim();
-    if (!strVal) return null;
-
-    const excelErrors = ["#value!", "#div/0!", "#n/a", "#ref!", "#name?", "#null!"];
-    if (excelErrors.includes(strVal.toLowerCase())) return strVal.toUpperCase();
-
-    if (!/\d/.test(strVal)) return null;
-
-    let clean = strVal.replace(/\$/g, "").replace(/\s/g, "").trim();
-    const hasPercentSign = clean.includes("%");
-    clean = clean.replace(/%/g, "");
-
-    if (clean.includes(".") && clean.includes(",")) {
-      const lastDot = clean.lastIndexOf(".");
-      const lastComma = clean.lastIndexOf(",");
-      if (lastComma > lastDot) {
-        clean = clean.replace(/\./g, "").replace(",", ".");
-      } else {
-        clean = clean.replace(/,/g, "");
-      }
-    } else if (clean.includes(",") && !clean.includes(".")) {
-      const commas = (clean.match(/,/g) || []).length;
-      if (commas > 1) {
-        clean = clean.replace(/,/g, "");
-      } else {
-        clean = clean.replace(",", ".");
-      }
-    } else if (clean.includes(".") && !clean.includes(",")) {
-      const parts = clean.split(".");
-      const allThreeDigits = parts.slice(1).every((p) => p.length === 3);
-      if (parts.length > 2 && allThreeDigits) {
-        clean = clean.replace(/\./g, "");
-      } else if (parts.length === 2 && parts[1].length === 3 && parseInt(parts[0]) >= 10) {
-        clean = clean.replace(".", "");
-      }
+    const s = String(val).trim();
+    if (!s || ['sin datos', 'sin dato', '-'].includes(s.toLowerCase())) return null;
+    const errores = ['#value!','#div/0!','#n/a','#ref!','#name?','#null!'];
+    if (errores.includes(s.toLowerCase())) return s.toUpperCase();
+    let clean = s.replace(/\$/g,'').replace(/\s/g,'').trim();
+    const hasPct = clean.includes('%');
+    clean = clean.replace(/%/g,'');
+    if (clean.includes('.') && clean.includes(',')) {
+      clean = clean.lastIndexOf(',') > clean.lastIndexOf('.')
+        ? clean.replace(/\./g,'').replace(',','.') : clean.replace(/,/g,'');
+    } else if (clean.includes(',') && !clean.includes('.')) {
+      clean = (clean.match(/,/g)||[]).length > 1
+        ? clean.replace(/,/g,'') : clean.replace(',','.');
+    } else if (clean.includes('.') && !clean.includes(',')) {
+      const parts = clean.split('.');
+      if (parts.length > 2 && parts.slice(1).every(p => p.length === 3))
+        clean = clean.replace(/\./g,'');
     }
-
     const num = parseFloat(clean);
     if (isNaN(num)) return null;
-    return isPercent && !hasPercentSign ? parseFloat((num * 100).toFixed(4)) : num;
-  };
+    return (isPercent && !hasPct) ? parseFloat((num * 100).toFixed(4)) : num;
+  }
 
-  const globalMappings = {
-    // --- Filas a ignorar explícitamente (clave más larga gana) ---
-    "facturación por tipo de productos": null,
-    "facturación desagregada":           null,
-    "variación m/m resultado":           null,
+  // Escribir valor en la estructura de datos
+  function setVal(path, mIdx, val) {
+    if (val === null || val === undefined) return;
+    const keys = path.split('.');
+    let ref = data;
+    for (let i = 0; i < keys.length - 1; i++) ref = ref[keys[i]];
+    ref[keys[keys.length - 1]][mIdx] = val;
+  }
 
-    // --- Facturación ---
-    "facturación real": { key: "facturacion.real", isPercent: false },
-    "facturación":      { key: "facturacion.real", isPercent: false },
+  // Filas a ignorar (contienen estas cadenas)
+  const ignorar = [
+    'facturación por tipo de productos',
+    'facturación desagregada',
+  ];
 
-    // --- Cobranza ---
-    "cobranza total":   { key: "cobranza.real",      isPercent: false },
-    "objetivo del mes": { key: "cobranza.objetivo",  isPercent: false },
-
-    // --- Activo Corriente ---
-    "activo corriente":           { key: "activoCorriente.total",         isPercent: false },
-    "caja y bancos":              { key: "activoCorriente.cajaBancos",    isPercent: false },
-    "fci":                        { key: "activoCorriente.fci",           isPercent: false },
-    "cheques en cartera":         { key: "activoCorriente.cheques",       isPercent: false },
-    "deudores por ventas":        { key: "activoCorriente.deudores",      isPercent: false },
-    "top 20 deudores por ventas": { key: "activoCorriente.top20Deudores", isPercent: false },
-    "top 20 deudores":            { key: "activoCorriente.top20Deudores", isPercent: false },
-    "plazo fijos":                { key: "activoCorriente.plazoFijo",     isPercent: false },
-    "plazo fijo":                 { key: "activoCorriente.plazoFijo",     isPercent: false },
-
-    // --- Activo No Corriente ---
-    "activo no corriente":           { key: "activoNoCorriente.total",                 isPercent: false },
-    "participación en orbitrix arg": { key: "activoNoCorriente.participacionOrbitrix", isPercent: false },
-    "participación en orbitrix":     { key: "activoNoCorriente.participacionOrbitrix", isPercent: false },
-
-    // --- Pasivo Corriente ---
-    "pasivo corriente":            { key: "pasivoCorriente.total",              isPercent: false },
-    "cheques pendientes de pago":  { key: "pasivoCorriente.proveedores",        isPercent: false },
-    "facturas pendientes de pago": { key: "pasivoCorriente.facturasPendientes", isPercent: false },
-    "pagos comprometidos":         { key: "pasivoCorriente.pagosComprometidos", isPercent: false },
-
-    // --- Pasivo No Corriente ---
-    "pasivo no corriente": { key: "pasivoNoCorriente.total",      isPercent: false },
-    "planes de pago arca": { key: "pasivoNoCorriente.planesArca", isPercent: false },
-    "planes arca":         { key: "pasivoNoCorriente.planesArca", isPercent: false },
-    "préstamos":           { key: "pasivoNoCorriente.prestamos",  isPercent: false },
-    "prestamos":           { key: "pasivoNoCorriente.prestamos",  isPercent: false },
-
-    // --- Composición de facturación ---
-    "ratio abonos":        { key: "facturacionMix.ratioAbonos",       isPercent: true },
-    "ratio otros":         { key: "facturacionMix.ratioOtros",         isPercent: true },
-    "ratio instalaciones": { key: "facturacionMix.ratioInstalaciones", isPercent: true },
-  };
-
-  const sectionMappings = {
-    "variación m/m": {
-      facturacion: { key: "facturacion.variacion",    isPercent: true  },
-      cobranza:    { key: "cobranza.variacion",       isPercent: true  },
-    },
-    "variacion m/m": {
-      facturacion: { key: "facturacion.variacion",    isPercent: true  },
-      cobranza:    { key: "cobranza.variacion",       isPercent: true  },
-    },
-    "objetivo": {
-      facturacion: { key: "facturacion.objetivo",     isPercent: false },
-      cobranza:    { key: "cobranza.objetivo",        isPercent: false },
-    },
-    "cumplimiento": {
-      facturacion: { key: "facturacion.cumplimiento", isPercent: true  },
-      cobranza:    { key: "cobranza.cumplimiento",    isPercent: true  },
-    },
-  };
-
+  // Anclajes de sección — detectan en qué bloque estamos
   const sectionAnchors = {
-    "facturación real":    "facturacion",
-    "facturación":         "facturacion",
-    "cobranza total":      "cobranza",
-    "activo corriente":    "activos",
-    "activo no corriente": "activos",
-    "pasivo corriente":    "pasivos",
-    "pasivo no corriente": "pasivos",
+    'facturación real': 'facturacion',
+    'facturación':      'facturacion',
+    'cobranza total':   'cobranza',
+    'activo corriente':    'activos',
+    'activo no corriente': 'activos',
+    'pasivo corriente':    'pasivos',
+    'pasivo no corriente': 'pasivos',
   };
 
-  let currentSection = null;
-  let rowsMatched = 0;
+  // Mapeos únicos (no dependen de la sección)
+  const global = {
+    'facturación real':              { key: 'facturacion.real',                        ip: false },
+    'facturación':                   { key: 'facturacion.real',                        ip: false },
+    'cobranza total':                { key: 'cobranza.real',                           ip: false },
+    'objetivo del mes':              { key: 'cobranza.objetivo',                       ip: false },
+    'activo corriente':              { key: 'activoCorriente.total',                   ip: false },
+    'caja y bancos':                 { key: 'activoCorriente.cajaBancos',              ip: false },
+    'fci':                           { key: 'activoCorriente.fci',                     ip: false },
+    'cheques en cartera':            { key: 'activoCorriente.cheques',                 ip: false },
+    'deudores por ventas':           { key: 'activoCorriente.deudores',                ip: false },
+    'top 20 deudores por ventas':    { key: 'activoCorriente.top20Deudores',           ip: false },
+    'top 20 deudores':               { key: 'activoCorriente.top20Deudores',           ip: false },
+    'plazo fijos':                   { key: 'activoCorriente.plazoFijo',               ip: false },
+    'plazo fijo':                    { key: 'activoCorriente.plazoFijo',               ip: false },
+    'activo no corriente':           { key: 'activoNoCorriente.total',                 ip: false },
+    'participación en orbitrix arg': { key: 'activoNoCorriente.participacionOrbitrix', ip: false },
+    'participación en orbitrix':     { key: 'activoNoCorriente.participacionOrbitrix', ip: false },
+    'pasivo corriente':              { key: 'pasivoCorriente.total',                   ip: false },
+    'cheques pendientes de pago':    { key: 'pasivoCorriente.proveedores',             ip: false },
+    'facturas pendientes de pago':   { key: 'pasivoCorriente.facturasPendientes',      ip: false },
+    'pagos comprometidos':           { key: 'pasivoCorriente.pagosComprometidos',      ip: false },
+    'pasivo no corriente':           { key: 'pasivoNoCorriente.total',                 ip: false },
+    'planes de pago arca':           { key: 'pasivoNoCorriente.planesArca',            ip: false },
+    'planes arca':                   { key: 'pasivoNoCorriente.planesArca',            ip: false },
+    'préstamos':                     { key: 'pasivoNoCorriente.prestamos',             ip: false },
+    'prestamos':                     { key: 'pasivoNoCorriente.prestamos',             ip: false },
+    'ratio abonos':                  { key: 'facturacionMix.ratioAbonos',              ip: true  },
+    'ratio otros':                   { key: 'facturacionMix.ratioOtros',               ip: true  },
+    'ratio instalaciones':           { key: 'facturacionMix.ratioInstalaciones',       ip: true  },
+  };
+
+  // Mapeos dependientes de sección (mismo label en distintos bloques)
+  const porSeccion = {
+    'variación m/m': {
+      facturacion: { key: 'facturacion.variacion', ip: true },
+      cobranza:    { key: 'cobranza.variacion',    ip: true },
+    },
+    'objetivo': {
+      facturacion: { key: 'facturacion.objetivo',     ip: false },
+      cobranza:    { key: 'cobranza.objetivo',         ip: false },
+    },
+    'cumplimiento': {
+      facturacion: { key: 'facturacion.cumplimiento', ip: true },
+      cobranza:    { key: 'cobranza.cumplimiento',    ip: true },
+    },
+  };
+
+  let seccion = null;
 
   for (let i = 1; i < rows.length; i++) {
     const cells = rows[i];
     if (!cells || !cells[0]) continue;
 
-    const rowLabel = String(cells[0]).trim().toLowerCase().replace(/\s+/g, " ");
+    const label = String(cells[0]).trim().toLowerCase().replace(/\s+/g, ' ');
 
-    for (const [anchor, section] of Object.entries(sectionAnchors)) {
-      if (rowLabel === anchor || rowLabel.startsWith(anchor + " ") || rowLabel.includes(anchor)) {
-        currentSection = section;
-        break;
-      }
+    // Ignorar filas explícitas
+    if (ignorar.some(ig => label.includes(ig))) continue;
+
+    // Actualizar sección activa
+    for (const [anchor, sec] of Object.entries(sectionAnchors)) {
+      if (label === anchor || label.startsWith(anchor)) { seccion = sec; break; }
     }
 
+    // Buscar mapeo global (match más largo gana)
     let mapping = null;
     let bestLen = 0;
-    for (const [key, value] of Object.entries(globalMappings)) {
-      if (
-        (rowLabel === key || rowLabel.startsWith(key + " ") || rowLabel.includes(key)) &&
-        key.length > bestLen
-      ) {
-        mapping = value;
-        bestLen = key.length;
+    for (const [key, val] of Object.entries(global)) {
+      if (label.includes(key) && key.length > bestLen) {
+        mapping = val; bestLen = key.length;
       }
     }
 
+    // Si no hay global, buscar por sección
     if (!mapping) {
-      for (const [key, sectionMap] of Object.entries(sectionMappings)) {
-        if (rowLabel === key || rowLabel.includes(key)) {
-          if (currentSection && sectionMap[currentSection]) {
-            mapping = sectionMap[currentSection];
-          }
+      for (const [key, secMap] of Object.entries(porSeccion)) {
+        if (label === key || label.includes(key)) {
+          if (seccion && secMap[seccion]) mapping = secMap[seccion];
           break;
         }
       }
     }
 
-    if (mapping && mapping.key) {
-      rowsMatched++;
-      Object.entries(monthMap).forEach(([mIdxStr, colIdx]) => {
-        const mIdx = parseInt(mIdxStr);
-        const rawVal = cells[colIdx];
-        if (rawVal !== undefined && rawVal !== null) {
-          const parsedVal = parseNumber(rawVal, mapping.isPercent);
-          if (parsedVal !== null) {
-            setNestedValue(data, mapping.key, mIdx, parsedVal);
-          }
-        }
-      });
+    // Aplicar mapeo
+    if (mapping) {
+      for (const [mIdxStr, colIdx] of Object.entries(monthMap)) {
+        const v = parseVal(cells[colIdx], mapping.ip);
+        if (v !== null) setVal(mapping.key, parseInt(mIdxStr), v);
+      }
     }
   }
 
-  if (rowsMatched === 0) {
-    throw new Error(
-      "Se encontraron columnas de meses pero ninguna fila coincidió con los indicadores conocidos. Verificá que los nombres de filas sean correctos (Facturación, Cobranza Total, Activo Corriente, etc.)."
-    );
-  }
-
-  return { data, monthsLoaded: Object.keys(monthMap).length, rowsMatched };
+  return data;
 }
 
 // ── Componente principal ─────────────────────────────────────────────────────
@@ -267,7 +234,7 @@ export default function ImportPanel() {
 
     try {
       const arrayBuffer = await file.arrayBuffer();
-      const { data, monthsLoaded, rowsMatched } = parseAndExtractXLSX(arrayBuffer);
+      const data = parseAndExtractXLSX(arrayBuffer);
 
       const res = await fetch("/api/data", {
         method: "POST",
@@ -281,9 +248,7 @@ export default function ImportPanel() {
       }
 
       setStatus("success");
-      setMessage(
-        `Importación exitosa. ${monthsLoaded} mes/es cargados con ${rowsMatched} indicadores reconocidos.`
-      );
+      setMessage("Importación exitosa. Dashboard actualizado.");
     } catch (err) {
       setStatus("error");
       setMessage(err.message || "Error al procesar el archivo.");
