@@ -110,6 +110,7 @@ function parseAndExtractXLSX(arrayBuffer) {
 
   // Anclajes de sección — detectan en qué bloque estamos
   const sectionAnchors = {
+    'facturación total (iva incluído)': 'facturacion',
     'facturación total': 'facturacion',
     'facturación':       'facturacion',
     'cobranza total':    'cobranza',
@@ -122,6 +123,7 @@ function parseAndExtractXLSX(arrayBuffer) {
   // Mapeos únicos (no dependen de la sección)
   const global = {
     // Facturación
+    'facturación total (iva incluído)':      { key: 'facturacion.real',         ip: false },
     'facturación total':                     { key: 'facturacion.real',         ip: false },
     'objetivo de ventas':                    { key: 'facturacion.objetivo',     ip: false },
     'cumplimiento de objetivo de ventas':    { key: 'facturacion.cumplimiento', ip: true  },
