@@ -8,6 +8,7 @@ import { fmtCurrency, fmtPercent, fmtNumber } from '@/lib/format';
 import ProyeccionAnual from '@/components/ProyeccionAnual';
 import NotaMensual from '@/components/NotaMensual';
 import PresentationMode from '@/components/PresentationMode';
+import TVMode from '@/components/TVMode';
 import {
   DollarSign, CreditCard, Percent, Activity, LayoutDashboard,
   TrendingUp, TrafficCone, Table2, PieChart, Wallet, LineChart,
@@ -144,7 +145,7 @@ const MATRIX_ROWS = [
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function DashboardClient({ initialData, config, isAdmin, initialNotas, year }) {
+export default function DashboardClient({ initialData, config, isAdmin, initialNotas, year, lastSync }) {
   const companyData = initialData || getEmptyData();
 
   const getInitialMonth = (d) => {
@@ -163,6 +164,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
   const [currency,         setCurrency]         = useState('ARS');
   const [rates,            setRates]            = useState(null);
   const [presentationMode, setPresentationMode] = useState(false);
+  const [tvMode,           setTvMode]           = useState(false);
   const [notas,    setNotas]    = useState(initialNotas ?? {});
 
   function handleNotaSaved(mes, texto) {
@@ -506,6 +508,14 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
           onExit={() => setPresentationMode(false)}
         />
       )}
+      {tvMode && (
+        <TVMode
+          companyData={companyData}
+          config={config}
+          lastSync={lastSync}
+          onExit={() => setTvMode(false)}
+        />
+      )}
       {/* Controls: month selector + export + dark mode */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -577,6 +587,21 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
           >
             <i className="ti ti-presentation text-base" aria-hidden="true"/>
             Presentación
+          </button>
+
+          <button
+            onClick={() => setTvMode(true)}
+            className="flex items-center gap-2 text-sm font-medium
+                       text-slate-600 dark:text-slate-400
+                       hover:text-slate-900 dark:hover:text-white
+                       border border-slate-200 dark:border-slate-700
+                       hover:border-slate-400 dark:hover:border-slate-500
+                       bg-white dark:bg-slate-800
+                       px-4 py-2 rounded-xl transition"
+            title="Modo TV para pantalla de la oficina"
+          >
+            <i className="ti ti-device-tv text-base" aria-hidden="true"/>
+            Modo TV
           </button>
         </div>
 

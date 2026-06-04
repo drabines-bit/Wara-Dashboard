@@ -44,6 +44,7 @@ export default async function DashboardPage() {
           isAdmin={isAdmin}
           initialNotas={notas}
           year={year}
+          lastSync={lastSync}
         />
       </main>
       <DashboardFooter links={config?.links} />
