@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { generateMonthlyReport } from '@/lib/generatePDF';
 import { Chart, registerables } from "chart.js";
 import Link from "next/link";
+import { fmtCurrency, fmtPercent, fmtNumber } from '@/lib/format';
 import {
   DollarSign, CreditCard, Percent, Activity, LayoutDashboard,
   TrendingUp, TrafficCone, Table2, PieChart, Wallet, LineChart,
@@ -36,27 +37,18 @@ function isExcelError(val) {
 function formatValueText(val, type = "currency") {
   if (isExcelError(val)) return "trabajando datos";
   if (val === null || val === undefined || val === "") return "-";
-  if (typeof val === "string" && (val.includes("%") || val.includes(","))) return val;
-  if (typeof val === "number") {
-    if (type === "currency")
-      return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(val);
-    if (type === "percent")
-      return new Intl.NumberFormat("es-AR", { style: "percent", minimumFractionDigits: 2 }).format(val / 100);
-    return val.toString();
-  }
-  return String(val);
+  if (typeof val === "string") return val;
+  if (type === "currency") return fmtCurrency(val);
+  if (type === "percent")  return fmtPercent(val);
+  return fmtNumber(val);
 }
 
 function formatCustomValue(val, dataType) {
   if (val === null || val === undefined) return '–';
   if (typeof val === 'string') return val;
-  if (dataType === 'currency') {
-    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(val);
-  }
-  if (dataType === 'percent') {
-    return new Intl.NumberFormat('es-AR', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val / 100);
-  }
-  return new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(val);
+  if (dataType === 'currency') return fmtCurrency(val);
+  if (dataType === 'percent')  return fmtPercent(val);
+  return fmtNumber(val);
 }
 
 function getNestedValue(obj, keyPath, index) {
@@ -372,8 +364,8 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
               tooltip: {
                 ...tooltipBase,
                 callbacks: {
-                  label: (ctx) => ` ${ctx.dataset.label}: ${ctx.raw?.toFixed(1)}%`,
-                  footer: (items) => `Total: ${items.reduce((s, i) => s + (i.raw || 0), 0).toFixed(1)}%`,
+                  label: (ctx) => ` ${ctx.dataset.label}: ${fmtPercent(ctx.raw, 1)}`,
+                  footer: (items) => `Total: ${fmtPercent(items.reduce((s, i) => s + (i.raw || 0), 0), 1)}`,
                 },
               },
             },
@@ -404,15 +396,15 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
   const actCorr        = companyData.activoCorriente.total[selectedMonthIdx] || 0;
   const pasCorr        = companyData.pasivoCorriente.total[selectedMonthIdx] || 0;
   const varFact        = companyData.facturacion.variacion[selectedMonthIdx];
-  const ratioLiquidez  = actCorr && pasCorr ? (actCorr / pasCorr).toFixed(2) : "0.00";
+  const ratioLiquidez  = actCorr && pasCorr ? actCorr / pasCorr : 0;
 
   const factSem  = getSemaphoreColor("cumplimiento", factCumpl);
   const cobSem   = getSemaphoreColor("cumplimiento", cobCumpl);
   const varSem   = getSemaphoreColor("variacion", varFact);
   const liqSem   = getSemaphoreColor("liquidez", ratioLiquidez);
 
-  const factPct  = factObj && factReal ? ((factReal / factObj) * 100).toFixed(2) : 0;
-  const cobPct   = cobObj  && cobReal  ? ((cobReal  / cobObj)  * 100).toFixed(2) : 0;
+  const factPct  = factObj && factReal ? (factReal / factObj) * 100 : 0;
+  const cobPct   = cobObj  && cobReal  ? (cobReal  / cobObj)  * 100 : 0;
 
   const caja      = companyData.activoCorriente.cajaBancos[selectedMonthIdx] || 0;
   const fci       = companyData.activoCorriente.fci[selectedMonthIdx] || 0;
@@ -421,7 +413,7 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
   const plazoFijo = companyData.activoCorriente.plazoFijo[selectedMonthIdx] || 0;
   const actTotal  = actCorr || 1;
 
-  const pct = (n) => ((n / actTotal) * 100).toFixed(2);
+  const pct = (n) => fmtNumber((n / actTotal) * 100, 2);
   const liqInmPct   = ((caja + cheques) / actTotal) * 100;
   const deudPct     = (deudores / actTotal) * 100;
   const liqInmColor = liqInmPct >= 20 ? "bg-emerald-500" : liqInmPct >= 10 ? "bg-amber-500" : "bg-rose-500";
@@ -542,7 +534,7 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
           { title: "Facturación Real",          value: formatValueText(factReal), subtitle: factObj ? `Objetivo: ${formatValueText(factObj)}` : "Objetivo sin definir", badge: isExcelError(factCumpl) ? "trabajando datos" : `${factCumpl || "0,00%"} Cumplimiento`, badgeClass: factSem.color, Icon: DollarSign,  iconColor: "text-sky-500 bg-sky-50 dark:bg-sky-950/50" },
           { title: "Cobranza Real",              value: formatValueText(cobReal),  subtitle: cobObj  ? `Objetivo: ${formatValueText(cobObj)}`  : "Objetivo sin definir", badge: isExcelError(cobCumpl) ? "trabajando datos"  : `${cobCumpl || "0,00%"} Cumplimiento`,  badgeClass: cobSem.color,  Icon: CreditCard,  iconColor: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/50" },
           { title: "Variación m/m Facturación",  value: isExcelError(varFact) ? "trabajando datos" : (varFact || "0,00%"), subtitle: "Vs. mes anterior", badge: isExcelError(varFact) ? "Revisando" : (parseFloat(varFact) < 0 ? "Contracción" : "Aumento"), badgeClass: varSem.color, Icon: Percent,    iconColor: "text-amber-500 bg-amber-50 dark:bg-amber-950/50" },
-          { title: "Ratio Liquidez Corriente",   value: isExcelError(actCorr) || isExcelError(pasCorr) ? "trabajando datos" : ratioLiquidez + "x", subtitle: "Activo Corriente / Pasivo Corriente", badge: isExcelError(actCorr) || isExcelError(pasCorr) ? "trabajando datos" : liqSem.label, badgeClass: liqSem.color, Icon: Activity, iconColor: "text-indigo-500 bg-indigo-50 dark:bg-indigo-950/50" },
+          { title: "Ratio Liquidez Corriente",   value: isExcelError(actCorr) || isExcelError(pasCorr) ? "trabajando datos" : fmtNumber(ratioLiquidez, 2) + "x", subtitle: "Activo Corriente / Pasivo Corriente", badge: isExcelError(actCorr) || isExcelError(pasCorr) ? "trabajando datos" : liqSem.label, badgeClass: liqSem.color, Icon: Activity, iconColor: "text-indigo-500 bg-indigo-50 dark:bg-indigo-950/50" },
         ].map((m) => (
           <div key={m.title} className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800/80 flex flex-col justify-between hover:shadow-md transition-all">
             <div className="flex items-center justify-between mb-4">
@@ -630,10 +622,10 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
                 <div>
                   <div className="flex items-center justify-between text-sm mb-2">
                     <span className="font-medium text-slate-600 dark:text-slate-400">Facturación Real vs. Objetivo</span>
-                    <span className="font-bold text-sky-500">{factReal === null ? "Sin datos" : `${factPct}%`}</span>
+                    <span className="font-bold text-sky-500">{factReal === null ? "Sin datos" : fmtPercent(factPct)}</span>
                   </div>
                   <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
-                    <div className="bg-sky-500 h-3 rounded-full transition-all duration-500" style={{ width: `${Math.min(Number(factPct), 100)}%` }} />
+                    <div className="bg-sky-500 h-3 rounded-full transition-all duration-500" style={{ width: `${Math.min(factPct, 100)}%` }} />
                   </div>
                   <div className="flex justify-between items-center mt-2 text-xs text-slate-500">
                     <span>{formatValueText(factReal)}</span>
@@ -644,10 +636,10 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
                 <div>
                   <div className="flex items-center justify-between text-sm mb-2">
                     <span className="font-medium text-slate-600 dark:text-slate-400">Cobranza Real vs. Objetivo</span>
-                    <span className="font-bold text-emerald-500">{cobReal === null ? "Sin datos" : `${cobPct}%`}</span>
+                    <span className="font-bold text-emerald-500">{cobReal === null ? "Sin datos" : fmtPercent(cobPct)}</span>
                   </div>
                   <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
-                    <div className="bg-emerald-500 h-3 rounded-full transition-all duration-500" style={{ width: `${Math.min(Number(cobPct), 100)}%` }} />
+                    <div className="bg-emerald-500 h-3 rounded-full transition-all duration-500" style={{ width: `${Math.min(cobPct, 100)}%` }} />
                   </div>
                   <div className="flex justify-between items-center mt-2 text-xs text-slate-500">
                     <span>{formatValueText(cobReal)}</span>
@@ -732,7 +724,7 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
                       {[
                         { sem: factSem, title: `Facturación: ${factSem.label}`, detail: `Facturado: ${formatValueText(factReal)} frente a objetivo de ${formatValueText(factObj)}. Cumplimiento del ${factCumpl || "0,00%"}.` },
                         { sem: cobSem,  title: `Cobranzas: ${cobSem.label}`,    detail: `Recaudado: ${formatValueText(cobReal)} frente a objetivo de ${formatValueText(cobObj)}. Cumplimiento del ${cobCumpl || "0,00%"}.` },
-                        { sem: { bg: parseFloat(ratioLiquidez) >= 1.5 ? "bg-emerald-500" : "bg-rose-500" }, title: `Ratio Liquidez: ${parseFloat(ratioLiquidez) >= 1.5 ? "Fuerte" : "Ajustado"} (${ratioLiquidez}x)`, detail: `Activo corriente de ${formatValueText(actCorr)} respalda el pasivo de ${formatValueText(pasCorr)}.` },
+                        { sem: { bg: ratioLiquidez >= 1.5 ? "bg-emerald-500" : "bg-rose-500" }, title: `Ratio Liquidez: ${ratioLiquidez >= 1.5 ? "Fuerte" : "Ajustado"} (${fmtNumber(ratioLiquidez, 2)}x)`, detail: `Activo corriente de ${formatValueText(actCorr)} respalda el pasivo de ${formatValueText(pasCorr)}.` },
                       ].map(({ sem, title, detail }, i) => (
                         <div key={i} className="flex items-start gap-3">
                           <span className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${sem.bg}`} />
@@ -757,7 +749,7 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
               <p className="text-sm text-slate-300 leading-relaxed mb-4">
                 El mes de <span className="text-indigo-200 font-semibold">{monthName.toLowerCase()}</span> presenta una excelente recuperación en{" "}
                 <span className="font-semibold text-emerald-300">Cobranzas ({formatValueText(cobReal)})</span> impulsado probablemente por un récord de facturación anterior.
-                Sin embargo, el <span className="font-semibold text-rose-300">{factPct}%</span> de cumplimiento en facturación sugiere que el esfuerzo de prospección debe redoblarse.
+                Sin embargo, el <span className="font-semibold text-rose-300">{fmtPercent(factPct)}</span> de cumplimiento en facturación sugiere que el esfuerzo de prospección debe redoblarse.
               </p>
               <div className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50 space-y-2 text-xs">
                 <div className="flex items-start space-x-2 text-indigo-200">

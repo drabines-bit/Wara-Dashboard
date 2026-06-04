@@ -1,23 +1,8 @@
-export default function WelcomeBanner({ userName, lastSync }) {
-  const today = new Date().toLocaleDateString('es-AR', {
-    weekday: 'long',
-    day:     'numeric',
-    month:   'long',
-    year:    'numeric',
-  });
-  const todayStr = today.charAt(0).toUpperCase() + today.slice(1);
+import { fmtDateLong, fmtDateTime } from '@/lib/format';
 
-  let syncStr = 'sin sincronizar aún';
-  if (lastSync) {
-    const d = new Date(lastSync);
-    const fechaSync = d.toLocaleDateString('es-AR', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-    });
-    const horaSync = d.toLocaleTimeString('es-AR', {
-      hour: '2-digit', minute: '2-digit',
-    });
-    syncStr = `${fechaSync} a las ${horaSync}`;
-  }
+export default function WelcomeBanner({ userName, lastSync }) {
+  const todayStr = fmtDateLong(new Date());
+  const syncStr  = lastSync ? fmtDateTime(lastSync) : 'sin sincronizar aún';
 
   const nombre = userName ?? 'usuario';
 
