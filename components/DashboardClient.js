@@ -5,6 +5,7 @@ import { generateMonthlyReport } from '@/lib/generatePDF';
 import { Chart, registerables } from "chart.js";
 import Link from "next/link";
 import { fmtCurrency, fmtPercent, fmtNumber } from '@/lib/format';
+import ProyeccionAnual from '@/components/ProyeccionAnual';
 import {
   DollarSign, CreditCard, Percent, Activity, LayoutDashboard,
   TrendingUp, TrafficCone, Table2, PieChart, Wallet, LineChart,
@@ -824,6 +825,9 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
             </div>
           </div>
         </div>
+
+        {/* Proyección anual */}
+        <ProyeccionAnual companyData={companyData} config={config} />
       </section>
 
       {/* ── TAB 2: Gráficos ──────────────────────────────────────────────── */}
