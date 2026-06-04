@@ -93,7 +93,7 @@ function getSemaphoreColor(type, value) {
 }
 
 // Matrix cell component — renders "trabajando datos" badge or formatted value
-function MatrixCell({ val, type = "currency", isActive }) {
+function MatrixCell({ val, type = "currency", isActive, fmt = formatValueText }) {
   const base = "p-3 text-center text-xs text-slate-600 dark:text-slate-300";
   const active = isActive ? "bg-indigo-50/40 dark:bg-indigo-950/10 border-x border-slate-200 dark:border-slate-700/50 font-medium" : "";
   let content;
@@ -106,7 +106,7 @@ function MatrixCell({ val, type = "currency", isActive }) {
   } else if (val === null || val === undefined || val === "") {
     content = <span className="text-slate-400 dark:text-slate-600">-</span>;
   } else {
-    content = formatValueText(val, type);
+    content = fmt(val, type);
   }
   return <td className={`${base} ${active}`}>{content}</td>;
 }
@@ -157,6 +157,8 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
   const [isDark, setIsDark] = useState(false);
   const [alert, setAlert] = useState(null);
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [currency, setCurrency] = useState('ARS');
+  const [rates,    setRates]    = useState(null);
 
   // Chart canvas refs
   const assetCanvasRef = useRef(null);
@@ -182,6 +184,13 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDark);
   }, [isDark]);
+
+  useEffect(() => {
+    fetch('/api/cotizaciones')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setRates(d); })
+      .catch(() => {});
+  }, []);
 
   // ── Asset doughnut chart (tab-general) ────────────────────────────────────
   useEffect(() => {
@@ -385,6 +394,22 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
     };
   }, [companyData, selectedMonthIdx, isDark, activeTab]);
 
+  const activeRate = currency === 'USD_OFICIAL' ? rates?.ars?.venta
+                   : currency === 'USD_MEP'     ? rates?.mep?.venta
+                   : null;
+
+  function cvt(val, dataType) {
+    if (val === null || val === undefined) return '–';
+    if (typeof val === 'string') return formatValueText(val, dataType);
+    if (dataType !== 'currency') return formatValueText(val, dataType);
+    if (!activeRate || currency === 'ARS') return formatValueText(val, 'currency');
+    const usd = val / activeRate;
+    return 'US$ ' + new Intl.NumberFormat('es-AR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(usd);
+  }
+
   // ── Computed values for selected month ────────────────────────────────────
   const monthName      = companyData.months[selectedMonthIdx];
   const factReal       = companyData.facturacion.real[selectedMonthIdx];
@@ -484,6 +509,32 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
               </>
             )}
           </button>
+
+          {/* Toggle de moneda */}
+          <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1 text-xs font-medium gap-0.5">
+            {[
+              { label: 'ARS',         val: 'ARS'        },
+              { label: 'USD Oficial', val: 'USD_OFICIAL' },
+              { label: 'USD MEP',     val: 'USD_MEP'     },
+            ].map(({ label, val }) => (
+              <button
+                key={val}
+                onClick={() => setCurrency(val)}
+                title={val === 'USD_OFICIAL'
+                  ? `Tipo de cambio oficial: $${rates?.ars?.venta?.toLocaleString('es-AR') ?? '...'}`
+                  : val === 'USD_MEP'
+                  ? `Dólar MEP: $${rates?.mep?.venta?.toLocaleString('es-AR') ?? '...'}`
+                  : 'Pesos argentinos'}
+                className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap ${
+                  currency === val
+                    ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <button
@@ -493,6 +544,15 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
           {isDark ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5" />}
         </button>
       </div>
+
+      {currency !== 'ARS' && activeRate && (
+        <p className="text-xs text-slate-400 dark:text-slate-500 -mt-4 mb-4">
+          Valores convertidos al tipo de cambio{' '}
+          {currency === 'USD_OFICIAL' ? 'oficial' : 'MEP'} actual:{' '}
+          ${new Intl.NumberFormat('es-AR').format(activeRate)} por USD.
+          Los gráficos se mantienen en ARS.
+        </p>
+      )}
 
       {/* No-data banner */}
       {!hasAnyData && (
@@ -531,8 +591,8 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
       {/* Quick metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[
-          { title: "Facturación Real",          value: formatValueText(factReal), subtitle: factObj ? `Objetivo: ${formatValueText(factObj)}` : "Objetivo sin definir", badge: isExcelError(factCumpl) ? "trabajando datos" : `${factCumpl || "0,00%"} Cumplimiento`, badgeClass: factSem.color, Icon: DollarSign,  iconColor: "text-sky-500 bg-sky-50 dark:bg-sky-950/50" },
-          { title: "Cobranza Real",              value: formatValueText(cobReal),  subtitle: cobObj  ? `Objetivo: ${formatValueText(cobObj)}`  : "Objetivo sin definir", badge: isExcelError(cobCumpl) ? "trabajando datos"  : `${cobCumpl || "0,00%"} Cumplimiento`,  badgeClass: cobSem.color,  Icon: CreditCard,  iconColor: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/50" },
+          { title: "Facturación Real",          value: cvt(factReal, 'currency'), subtitle: factObj ? `Objetivo: ${cvt(factObj, 'currency')}` : "Objetivo sin definir", badge: isExcelError(factCumpl) ? "trabajando datos" : `${factCumpl || "0,00%"} Cumplimiento`, badgeClass: factSem.color, Icon: DollarSign,  iconColor: "text-sky-500 bg-sky-50 dark:bg-sky-950/50" },
+          { title: "Cobranza Real",              value: cvt(cobReal, 'currency'),  subtitle: cobObj  ? `Objetivo: ${cvt(cobObj, 'currency')}`  : "Objetivo sin definir", badge: isExcelError(cobCumpl) ? "trabajando datos"  : `${cobCumpl || "0,00%"} Cumplimiento`,  badgeClass: cobSem.color,  Icon: CreditCard,  iconColor: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/50" },
           { title: "Variación m/m Facturación",  value: isExcelError(varFact) ? "trabajando datos" : (varFact || "0,00%"), subtitle: "Vs. mes anterior", badge: isExcelError(varFact) ? "Revisando" : (parseFloat(varFact) < 0 ? "Contracción" : "Aumento"), badgeClass: varSem.color, Icon: Percent,    iconColor: "text-amber-500 bg-amber-50 dark:bg-amber-950/50" },
           { title: "Ratio Liquidez Corriente",   value: isExcelError(actCorr) || isExcelError(pasCorr) ? "trabajando datos" : fmtNumber(ratioLiquidez, 2) + "x", subtitle: "Activo Corriente / Pasivo Corriente", badge: isExcelError(actCorr) || isExcelError(pasCorr) ? "trabajando datos" : liqSem.label, badgeClass: liqSem.color, Icon: Activity, iconColor: "text-indigo-500 bg-indigo-50 dark:bg-indigo-950/50" },
         ].map((m) => (
@@ -570,7 +630,7 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
                   </div>
                   <div className="mb-4">
                     <h4 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                      {hasData ? formatCustomValue(val, cv.dataType) : '–'}
+                      {hasData ? cvt(val, cv.dataType) : '–'}
                     </h4>
                     <p className="text-xs text-slate-500 mt-1">
                       {cv.dataType === 'currency' ? 'Moneda local' : cv.dataType === 'percent' ? 'Porcentaje' : 'Valor numérico'}
@@ -628,8 +688,8 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
                     <div className="bg-sky-500 h-3 rounded-full transition-all duration-500" style={{ width: `${Math.min(factPct, 100)}%` }} />
                   </div>
                   <div className="flex justify-between items-center mt-2 text-xs text-slate-500">
-                    <span>{formatValueText(factReal)}</span>
-                    <span>{factObj ? `Meta: ${formatValueText(factObj)}` : "Meta no presupuestada"}</span>
+                    <span>{cvt(factReal, 'currency')}</span>
+                    <span>{factObj ? `Meta: ${cvt(factObj, 'currency')}` : "Meta no presupuestada"}</span>
                   </div>
                 </div>
                 {/* Cobranza bar */}
@@ -642,8 +702,8 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
                     <div className="bg-emerald-500 h-3 rounded-full transition-all duration-500" style={{ width: `${Math.min(cobPct, 100)}%` }} />
                   </div>
                   <div className="flex justify-between items-center mt-2 text-xs text-slate-500">
-                    <span>{formatValueText(cobReal)}</span>
-                    <span>{cobObj ? `Meta: ${formatValueText(cobObj)}` : "Meta no presupuestada"}</span>
+                    <span>{cvt(cobReal, 'currency')}</span>
+                    <span>{cobObj ? `Meta: ${cvt(cobObj, 'currency')}` : "Meta no presupuestada"}</span>
                   </div>
                 </div>
               </div>
@@ -659,14 +719,14 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
                 {[
                   { label: "Caja, Bancos & FCI", value: caja + fci, note: "Disponibilidad líquida inmediata", semColor: liqInmColor },
                   { label: "Cheques Cartera",    value: cheques,    note: "Instrumentos negociables",          semColor: "bg-green-500" },
-                  { label: "Cuentas por Cobrar", value: deudores,   note: `Top 20 Deudores: ${formatValueText(companyData.activoCorriente.top20Deudores[selectedMonthIdx])}`, semColor: deudColor },
+                  { label: "Cuentas por Cobrar", value: deudores,   note: `Top 20 Deudores: ${cvt(companyData.activoCorriente.top20Deudores[selectedMonthIdx], 'currency')}`, semColor: deudColor },
                 ].map(({ label, value, note, semColor }) => (
                   <div key={label} className="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-semibold text-slate-500 uppercase">{label}</span>
                       <span className={`w-3 h-3 rounded-full ${semColor}`} />
                     </div>
-                    <p className="text-lg font-bold text-slate-900 dark:text-white">{formatValueText(value)}</p>
+                    <p className="text-lg font-bold text-slate-900 dark:text-white">{cvt(value, 'currency')}</p>
                     <p className="text-xs text-slate-500 mt-1">{note}</p>
                   </div>
                 ))}
@@ -680,7 +740,7 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
                 <div className="w-full md:w-1/2 space-y-3 mt-4 md:mt-0 md:pl-6 text-sm">
                   <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/50 pb-2">
                     <span className="font-medium">Total Activo Corriente</span>
-                    <span className="font-bold text-brand-600 dark:text-sky-400">{formatValueText(actCorr)}</span>
+                    <span className="font-bold text-brand-600 dark:text-sky-400">{cvt(actCorr, 'currency')}</span>
                   </div>
                   {[
                     { label: "Caja y Bancos",     color: "bg-sky-500",    val: pct(caja) },
@@ -722,9 +782,9 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
                     <p className="leading-relaxed">Durante <strong>{monthName}</strong>, la empresa presenta el siguiente comportamiento:</p>
                     <div className="space-y-3">
                       {[
-                        { sem: factSem, title: `Facturación: ${factSem.label}`, detail: `Facturado: ${formatValueText(factReal)} frente a objetivo de ${formatValueText(factObj)}. Cumplimiento del ${factCumpl || "0,00%"}.` },
-                        { sem: cobSem,  title: `Cobranzas: ${cobSem.label}`,    detail: `Recaudado: ${formatValueText(cobReal)} frente a objetivo de ${formatValueText(cobObj)}. Cumplimiento del ${cobCumpl || "0,00%"}.` },
-                        { sem: { bg: ratioLiquidez >= 1.5 ? "bg-emerald-500" : "bg-rose-500" }, title: `Ratio Liquidez: ${ratioLiquidez >= 1.5 ? "Fuerte" : "Ajustado"} (${fmtNumber(ratioLiquidez, 2)}x)`, detail: `Activo corriente de ${formatValueText(actCorr)} respalda el pasivo de ${formatValueText(pasCorr)}.` },
+                        { sem: factSem, title: `Facturación: ${factSem.label}`, detail: `Facturado: ${cvt(factReal, 'currency')} frente a objetivo de ${cvt(factObj, 'currency')}. Cumplimiento del ${factCumpl || "0,00%"}.` },
+                        { sem: cobSem,  title: `Cobranzas: ${cobSem.label}`,    detail: `Recaudado: ${cvt(cobReal, 'currency')} frente a objetivo de ${cvt(cobObj, 'currency')}. Cumplimiento del ${cobCumpl || "0,00%"}.` },
+                        { sem: { bg: ratioLiquidez >= 1.5 ? "bg-emerald-500" : "bg-rose-500" }, title: `Ratio Liquidez: ${ratioLiquidez >= 1.5 ? "Fuerte" : "Ajustado"} (${fmtNumber(ratioLiquidez, 2)}x)`, detail: `Activo corriente de ${cvt(actCorr, 'currency')} respalda el pasivo de ${cvt(pasCorr, 'currency')}.` },
                       ].map(({ sem, title, detail }, i) => (
                         <div key={i} className="flex items-start gap-3">
                           <span className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${sem.bg}`} />
@@ -748,7 +808,7 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
               </div>
               <p className="text-sm text-slate-300 leading-relaxed mb-4">
                 El mes de <span className="text-indigo-200 font-semibold">{monthName.toLowerCase()}</span> presenta una excelente recuperación en{" "}
-                <span className="font-semibold text-emerald-300">Cobranzas ({formatValueText(cobReal)})</span> impulsado probablemente por un récord de facturación anterior.
+                <span className="font-semibold text-emerald-300">Cobranzas ({cvt(cobReal, 'currency')})</span> impulsado probablemente por un récord de facturación anterior.
                 Sin embargo, el <span className="font-semibold text-rose-300">{fmtPercent(factPct)}</span> de cumplimiento en facturación sugiere que el esfuerzo de prospección debe redoblarse.
               </p>
               <div className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50 space-y-2 text-xs">
@@ -758,7 +818,7 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
                 </div>
                 <div className="flex items-start space-x-2 text-indigo-200">
                   <span className="bg-indigo-500/20 px-1.5 py-0.5 rounded font-bold text-indigo-400">2</span>
-                  <span><strong>Facturas por Cobrar:</strong> Los deudores por ventas representan {formatValueText(deudores)}. Plan de cobro intensivo.</span>
+                  <span><strong>Facturas por Cobrar:</strong> Los deudores por ventas representan {cvt(deudores, 'currency')}. Plan de cobro intensivo.</span>
                 </div>
               </div>
             </div>
@@ -877,7 +937,7 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
                         {r.label}
                       </td>
                       {Array.from({ length: 12 }, (_, mIdx) => (
-                        <MatrixCell key={mIdx} val={getNestedValue(companyData, r.key, mIdx)} type={r.type} isActive={mIdx === selectedMonthIdx} />
+                        <MatrixCell key={mIdx} val={getNestedValue(companyData, r.key, mIdx)} type={r.type} isActive={mIdx === selectedMonthIdx} fmt={cvt} />
                       ))}
                     </tr>
                   )
@@ -906,7 +966,7 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
                             const val = companyData.custom?.[cv.id]?.[mIdx] ?? null;
                             return (
                               <td key={mIdx} className={`px-3 py-3 text-sm text-center whitespace-nowrap ${mIdx === selectedMonthIdx ? "bg-indigo-50/40 dark:bg-indigo-950/10 border-x border-slate-200 dark:border-slate-700/50 font-medium text-slate-900 dark:text-slate-100" : "text-slate-300"}`}>
-                                {val !== null ? formatCustomValue(val, cv.dataType) : <span className="text-slate-600">–</span>}
+                                {val !== null ? cvt(val, cv.dataType) : <span className="text-slate-600">–</span>}
                               </td>
                             );
                           })}

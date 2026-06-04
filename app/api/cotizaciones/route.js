@@ -3,13 +3,17 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const [arResult, clResult] = await Promise.allSettled([
+  const [arResult, clResult, mepResult] = await Promise.allSettled([
     fetch('https://dolarapi.com/v1/dolares/oficial', {
       next: { revalidate: 600 },
       headers: { 'Accept': 'application/json' },
     }),
     fetch('https://mindicador.cl/api/dolar', {
       next: { revalidate: 3600 },
+      headers: { 'Accept': 'application/json' },
+    }),
+    fetch('https://dolarapi.com/v1/dolares/bolsa', {
+      next: { revalidate: 600 },
       headers: { 'Accept': 'application/json' },
     }),
   ]);
@@ -40,7 +44,19 @@ export async function GET() {
     } catch { /* silencioso */ }
   }
 
-  return NextResponse.json({ ars, clp }, {
+  let mep = null;
+  if (mepResult.status === 'fulfilled' && mepResult.value.ok) {
+    try {
+      const data = await mepResult.value.json();
+      mep = {
+        compra:      data.compra,
+        venta:       data.venta,
+        actualizado: data.fechaActualizacion ?? null,
+      };
+    } catch { /* silencioso */ }
+  }
+
+  return NextResponse.json({ ars, clp, mep }, {
     headers: {
       'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200',
     },
