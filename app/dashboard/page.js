@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getDashboardData, getDashboardConfig, getLastSync } from "@/lib/kv";
 import DashboardClient from "@/components/DashboardClient";
 import WelcomeBanner from "@/components/WelcomeBanner";
+import MacroContextStrip from "@/components/MacroContextStrip";
 import WelcomeVideoModal from "@/components/WelcomeVideoModal";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardFooter from "@/components/DashboardFooter";
@@ -30,6 +31,7 @@ export default async function DashboardPage() {
           userName={session.user.name}
           lastSync={lastSync}
         />
+        <MacroContextStrip />
         <DashboardClient
           initialData={data}
           config={config}
