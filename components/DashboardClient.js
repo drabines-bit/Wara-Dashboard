@@ -6,6 +6,7 @@ import { Chart, registerables } from "chart.js";
 import Link from "next/link";
 import { fmtCurrency, fmtPercent, fmtNumber } from '@/lib/format';
 import ProyeccionAnual from '@/components/ProyeccionAnual';
+import NotaMensual from '@/components/NotaMensual';
 import {
   DollarSign, CreditCard, Percent, Activity, LayoutDashboard,
   TrendingUp, TrafficCone, Table2, PieChart, Wallet, LineChart,
@@ -142,7 +143,7 @@ const MATRIX_ROWS = [
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function DashboardClient({ initialData, config, isAdmin }) {
+export default function DashboardClient({ initialData, config, isAdmin, initialNotas, year }) {
   const companyData = initialData || getEmptyData();
 
   const getInitialMonth = (d) => {
@@ -160,6 +161,19 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [currency, setCurrency] = useState('ARS');
   const [rates,    setRates]    = useState(null);
+  const [notas,    setNotas]    = useState(initialNotas ?? {});
+
+  function handleNotaSaved(mes, texto) {
+    setNotas(prev => {
+      const next = { ...prev };
+      if (texto?.trim()) {
+        next[String(mes)] = texto.trim();
+      } else {
+        delete next[String(mes)];
+      }
+      return next;
+    });
+  }
 
   // Chart canvas refs
   const assetCanvasRef = useRef(null);
@@ -665,6 +679,16 @@ export default function DashboardClient({ initialData, config, isAdmin }) {
 
       {/* ── TAB 1: Vista General ─────────────────────────────────────────── */}
       <section className={activeTab === "tab-general" ? "block" : "hidden"}>
+        {/* Nota del período */}
+        <NotaMensual
+          nota={notas[String(selectedMonthIdx)] ?? null}
+          mes={selectedMonthIdx}
+          mesNombre={companyData.months[selectedMonthIdx]}
+          year={year ?? new Date().getFullYear()}
+          isAdmin={isAdmin}
+          onSaved={handleNotaSaved}
+        />
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             {/* Análisis operativo */}

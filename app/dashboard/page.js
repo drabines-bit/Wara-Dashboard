@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
-import { getDashboardData, getDashboardConfig, getLastSync } from "@/lib/kv";
+import { getDashboardData, getDashboardConfig, getLastSync, getNotas } from "@/lib/kv";
 import DashboardClient from "@/components/DashboardClient";
 import WelcomeBanner from "@/components/WelcomeBanner";
 import MacroContextStrip from "@/components/MacroContextStrip";
@@ -13,11 +13,17 @@ export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
-  const [data, config, lastSync] = await Promise.all([
+  const year = new Date().getFullYear();
+
+  const [data, config, lastSync, notas] = await Promise.all([
     getDashboardData(),
     getDashboardConfig(),
     getLastSync(),
+    getNotas(year),
   ]);
+
+  const adminEmails = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim());
+  const isAdmin = adminEmails.includes(session.user?.email ?? '');
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -35,7 +41,9 @@ export default async function DashboardPage() {
         <DashboardClient
           initialData={data}
           config={config}
-          isAdmin={session.user.role === "admin"}
+          isAdmin={isAdmin}
+          initialNotas={notas}
+          year={year}
         />
       </main>
       <DashboardFooter links={config?.links} />
