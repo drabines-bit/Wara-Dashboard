@@ -2,6 +2,7 @@
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { WARA_LOGO_BASE64 } from "@/lib/logo";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -11,9 +12,11 @@ function LoginForm() {
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
       <div className="bg-slate-800 rounded-2xl p-10 w-full max-w-sm shadow-xl border border-slate-700">
         <div className="flex items-center space-x-3 mb-8">
-          <div className="w-10 h-10 bg-gradient-to-tr from-sky-400 to-indigo-500 rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-sm">W</span>
-          </div>
+          <img
+            src={WARA_LOGO_BASE64}
+            alt="Wara GPS"
+            className="h-12 w-auto object-contain"
+          />
           <div>
             <h1 className="text-white font-bold text-lg leading-none">WARA GPS</h1>
             <p className="text-slate-400 text-xs">Business Intelligence &amp; Finance</p>
