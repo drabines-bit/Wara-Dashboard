@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import { getServerSession } from 'next-auth';
 import { NextResponse } from 'next/server';
-import { setDashboardData, getDashboardConfig } from '@/lib/kv';
+import { setDashboardData, getDashboardConfig, setLastSync } from '@/lib/kv';
 
 export async function POST() {
   const session = await getServerSession();
@@ -50,6 +50,7 @@ export async function POST() {
 
     const data = parseSheetRows(rows, customVariables);
     await setDashboardData(data);
+    await setLastSync();
 
     return NextResponse.json({ ok: true });
 

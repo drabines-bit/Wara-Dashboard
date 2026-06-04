@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
-import { getDashboardData, setDashboardData } from "@/lib/kv";
+import { getDashboardData, setDashboardData, setLastSync } from "@/lib/kv";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -25,5 +25,6 @@ export async function POST(req) {
     return NextResponse.json({ error: "Payload inválido" }, { status: 400 });
   }
   await setDashboardData(body.data);
+  await setLastSync();
   return NextResponse.json({ ok: true });
 }
