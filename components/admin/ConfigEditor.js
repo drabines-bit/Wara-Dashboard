@@ -2,6 +2,15 @@
 
 import { useState } from "react";
 
+const PDF_SECTIONS_REGISTRY = [
+  { id: 'kpis',     label: 'KPIs y Diagnóstico',   desc: 'Indicadores del período seleccionado' },
+  { id: 'balance',  label: 'Balance',               desc: 'Activo corriente, no corriente y pasivo' },
+  { id: 'graficos', label: 'Gráficos y Tendencias', desc: 'Evolución mensual de facturación y cobranza' },
+  { id: 'matriz',   label: 'Matriz de Indicadores', desc: 'Tabla completa de los 12 meses' },
+];
+
+const PDF_SECTIONS_DEFAULT = ['kpis', 'balance', 'graficos', 'matriz'];
+
 const TV_CARD_REGISTRY = [
   { id: 'cumplimientoFacturacion', label: 'Cumpl. Facturación',    icon: 'ti-chart-bar'       },
   { id: 'cumplimientoCobranza',    label: 'Cumpl. Cobranza',       icon: 'ti-cash'            },
@@ -22,7 +31,8 @@ const TV_CARDS_DEFAULT = [
 export default function ConfigEditor({ initialConfig }) {
   const [config, setConfig] = useState({
     ...initialConfig,
-    tvMode: { ...initialConfig?.tvMode, cards: initialConfig?.tvMode?.cards ?? TV_CARDS_DEFAULT },
+    tvMode:    { ...initialConfig?.tvMode,    cards:    initialConfig?.tvMode?.cards    ?? TV_CARDS_DEFAULT    },
+    pdfExport: { ...initialConfig?.pdfExport, sections: initialConfig?.pdfExport?.sections ?? PDF_SECTIONS_DEFAULT },
   });
   const [status, setStatus] = useState(null); // null | "saving" | "saved" | "error"
 
@@ -209,6 +219,59 @@ export default function ConfigEditor({ initialConfig }) {
                 <i className={`ti ${card.icon} text-base`} aria-hidden="true" />
                 <span className="flex-1 text-xs font-medium">{card.label}</span>
                 <i className={`ti ${enabled ? 'ti-check' : 'ti-plus'} text-xs opacity-60`} aria-hidden="true" />
+              </button>
+            );
+          })}
+        </div>
+      </Section>
+
+      {/* EXPORT PDF */}
+      <Section
+        title={<span className="flex items-center gap-2"><i className="ti ti-file-export" aria-hidden="true" />Secciones del export PDF</span>}
+        desc="La portada siempre se incluye. Elegí el resto."
+      >
+        {/* Portada — bloqueada */}
+        <div className="flex items-center gap-2 px-3 py-2 mb-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 opacity-60 cursor-not-allowed">
+          <i className="ti ti-file-text text-base text-slate-400" aria-hidden="true" />
+          <div className="flex-1">
+            <p className="text-xs font-medium text-slate-600 dark:text-slate-400">Portada</p>
+            <p className="text-xs text-slate-400">Logo, nombre y período — siempre incluida</p>
+          </div>
+          <i className="ti ti-lock text-xs text-slate-400" aria-hidden="true" />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {PDF_SECTIONS_REGISTRY.map(sec => {
+            const activeSections = config?.pdfExport?.sections ?? PDF_SECTIONS_DEFAULT;
+            const enabled = activeSections.includes(sec.id);
+            return (
+              <button
+                key={sec.id}
+                type="button"
+                onClick={() => {
+                  const next = enabled
+                    ? activeSections.filter(id => id !== sec.id)
+                    : [...activeSections, sec.id];
+                  setConfig(prev => ({
+                    ...prev,
+                    pdfExport: { ...prev.pdfExport, sections: next },
+                  }));
+                }}
+                className={`flex items-start gap-3 px-3 py-2.5 rounded-lg border text-left transition-all ${
+                  enabled
+                    ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-950/40'
+                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
+                }`}
+              >
+                <i className={`ti ${enabled ? 'ti-check' : 'ti-plus'} text-sm mt-0.5 flex-shrink-0 ${
+                  enabled ? 'text-indigo-500' : 'text-slate-400'
+                }`} aria-hidden="true" />
+                <div>
+                  <p className={`text-xs font-medium ${
+                    enabled ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-600 dark:text-slate-400'
+                  }`}>{sec.label}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{sec.desc}</p>
+                </div>
               </button>
             );
           })}
