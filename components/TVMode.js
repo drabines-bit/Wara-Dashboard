@@ -3,6 +3,23 @@ import { useState, useEffect, useMemo } from 'react';
 import { WARA_LOGO_BASE64 } from '@/lib/logo';
 import { fmtNumber } from '@/lib/format';
 
+const TV_CARD_REGISTRY = [
+  { id: 'cumplimientoFacturacion', label: 'Cumpl. Facturación',    icon: 'ti-chart-bar'       },
+  { id: 'cumplimientoCobranza',    label: 'Cumpl. Cobranza',       icon: 'ti-cash'            },
+  { id: 'variacionFacturacion',    label: 'Variación Facturación', icon: 'ti-trending-up'     },
+  { id: 'variacionCobranza',       label: 'Variación Cobranza',    icon: 'ti-trending-up'     },
+  { id: 'liquidez',                label: 'Ratio Liquidez',        icon: 'ti-droplet'         },
+  { id: 'inflacion',               label: 'Inflación INDEC',       icon: 'ti-percentage'      },
+  { id: 'dolarOficial',            label: 'Dólar Oficial',         icon: 'ti-currency-dollar' },
+  { id: 'dolarMep',                label: 'Dólar MEP',             icon: 'ti-currency-dollar' },
+  { id: 'dolarClp',                label: 'CLP',                   icon: 'ti-currency'        },
+];
+
+const TV_CARDS_DEFAULT = [
+  'cumplimientoFacturacion', 'cumplimientoCobranza', 'variacionFacturacion',
+  'liquidez', 'inflacion', 'dolarOficial',
+];
+
 // ── Semáforo ──────────────────────────────────────────────────────────
 
 function sem(type, val, config) {
@@ -39,10 +56,11 @@ function sem(type, val, config) {
 
 // ── Tarjeta TV ────────────────────────────────────────────────────────
 
-function TVCard({ label, value, badge, semColors, sub }) {
+function TVCard({ label, value, badge, semColors, sub, icon }) {
   return (
     <div className={`flex-1 bg-slate-950 rounded-2xl p-6 ring-1 ${semColors.ring}
-                     shadow-xl ${semColors.glow} flex flex-col justify-between min-h-0`}>
+                     shadow-xl ${semColors.glow} flex flex-col justify-between min-h-0`}
+         style={{ position: 'relative', overflow: 'hidden' }}>
       <p className="text-slate-600 text-xs font-bold uppercase tracking-[.2em] mb-2 leading-tight">
         {label}
       </p>
@@ -55,13 +73,24 @@ function TVCard({ label, value, badge, semColors, sub }) {
         </span>
         {sub && <span className="text-slate-600 text-xs">{sub}</span>}
       </div>
+      {icon && (
+        <i
+          className={`ti ${icon}`}
+          style={{
+            position: 'absolute', bottom: '-14px', right: '-4px',
+            fontSize: '110px', opacity: 0.07, color: 'white',
+            lineHeight: 1, pointerEvents: 'none', userSelect: 'none',
+          }}
+          aria-hidden="true"
+        />
+      )}
     </div>
   );
 }
 
 // ── Componente principal ──────────────────────────────────────────────
 
-export default function TVMode({ companyData, config, lastSync, onExit }) {
+export default function TVMode({ companyData, config, lastSync, onExit, tvCards = TV_CARDS_DEFAULT }) {
   const [hora,  setHora]  = useState('');
   const [fecha, setFecha] = useState('');
   const [rates, setRates] = useState(null);
@@ -204,54 +233,72 @@ export default function TVMode({ companyData, config, lastSync, onExit }) {
 
         {/* Fila 1: indicadores operativos */}
         <div className="flex gap-4 flex-1 min-h-0">
-          <TVCard
-            label={`Cumplimiento · ${config?.labels?.facturacion ?? 'Facturación'}`}
-            value={pct(facCumpl)}
-            badge={cFact.label}
-            semColors={cFact}
-          />
-          <TVCard
-            label={`Cumplimiento · ${config?.labels?.cobranza ?? 'Cobranza'}`}
-            value={pct(cobCumpl)}
-            badge={cCob.label}
-            semColors={cCob}
-          />
-          <TVCard
-            label={`Variación M/M · ${config?.labels?.variacion ?? 'Facturación'}`}
-            value={facVar !== null ? (facVar > 0 ? '+' : '') + pct(facVar) : '–'}
-            badge={cVar.label}
-            semColors={cVar}
-          />
+          {tvCards.includes('cumplimientoFacturacion') && (
+            <TVCard
+              label={`Cumplimiento · ${config?.labels?.facturacion ?? 'Facturación'}`}
+              value={pct(facCumpl)}
+              badge={cFact.label}
+              semColors={cFact}
+              icon="ti-chart-bar"
+            />
+          )}
+          {tvCards.includes('cumplimientoCobranza') && (
+            <TVCard
+              label={`Cumplimiento · ${config?.labels?.cobranza ?? 'Cobranza'}`}
+              value={pct(cobCumpl)}
+              badge={cCob.label}
+              semColors={cCob}
+              icon="ti-cash"
+            />
+          )}
+          {tvCards.includes('variacionFacturacion') && (
+            <TVCard
+              label={`Variación M/M · ${config?.labels?.variacion ?? 'Facturación'}`}
+              value={facVar !== null ? (facVar > 0 ? '+' : '') + pct(facVar) : '–'}
+              badge={cVar.label}
+              semColors={cVar}
+              icon="ti-trending-up"
+            />
+          )}
         </div>
 
         {/* Fila 2: contexto */}
         <div className="flex gap-4 flex-1 min-h-0">
-          <TVCard
-            label={`Ratio · ${config?.labels?.liquidez ?? 'Liquidez Corriente'}`}
-            value={ratio(liquidez)}
-            badge={cLiq.label}
-            sub="Activo Cte / Pasivo Cte"
-            semColors={cLiq}
-          />
-          <TVCard
-            label={`Inflación mensual · ${inflMes}`}
-            value={pct(inflMensual)}
-            badge={cInfl.label}
-            sub="Fuente: INDEC"
-            semColors={cInfl}
-          />
-          <TVCard
-            label="Dólar oficial · Banco Nación"
-            value={ars(arsVenta)}
-            badge="venta"
-            sub="Tipo de cambio ARS/USD"
-            semColors={{
-              ring:  'ring-indigo-900',
-              glow:  'shadow-indigo-950/50',
-              text:  'text-indigo-200',
-              badge: 'bg-indigo-900/50 text-indigo-300',
-            }}
-          />
+          {tvCards.includes('liquidez') && (
+            <TVCard
+              label={`Ratio · ${config?.labels?.liquidez ?? 'Liquidez Corriente'}`}
+              value={ratio(liquidez)}
+              badge={cLiq.label}
+              sub="Activo Cte / Pasivo Cte"
+              semColors={cLiq}
+              icon="ti-droplet"
+            />
+          )}
+          {tvCards.includes('inflacion') && (
+            <TVCard
+              label={`Inflación mensual · ${inflMes}`}
+              value={pct(inflMensual)}
+              badge={cInfl.label}
+              sub="Fuente: INDEC"
+              semColors={cInfl}
+              icon="ti-percentage"
+            />
+          )}
+          {tvCards.includes('dolarOficial') && (
+            <TVCard
+              label="Dólar oficial · Banco Nación"
+              value={ars(arsVenta)}
+              badge="venta"
+              sub="Tipo de cambio ARS/USD"
+              semColors={{
+                ring:  'ring-indigo-900',
+                glow:  'shadow-indigo-950/50',
+                text:  'text-indigo-200',
+                badge: 'bg-indigo-900/50 text-indigo-300',
+              }}
+              icon="ti-currency-dollar"
+            />
+          )}
         </div>
       </div>
 

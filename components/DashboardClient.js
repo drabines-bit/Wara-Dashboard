@@ -19,6 +19,11 @@ import {
 
 Chart.register(...registerables);
 
+const TV_CARDS_DEFAULT = [
+  'cumplimientoFacturacion', 'cumplimientoCobranza', 'variacionFacturacion',
+  'liquidez', 'inflacion', 'dolarOficial',
+];
+
 // ─── Data helpers ────────────────────────────────────────────────────────────
 
 function getEmptyData() {
@@ -559,6 +564,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
           config={config}
           lastSync={lastSync}
           onExit={() => setTvMode(false)}
+          tvCards={config?.tvMode?.cards ?? TV_CARDS_DEFAULT}
         />
       )}
       {/* Controls: month selector + export + dark mode */}

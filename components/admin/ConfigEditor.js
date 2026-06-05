@@ -2,8 +2,28 @@
 
 import { useState } from "react";
 
+const TV_CARD_REGISTRY = [
+  { id: 'cumplimientoFacturacion', label: 'Cumpl. Facturación',    icon: 'ti-chart-bar'       },
+  { id: 'cumplimientoCobranza',    label: 'Cumpl. Cobranza',       icon: 'ti-cash'            },
+  { id: 'variacionFacturacion',    label: 'Variación Facturación', icon: 'ti-trending-up'     },
+  { id: 'variacionCobranza',       label: 'Variación Cobranza',    icon: 'ti-trending-up'     },
+  { id: 'liquidez',                label: 'Ratio Liquidez',        icon: 'ti-droplet'         },
+  { id: 'inflacion',               label: 'Inflación INDEC',       icon: 'ti-percentage'      },
+  { id: 'dolarOficial',            label: 'Dólar Oficial',         icon: 'ti-currency-dollar' },
+  { id: 'dolarMep',                label: 'Dólar MEP',             icon: 'ti-currency-dollar' },
+  { id: 'dolarClp',                label: 'CLP',                   icon: 'ti-currency'        },
+];
+
+const TV_CARDS_DEFAULT = [
+  'cumplimientoFacturacion', 'cumplimientoCobranza', 'variacionFacturacion',
+  'liquidez', 'inflacion', 'dolarOficial',
+];
+
 export default function ConfigEditor({ initialConfig }) {
-  const [config, setConfig] = useState(initialConfig);
+  const [config, setConfig] = useState({
+    ...initialConfig,
+    tvMode: { ...initialConfig?.tvMode, cards: initialConfig?.tvMode?.cards ?? TV_CARDS_DEFAULT },
+  });
   const [status, setStatus] = useState(null); // null | "saving" | "saved" | "error"
 
   function updateConfig(path, value) {
@@ -158,6 +178,40 @@ export default function ConfigEditor({ initialConfig }) {
               ))}
             </tbody>
           </table>
+        </div>
+      </Section>
+
+      {/* MODO TV */}
+      <Section
+        title={<span className="flex items-center gap-2"><i className="ti ti-device-tv" aria-hidden="true" />Tarjetas visibles en Modo TV</span>}
+        desc="Seleccioná qué métricas aparecen en el Modo TV de oficina."
+      >
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {TV_CARD_REGISTRY.map(card => {
+            const activeCards = config?.tvMode?.cards ?? TV_CARDS_DEFAULT;
+            const enabled = activeCards.includes(card.id);
+            return (
+              <button
+                key={card.id}
+                type="button"
+                onClick={() => {
+                  const next = enabled
+                    ? activeCards.filter(id => id !== card.id)
+                    : [...activeCards, card.id];
+                  updateConfig('tvMode.cards', next);
+                }}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-left transition-all ${
+                  enabled
+                    ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300'
+                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500'
+                }`}
+              >
+                <i className={`ti ${card.icon} text-base`} aria-hidden="true" />
+                <span className="flex-1 text-xs font-medium">{card.label}</span>
+                <i className={`ti ${enabled ? 'ti-check' : 'ti-plus'} text-xs opacity-60`} aria-hidden="true" />
+              </button>
+            );
+          })}
         </div>
       </Section>
 
