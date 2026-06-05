@@ -467,11 +467,44 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
   const hasAnyData    = companyData.facturacion.real.some((v) => v !== null);
   const hasCompMix    = companyData.facturacionMix?.ratioAbonos?.some((v) => v !== null);
 
+  const recDesc = (() => {
+    if (factReal === null) return null;
+    if (!factObj) return `${monthName}: facturación real ${cvt(factReal, 'currency')} — sin objetivo definido para el período.`;
+    if (factPct >= 95 && cobPct >= 95)
+      return `${monthName}: facturación y cobranza superan el objetivo. Doble cumplimiento confirmado.`;
+    if (factPct >= 95) {
+      const cobStr = cobPct >= 80 ? `en seguimiento (${fmtPercent(cobPct)})` : cobPct > 0 ? `con margen de mejora (${fmtPercent(cobPct)})` : 'sin objetivo';
+      return `Facturación de ${monthName} en verde (${fmtPercent(factPct)}). Cobranza ${cobStr}.`;
+    }
+    if (factPct >= 80)
+      return `Facturación de ${monthName} al ${fmtPercent(factPct)}: dentro del rango aceptable, con brecha respecto al objetivo.`;
+    return `Facturación de ${monthName} al ${fmtPercent(factPct)}: por debajo del umbral crítico. Revisá causas y reforzá el plan comercial.`;
+  })();
+
+  const recItems = [
+    (caja + fci) / (actTotal || 1) > 0.35 && {
+      label: 'Caja excedente',
+      detail: `${fmtPercent(((caja + fci) / actTotal) * 100)} del activo en liquidez inmediata. Considerá plazos fijos o FCI de alta liquidez.`,
+    },
+    deudPct > 30 && {
+      label: 'Deudores elevados',
+      detail: `${cvt(deudores, 'currency')} en cuentas por cobrar (${fmtPercent(deudPct)} del activo). Plan de cobro activo recomendado.`,
+    },
+    ratioLiquidez > 0 && ratioLiquidez < 1.5 && {
+      label: 'Liquidez ajustada',
+      detail: `Ratio ${fmtNumber(ratioLiquidez, 2)}x. Monitoreá los vencimientos del pasivo corriente (${cvt(pasCorr, 'currency')}).`,
+    },
+    cobPct > 0 && cobPct < 80 && {
+      label: 'Cobranza bajo objetivo',
+      detail: `${fmtPercent(cobPct)} de cumplimiento. Revisá plazos y seguimiento con los principales clientes.`,
+    },
+  ].filter(Boolean);
+
   const TABS = [
-    { id: "tab-general",    label: "Vista General (Enfoque Mensual)", Icon: LayoutDashboard },
+    { id: "tab-general",    label: "Vista General",                   Icon: LayoutDashboard },
     { id: "tab-charts",     label: "Gráficos y Tendencias",           Icon: TrendingUp      },
     { id: "tab-semaphores", label: "Reglas de Semáforos",             Icon: TrafficCone     },
-    { id: "tab-table",      label: "Matriz de Indicadores (2026)",    Icon: Table2          },
+    { id: "tab-table",      label: `Matriz de Datos ${year ?? new Date().getFullYear()}`, Icon: Table2 },
   ];
 
   async function handleExportPDF() {
@@ -518,8 +551,8 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
         />
       )}
       {/* Controls: month selector + export + dark mode */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-y-3 mb-6">
+        <div className="flex flex-wrap items-center gap-2">
           <select
             value={selectedMonthIdx}
             onChange={(e) => setSelectedMonthIdx(parseInt(e.target.value))}
@@ -575,35 +608,37 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
             ))}
           </div>
 
-          <button
-            onClick={() => setPresentationMode(true)}
-            className="flex items-center gap-2 text-sm font-medium
-                       text-slate-600 dark:text-slate-400
-                       hover:text-slate-900 dark:hover:text-white
-                       border border-slate-200 dark:border-slate-700
-                       hover:border-slate-400 dark:hover:border-slate-500
-                       bg-white dark:bg-slate-800
-                       px-4 py-2 rounded-xl transition"
-            title="Modo presentación para directorio"
-          >
-            <i className="ti ti-presentation text-base" aria-hidden="true"/>
-            Presentación
-          </button>
+          <div className="hidden md:flex items-center gap-2">
+            <button
+              onClick={() => setPresentationMode(true)}
+              className="flex items-center gap-2 text-sm font-medium
+                         text-slate-600 dark:text-slate-400
+                         hover:text-slate-900 dark:hover:text-white
+                         border border-slate-200 dark:border-slate-700
+                         hover:border-slate-400 dark:hover:border-slate-500
+                         bg-white dark:bg-slate-800
+                         px-4 py-2 rounded-xl transition"
+              title="Modo presentación para directorio"
+            >
+              <i className="ti ti-presentation text-base" aria-hidden="true"/>
+              Presentación
+            </button>
 
-          <button
-            onClick={() => setTvMode(true)}
-            className="flex items-center gap-2 text-sm font-medium
-                       text-slate-600 dark:text-slate-400
-                       hover:text-slate-900 dark:hover:text-white
-                       border border-slate-200 dark:border-slate-700
-                       hover:border-slate-400 dark:hover:border-slate-500
-                       bg-white dark:bg-slate-800
-                       px-4 py-2 rounded-xl transition"
-            title="Modo TV para pantalla de la oficina"
-          >
-            <i className="ti ti-device-tv text-base" aria-hidden="true"/>
-            Modo TV
-          </button>
+            <button
+              onClick={() => setTvMode(true)}
+              className="flex items-center gap-2 text-sm font-medium
+                         text-slate-600 dark:text-slate-400
+                         hover:text-slate-900 dark:hover:text-white
+                         border border-slate-200 dark:border-slate-700
+                         hover:border-slate-400 dark:hover:border-slate-500
+                         bg-white dark:bg-slate-800
+                         px-4 py-2 rounded-xl transition"
+              title="Modo TV para pantalla de la oficina"
+            >
+              <i className="ti ti-device-tv text-base" aria-hidden="true"/>
+              Modo TV
+            </button>
+          </div>
         </div>
 
         <button
@@ -658,20 +693,20 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
       )}
 
       {/* Quick metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
           { title: "Facturación Real",          value: cvt(factReal, 'currency'), subtitle: factObj ? `Objetivo: ${cvt(factObj, 'currency')}` : "Objetivo sin definir", badge: isExcelError(factCumpl) ? "trabajando datos" : `${factCumpl || "0,00%"} Cumplimiento`, badgeClass: factSem.color, Icon: DollarSign,  iconColor: "text-sky-500 bg-sky-50 dark:bg-sky-950/50" },
           { title: "Cobranza Real",              value: cvt(cobReal, 'currency'),  subtitle: cobObj  ? `Objetivo: ${cvt(cobObj, 'currency')}`  : "Objetivo sin definir", badge: isExcelError(cobCumpl) ? "trabajando datos"  : `${cobCumpl || "0,00%"} Cumplimiento`,  badgeClass: cobSem.color,  Icon: CreditCard,  iconColor: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/50" },
           { title: "Variación m/m Facturación",  value: isExcelError(varFact) ? "trabajando datos" : (varFact || "0,00%"), subtitle: "Vs. mes anterior", badge: isExcelError(varFact) ? "Revisando" : (parseFloat(varFact) < 0 ? "Contracción" : "Aumento"), badgeClass: varSem.color, Icon: Percent,    iconColor: "text-amber-500 bg-amber-50 dark:bg-amber-950/50" },
           { title: "Ratio Liquidez Corriente",   value: isExcelError(actCorr) || isExcelError(pasCorr) ? "trabajando datos" : fmtNumber(ratioLiquidez, 2) + "x", subtitle: "Activo Corriente / Pasivo Corriente", badge: isExcelError(actCorr) || isExcelError(pasCorr) ? "trabajando datos" : liqSem.label, badgeClass: liqSem.color, Icon: Activity, iconColor: "text-indigo-500 bg-indigo-50 dark:bg-indigo-950/50" },
-        ].map((m) => (
-          <div key={m.title} className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800/80 flex flex-col justify-between hover:shadow-md transition-all">
+        ].map((m, idx) => (
+          <div key={m.title} className={`bg-white dark:bg-slate-800 rounded-2xl flex flex-col justify-between hover:shadow-md transition-all ${idx === 0 ? 'p-6 shadow-sm border border-sky-100 dark:border-sky-900/30' : 'p-5 shadow-sm border border-slate-100 dark:border-slate-800/80'}`}>
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{m.title}</span>
+              <span className="text-xs font-medium text-slate-500">{m.title}</span>
               <div className={`${m.iconColor} p-2.5 rounded-xl`}><m.Icon className="w-5 h-5" /></div>
             </div>
             <div className="mb-4">
-              <h4 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{m.value}</h4>
+              <h4 className={`${idx === 0 ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'} font-bold tracking-tight text-slate-900 dark:text-white`}>{m.value}</h4>
               <p className="text-xs text-slate-500 mt-1">{m.subtitle}</p>
             </div>
             <div className="pt-3 border-t border-slate-50 dark:border-slate-700/50">
@@ -692,7 +727,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
               return (
                 <div key={cv.id} className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800/80 flex flex-col justify-between hover:shadow-md transition-all">
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{cv.displayName}</span>
+                    <span className="text-xs font-medium text-slate-500">{cv.displayName}</span>
                     <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700">
                       <span className="w-5 h-5 block rounded-full" style={{ background: cv.chartColor }} />
                     </div>
@@ -885,21 +920,29 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
                 <Sparkles className="w-5 h-5 text-indigo-300 animate-pulse" />
                 <h3 className="text-lg font-bold text-white">Recomendación Wara GPS</h3>
               </div>
-              <p className="text-sm text-slate-300 leading-relaxed mb-4">
-                El mes de <span className="text-indigo-200 font-semibold">{monthName.toLowerCase()}</span> presenta una excelente recuperación en{" "}
-                <span className="font-semibold text-emerald-300">Cobranzas ({cvt(cobReal, 'currency')})</span> impulsado probablemente por un récord de facturación anterior.
-                Sin embargo, el <span className="font-semibold text-rose-300">{fmtPercent(factPct)}</span> de cumplimiento en facturación sugiere que el esfuerzo de prospección debe redoblarse.
-              </p>
-              <div className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50 space-y-2 text-xs">
-                <div className="flex items-start space-x-2 text-indigo-200">
-                  <span className="bg-indigo-500/20 px-1.5 py-0.5 rounded font-bold text-indigo-400">1</span>
-                  <span><strong>Movilizar Activos:</strong> Invertir la caja ociosa en FCI o plazos fijos remunerados a corto plazo.</span>
-                </div>
-                <div className="flex items-start space-x-2 text-indigo-200">
-                  <span className="bg-indigo-500/20 px-1.5 py-0.5 rounded font-bold text-indigo-400">2</span>
-                  <span><strong>Facturas por Cobrar:</strong> Los deudores por ventas representan {cvt(deudores, 'currency')}. Plan de cobro intensivo.</span>
-                </div>
-              </div>
+              {factReal === null ? (
+                <p className="text-sm text-slate-400 italic">Sin datos para este período.</p>
+              ) : (
+                <>
+                  {recDesc && (
+                    <p className="text-sm text-slate-300 leading-relaxed mb-4">{recDesc}</p>
+                  )}
+                  {recItems.length > 0 ? (
+                    <div className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50 space-y-2 text-xs">
+                      {recItems.map(({ label, detail }, i) => (
+                        <div key={i} className="flex items-start space-x-2 text-indigo-200">
+                          <span className="bg-indigo-500/20 px-1.5 py-0.5 rounded font-bold text-indigo-400 flex-shrink-0">{i + 1}</span>
+                          <span><strong>{label}:</strong> {detail}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50 text-xs text-emerald-300">
+                      <strong>Indicadores en orden.</strong> Seguí monitoreando facturación y cobranza para mantener la tendencia.
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -1048,7 +1091,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
                           {companyData.months.map((_, mIdx) => {
                             const val = companyData.custom?.[cv.id]?.[mIdx] ?? null;
                             return (
-                              <td key={mIdx} className={`px-3 py-3 text-sm text-center whitespace-nowrap ${mIdx === selectedMonthIdx ? "bg-indigo-50/40 dark:bg-indigo-950/10 border-x border-slate-200 dark:border-slate-700/50 font-medium text-slate-900 dark:text-slate-100" : "text-slate-300"}`}>
+                              <td key={mIdx} className={`px-3 py-3 text-sm text-center whitespace-nowrap ${mIdx === selectedMonthIdx ? "bg-indigo-50/40 dark:bg-indigo-950/10 border-x border-slate-200 dark:border-slate-700/50 font-medium text-slate-900 dark:text-slate-100" : "text-slate-500"}`}>
                                 {val !== null ? cvt(val, cv.dataType) : <span className="text-slate-600">–</span>}
                               </td>
                             );

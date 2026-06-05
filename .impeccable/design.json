@@ -1,0 +1,262 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-05T00:00:00Z",
+  "title": "Design System: Wara GPS Dashboard",
+  "extensions": {
+    "colorMeta": {
+      "azul-wara": {
+        "role": "primary",
+        "displayName": "Azul Wara",
+        "canonical": "oklch(56% 0.18 231)",
+        "tonalRamp": ["#082f49", "#0c4a6e", "#075985", "#0369a1", "#0284c7", "#38bdf8", "#bae6fd", "#f0f9ff"]
+      },
+      "azul-wara-deep": {
+        "role": "primary-hover",
+        "displayName": "Azul Wara Deep",
+        "canonical": "oklch(48% 0.18 231)",
+        "tonalRamp": ["#082f49", "#0c4a6e", "#075985", "#0369a1", "#0284c7", "#38bdf8", "#bae6fd", "#f0f9ff"]
+      },
+      "accent-indigo": {
+        "role": "secondary",
+        "displayName": "Índigo Acción",
+        "canonical": "oklch(52% 0.27 274)",
+        "tonalRamp": ["#1e1b4b", "#312e81", "#3730a3", "#4338ca", "#4f46e5", "#818cf8", "#c7d2fe", "#eef2ff"]
+      },
+      "accent-purple": {
+        "role": "tertiary",
+        "displayName": "Púrpura Odoo",
+        "canonical": "oklch(65% 0.25 303)",
+        "tonalRamp": ["#3b0764", "#581c87", "#6b21a8", "#7e22ce", "#a855f7", "#c084fc", "#d8b4fe", "#f3e8ff"]
+      },
+      "status-success": {
+        "role": "semantic-success",
+        "displayName": "Success Emerald",
+        "canonical": "oklch(68% 0.17 162)",
+        "tonalRamp": ["#022c22", "#064e3b", "#065f46", "#047857", "#059669", "#10b981", "#6ee7b7", "#d1fae5"]
+      },
+      "status-warning": {
+        "role": "semantic-warning",
+        "displayName": "Warning Amber",
+        "canonical": "oklch(78% 0.15 76)",
+        "tonalRamp": ["#451a03", "#78350f", "#92400e", "#b45309", "#d97706", "#f59e0b", "#fcd34d", "#fef9c3"]
+      },
+      "status-danger": {
+        "role": "semantic-danger",
+        "displayName": "Danger Rose",
+        "canonical": "oklch(63% 0.22 14)",
+        "tonalRamp": ["#4c0519", "#881337", "#9f1239", "#be123c", "#e11d48", "#f43f5e", "#fda4af", "#ffe4e6"]
+      },
+      "ink-primary": {
+        "role": "neutral-ink",
+        "displayName": "Ink Primary",
+        "canonical": "oklch(14% 0.02 255)",
+        "tonalRamp": ["#020617", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1"]
+      },
+      "bg-page": {
+        "role": "neutral-bg",
+        "displayName": "Surface Page",
+        "canonical": "oklch(98% 0.004 255)",
+        "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f8fafc"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display / KPI",
+        "purpose": "Números protagonistas en cards de KPI. Máximo un número de esta escala por card."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Títulos de sección, tab headers, nombres de vista."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Cabeceras de card, etiquetas de gráfico, nombres de panel."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Datos en tabla, texto descriptivo, valores de celda. El tamaño universal de datos."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Metadatos, timestamps, leyendas de gráfico, fuentes de datos."
+      }
+    },
+    "shadows": [
+      {
+        "name": "ambient-resting",
+        "value": "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+        "purpose": "Estado por defecto de todos los cards. Tailwind shadow-sm."
+      },
+      {
+        "name": "ambient-hover",
+        "value": "0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)",
+        "purpose": "Hover en cards interactivos, junto con translateY(-1px)."
+      },
+      {
+        "name": "elevated",
+        "value": "0 8px 24px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)",
+        "purpose": "Dropdowns, popovers, tooltips."
+      },
+      {
+        "name": "modal",
+        "value": "0 20px 60px rgba(0,0,0,0.15)",
+        "purpose": "Modales y drawers. Límite superior del sistema."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Transiciones de estado general (color, background, border)."
+      },
+      {
+        "name": "ease-decelerate",
+        "value": "cubic-bezier(0, 0, 0.2, 1)",
+        "purpose": "Entradas: elementos que llegan a reposo (slide-in, fade-in)."
+      },
+      {
+        "name": "ease-accelerate",
+        "value": "cubic-bezier(0.4, 0, 1, 1)",
+        "purpose": "Salidas: elementos que salen de reposo (slide-out, fade-out)."
+      },
+      {
+        "name": "duration-fast",
+        "value": "150ms",
+        "purpose": "Hover states, color changes."
+      },
+      {
+        "name": "duration-standard",
+        "value": "200ms",
+        "purpose": "Card hover lifts, transitions de tab."
+      },
+      {
+        "name": "duration-emphasis",
+        "value": "300ms",
+        "purpose": "Entradas de panel, skeleton-to-content."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" },
+      { "name": "7xl", "value": "80rem", "note": "max-w-7xl container" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acciones de admin y confirmaciones. Índigo, no Azul Wara.",
+      "html": "<button class=\"ds-btn-primary\">Panel Admin</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 4px; background: #4f46e5; color: #fff; padding: 6px 12px; font-size: 12px; font-weight: 500; border: none; border-radius: 8px; cursor: pointer; transition: background 0.15s, transform 0.15s; font-family: 'Plus Jakarta Sans', sans-serif; white-space: nowrap; letter-spacing: 0; line-height: 1.4; } .ds-btn-primary:hover { background: #4338ca; transform: translateY(-1px); } .ds-btn-primary:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; } .ds-btn-primary:active { transform: translateY(0); background: #3730a3; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Acciones secundarias dentro de panels (Actualizar, Reintentar).",
+      "html": "<button class=\"ds-btn-ghost\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8\"/><path d=\"M21 3v5h-5\"/></svg>Actualizar</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; gap: 4px; background: transparent; color: #64748b; padding: 4px 8px; font-size: 12px; font-weight: 500; border: none; border-radius: 8px; cursor: pointer; transition: color 0.15s; font-family: 'Plus Jakarta Sans', sans-serif; } .ds-btn-ghost:hover { color: #4f46e5; } .ds-btn-ghost:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; } .ds-btn-ghost:disabled { opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Data Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Contenedor principal de datos del dashboard. No anidar cards.",
+      "html": "<div class=\"ds-card\"><p class=\"ds-card__label\">Facturación Real</p><p class=\"ds-card__value\">$12.450.000</p><span class=\"ds-badge ds-badge--success\">Excelente ≥95%</span></div>",
+      "css": ".ds-card { background: #fff; border: 1px solid #f1f5f9; border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04); transition: box-shadow 0.2s, transform 0.2s; font-family: 'Plus Jakarta Sans', sans-serif; } .ds-card__label { font-size: 12px; font-weight: 500; color: #94a3b8; margin: 0 0 4px; line-height: 1.4; } .ds-card__value { font-size: 28px; font-weight: 700; color: #0f172a; margin: 0 0 8px; line-height: 1.1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; } .ds-badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; border: 1px solid; } .ds-badge--success { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; } .ds-badge--warning { background: #fffbeb; color: #92400e; border-color: #fde68a; } .ds-badge--danger { background: #fff1f2; color: #9f1239; border-color: #fecdd3; }"
+    },
+    {
+      "name": "Macro Pill",
+      "kind": "custom",
+      "description": "Pill de contexto macroeconómico. Ícono + valor + sublabel.",
+      "html": "<div class=\"ds-pill ds-pill--warning\"><div class=\"ds-pill__icon\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"22 7 13.5 15.5 8.5 10.5 2 17\"/><polyline points=\"16 7 22 7 22 13\"/></svg></div><div class=\"ds-pill__body\"><p class=\"ds-pill__label\">Inflación mensual · May 2026</p><p class=\"ds-pill__value\">4.2%</p><p class=\"ds-pill__sub\">↑ sube vs mes anterior</p></div></div>",
+      "css": ".ds-pill { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; border: 1px solid #f1f5f9; background: #fff; font-family: 'Plus Jakarta Sans', sans-serif; } .ds-pill--warning { background: #fffbeb; } .ds-pill--success { background: #f0fdf4; } .ds-pill--danger { background: #fff1f2; } .ds-pill__icon { font-size: 22px; flex-shrink: 0; color: #f59e0b; } .ds-pill--success .ds-pill__icon { color: #10b981; } .ds-pill--danger .ds-pill__icon { color: #f43f5e; } .ds-pill__body { min-width: 0; } .ds-pill__label { font-size: 12px; color: #64748b; margin: 0; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-pill__value { font-size: 18px; font-weight: 700; color: #f59e0b; margin: 0; line-height: 1.2; } .ds-pill--success .ds-pill__value { color: #10b981; } .ds-pill--danger .ds-pill__value { color: #f43f5e; } .ds-pill__sub { font-size: 12px; color: #94a3b8; margin: 0; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "status-badge-success",
+      "description": "Semáforo de KPI. Solo para estados del negocio, nunca decorativo.",
+      "html": "<div style=\"display:flex;gap:8px;flex-wrap:wrap;\"><span class=\"ds-badge ds-badge--success\">Excelente (Verde)</span><span class=\"ds-badge ds-badge--warning\">Aceptable (Amarillo)</span><span class=\"ds-badge ds-badge--danger\">Crítico (Rojo)</span><span class=\"ds-badge ds-badge--neutral\">Sin datos</span></div>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; border: 1px solid; font-family: 'Plus Jakarta Sans', sans-serif; line-height: 1.5; } .ds-badge--success { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; } .ds-badge--warning { background: #fffbeb; color: #92400e; border-color: #fde68a; } .ds-badge--danger { background: #fff1f2; color: #9f1239; border-color: #fecdd3; } .ds-badge--neutral { background: #f8fafc; color: #475569; border-color: #e2e8f0; }"
+    },
+    {
+      "name": "Section Header",
+      "kind": "custom",
+      "description": "Encabezado de sección con dot de color + heading + badge de estado. El dot no es un border-left.",
+      "html": "<div class=\"ds-section-header\"><div class=\"ds-section-header__dot\" style=\"--dot-color: #4f46e5\"></div><h3 class=\"ds-section-header__title\">Proyección Anual</h3><span class=\"ds-badge ds-badge--success\">En curso</span></div>",
+      "css": ".ds-section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-family: 'Plus Jakarta Sans', sans-serif; } .ds-section-header__dot { width: 4px; height: 20px; border-radius: 9999px; background: var(--dot-color, #0284c7); flex-shrink: 0; } .ds-section-header__title { font-size: 14px; font-weight: 600; color: #334155; margin: 0; line-height: 1.4; }"
+    },
+    {
+      "name": "Progress Bar Row",
+      "kind": "custom",
+      "description": "Fila de ranking con barra de progreso proporcional. Usado en OdooPanel para facturación por provincia.",
+      "html": "<div class=\"ds-bar-row\"><span class=\"ds-bar-row__rank\">1</span><span class=\"ds-bar-row__label\">Buenos Aires</span><div class=\"ds-bar-row__track\"><div class=\"ds-bar-row__fill\" style=\"width: 85%\"></div></div><span class=\"ds-bar-row__value\">$4.200.000</span><span class=\"ds-bar-row__count\">142 fact.</span></div>",
+      "css": ".ds-bar-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-family: 'Plus Jakarta Sans', sans-serif; } .ds-bar-row:last-child { border-bottom: none; } .ds-bar-row__rank { font-size: 11px; color: #94a3b8; width: 20px; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; } .ds-bar-row__label { font-size: 13px; color: #475569; width: 112px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .ds-bar-row__track { flex: 1; height: 16px; background: #f1f5f9; border-radius: 4px; overflow: hidden; } .ds-bar-row__fill { height: 100%; background: #6366f1; border-radius: 4px; transition: width 0.5s cubic-bezier(0,0,0.2,1); } .ds-bar-row__value { font-size: 13px; font-weight: 600; color: #0f172a; width: 112px; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; } .ds-bar-row__count { font-size: 11px; color: #94a3b8; width: 56px; text-align: right; flex-shrink: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Centro de Control",
+    "overview": "Este sistema es una herramienta de misión crítica, no una pieza de diseño de vitrina. La metáfora es el cockpit o la sala de operaciones de un negocio: todo dato visible cumple una función, la jerarquía visual es inmediata, y quien llega a la pantalla sabe en tres segundos cuáles son los números que importan. El diseño transmite que la empresa tiene control total sobre su información financiera.\n\nLa densidad es intencional: múltiples KPIs conviven en la misma pantalla sin pelear por atención. Esto se logra con peso tipográfico contrastante, separación clara entre secciones, y un sistema de color semántico que codifica significado en lugar de decorar. La 'impresión' viene del control, no de los efectos.\n\nEl sistema rechaza explícitamente la estética del software contable argentino (Tango, AFIP, formularios de gobierno): bordes duros, grises sin jerarquía, tipografía plana.",
+    "keyCharacteristics": [
+      "Único font family: la jerarquía se logra con peso y tamaño, no con múltiples tipografías",
+      "Paleta semántica fija: Emerald/Amber/Rose son exclusivos para estados",
+      "Dark mode de primera clase: variante calibrada para proyectores y reuniones",
+      "Cards con hover-lift sutil: la interactividad se siente sin exagerarse",
+      "Máximo de tres capas de elevación: página → card → modal/drawer"
+    ],
+    "rules": [
+      {
+        "name": "The Semaphore Rule",
+        "body": "Emerald, Amber y Rose son exclusivos para estados del negocio. No se usan como acento decorativo ni para diferenciar secciones.",
+        "section": "colors"
+      },
+      {
+        "name": "The One-Blue Rule",
+        "body": "Azul Wara = identidad/datos. Índigo = acciones del usuario. Púrpura = origen Odoo. Nunca intercambiables.",
+        "section": "colors"
+      },
+      {
+        "name": "The Single-Family Rule",
+        "body": "Cero font families adicionales. La jerarquía se construye con escala y peso dentro de Plus Jakarta Sans.",
+        "section": "typography"
+      },
+      {
+        "name": "The Numbers-First Rule",
+        "body": "Los números financieros siempre en tabular-nums para que las columnas alineen correctamente.",
+        "section": "typography"
+      },
+      {
+        "name": "The Hover Lift Rule",
+        "body": "Cards interactivos añaden transform: translateY(-1px) junto con aumento de sombra en hover. Cards puramente informativos no tienen hover state visual.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Dark Tonal Rule",
+        "body": "En dark mode, la profundidad se logra con tonal steps (slate-900/800/700), no con sombras adicionales.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do usar tabular-nums en todos los valores financieros en tabla",
+      "Do reservar el semáforo (Emerald/Amber/Rose) exclusivamente para estados del negocio",
+      "Do usar text-wrap: balance en headings de sección",
+      "Do incluir prefers-reduced-motion en todas las animaciones",
+      "Do mantener el contraste de cuerpo ≥4.5:1 en ambos modos",
+      "Do usar overflow-y-auto con maxHeight en listas largas dentro de cards"
+    ],
+    "donts": [
+      "Don't usar background-clip: text con gradientes (gradient text) — el header actual tiene esta clase, no propagarla",
+      "Don't usar border-left > 1px como stripe de acento en cards o list items",
+      "Don't hacer que el diseño parezca software contable argentino (Tango, AFIP)",
+      "Don't añadir una segunda familia tipográfica",
+      "Don't usar glassmorphism en la UI principal de datos",
+      "Don't usar todos los cards del mismo tamaño e importancia (widget-farm)",
+      "Don't usar colores warm-neutral como fondo de página (cream, sand)",
+      "Don't aplicar sombras elevadas (shadow-lg, shadow-xl) a cards en reposo"
+    ]
+  }
+}
