@@ -1,17 +1,40 @@
-import { google } from 'googleapis';
+import { google }        from 'googleapis';
+import { Receiver }      from '@upstash/qstash';
 import { getServerSession } from 'next-auth';
-import { NextResponse } from 'next/server';
-import { setDashboardData, getDashboardConfig, setLastSync } from '@/lib/kv';
+import { NextResponse }  from 'next/server';
+import { setDashboardData, getDashboardConfig, setLastSync, setAutoSyncStatus } from '@/lib/kv';
 
-export async function POST() {
-  const session = await getServerSession();
-  if (!session) {
-    return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+export async function POST(req) {
+  // ── Autenticación: sesión admin O firma QStash ────────────────────
+  const qstashSig = req.headers.get('upstash-signature');
+  let isAutoSync  = false;
+
+  if (qstashSig) {
+    try {
+      const rawBody = await req.text();
+      const receiver = new Receiver({
+        currentSigningKey: process.env.QSTASH_CURRENT_SIGNING_KEY ?? '',
+        nextSigningKey:    process.env.QSTASH_NEXT_SIGNING_KEY    ?? '',
+      });
+      const valid = await receiver.verify({
+        signature:      qstashSig,
+        body:           rawBody,
+        clockTolerance: 86400,
+      });
+      if (!valid) return NextResponse.json({ error: 'Firma QStash inválida' }, { status: 401 });
+      isAutoSync = true;
+    } catch {
+      return NextResponse.json({ error: 'Error verificando QStash' }, { status: 401 });
+    }
+  } else {
+    const session = await getServerSession();
+    if (!session) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || [];
+    if (!adminEmails.includes(session.user?.email)) {
+      return NextResponse.json({ error: 'Sin permisos' }, { status: 403 });
+    }
   }
-  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || [];
-  if (!adminEmails.includes(session.user.email)) {
-    return NextResponse.json({ error: 'Sin permisos' }, { status: 403 });
-  }
+  // ── Fin autenticación ─────────────────────────────────────────────
 
   const sheetId  = process.env.GOOGLE_SHEET_ID;
   const email    = process.env.GOOGLE_CLIENT_EMAIL;
@@ -52,10 +75,21 @@ export async function POST() {
     await setDashboardData(data);
     await setLastSync();
 
+    if (isAutoSync) {
+      await setAutoSyncStatus({ lastRun: new Date().toISOString(), success: true, error: null });
+    }
+
     return NextResponse.json({ ok: true });
 
   } catch (err) {
     console.error('[sync-sheets] Error:', err.message);
+    if (isAutoSync) {
+      await setAutoSyncStatus({
+        lastRun: new Date().toISOString(),
+        success: false,
+        error:   err.message?.slice(0, 150) ?? 'Error desconocido',
+      }).catch(() => {});
+    }
     const msg = err.code === 403
       ? 'Sin acceso al Sheet. Verificá que la service account tiene acceso de Viewer.'
       : err.code === 404

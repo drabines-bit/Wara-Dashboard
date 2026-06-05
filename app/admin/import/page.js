@@ -1,5 +1,6 @@
 import ImportPanel from "@/components/admin/ImportPanel";
 import SyncSheetsPanel from "@/components/admin/SyncSheetsPanel";
+import AutoSyncPanel from "@/components/admin/AutoSyncPanel";
 
 export default function ImportPage() {
   return (
@@ -10,6 +11,7 @@ export default function ImportPage() {
       <p className="text-slate-500 mb-8">
         Sincronizá directamente desde Google Sheets o subí el archivo Excel manualmente.
       </p>
+      <AutoSyncPanel />
       <SyncSheetsPanel />
       <ImportPanel />
     </div>
