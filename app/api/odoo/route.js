@@ -19,10 +19,20 @@ async function odooAuth() {
   });
   const cookie = res.headers.get('set-cookie')?.split(';')[0] ?? '';
   const data   = await res.json();
+  console.log('[Odoo Auth]', JSON.stringify({
+    httpStatus:  res.status,
+    uid:         data.result?.uid,
+    errorMsg:    data.error?.data?.message ?? data.error?.message ?? null,
+    db:          ODOO_DB,
+    emailUsado:  ODOO_EMAIL,
+    keyLength:   ODOO_KEY?.length ?? 0,
+  }));
+
   if (!data.result?.uid) {
-    const detalle = data.error?.data?.message
-      ?? data.error?.message
-      ?? `uid=${JSON.stringify(data.result?.uid)} db=${ODOO_DB} login=${ODOO_EMAIL}`;
+    const detalle =
+      data.error?.data?.message ??
+      data.error?.message ??
+      `uid=${data.result?.uid} · db="${ODOO_DB}" · keyLen=${ODOO_KEY?.length}`;
     throw new Error(`Autenticación Odoo fallida: ${detalle}`);
   }
   return cookie;
