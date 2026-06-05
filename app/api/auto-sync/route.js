@@ -2,7 +2,8 @@ import { NextResponse }     from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getDashboardConfig, setDashboardConfig, getAutoSyncStatus } from '@/lib/kv';
 
-const QSTASH = 'https://qstash.upstash.io/v2';
+const QSTASH_BASE = process.env.QSTASH_URL ?? 'https://qstash.upstash.io';
+const QSTASH = `${QSTASH_BASE}/v2`;
 
 const CRON_MAP = {
   1:  '0 * * * *',
