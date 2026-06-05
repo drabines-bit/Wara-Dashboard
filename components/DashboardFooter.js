@@ -6,13 +6,15 @@ const ICONS = {
   email:      "ti-mail",
   erp:        "ti-database",
   backoffice: "ti-layout-dashboard",
+  custom1:    "ti-link",
+  custom2:    "ti-link",
 };
 
 export default function DashboardFooter({ links }) {
   if (!links) return null;
 
   const SOCIAL_KEYS = ["web", "instagram", "linkedin", "facebook", "email"];
-  const ACCESS_KEYS = ["erp", "backoffice"];
+  const ACCESS_KEYS = ["erp", "backoffice", "custom1", "custom2"];
 
   const enabledSocial = SOCIAL_KEYS.filter(
     k => links[k]?.enabled && links[k]?.url

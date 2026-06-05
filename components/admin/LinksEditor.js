@@ -8,7 +8,9 @@ const LINK_DEFS = [
   { key: "facebook",   icon: "ti-brand-facebook",   label: "Facebook",   bg: "#ede9fe", color: "#4c1d95", section: "social" },
   { key: "email",      icon: "ti-mail",             label: "Email",      bg: "#fef3c7", color: "#92400e", section: "social" },
   { key: "erp",        icon: "ti-database",         label: "ERP",        bg: "#ede9fe", color: "#4c1d95", section: "access" },
-  { key: "backoffice", icon: "ti-layout-dashboard", label: "Backoffice", bg: "#d1fae5", color: "#065f46", section: "access" },
+  { key: "backoffice", icon: "ti-layout-dashboard", label: "Backoffice",  bg: "#d1fae5", color: "#065f46", section: "access" },
+  { key: "custom1",   icon: "ti-link",             label: "Enlace 1",    bg: "#e0e7ff", color: "#3730a3", section: "access" },
+  { key: "custom2",   icon: "ti-link",             label: "Enlace 2",    bg: "#f0fdf4", color: "#166534", section: "access" },
 ];
 
 export default function LinksEditor({ initialLinks }) {
