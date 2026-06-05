@@ -8,6 +8,7 @@ import { fmtCurrency, fmtPercent, fmtNumber } from '@/lib/format';
 import ProyeccionAnual from '@/components/ProyeccionAnual';
 import NotaMensual from '@/components/NotaMensual';
 import OdooPanel from '@/components/OdooPanel';
+import PnlPanel from '@/components/PnlPanel';
 import PresentationMode from '@/components/PresentationMode';
 import TVMode from '@/components/TVMode';
 import {
@@ -987,6 +988,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
         {/* Proyección anual */}
         <ProyeccionAnual companyData={companyData} config={config} />
         <OdooPanel />
+        <PnlPanel />
       </section>
       )}
 
