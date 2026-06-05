@@ -501,10 +501,10 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
   ].filter(Boolean);
 
   const TABS = [
-    { id: "tab-general",    label: "Vista General",                   Icon: LayoutDashboard },
-    { id: "tab-charts",     label: "Gráficos y Tendencias",           Icon: TrendingUp      },
-    { id: "tab-semaphores", label: "Reglas de Semáforos",             Icon: TrafficCone     },
-    { id: "tab-table",      label: `Matriz de Datos ${year ?? new Date().getFullYear()}`, Icon: Table2 },
+    { id: "tab-general",    label: "Vista General",                                        shortLabel: "General",    Icon: LayoutDashboard },
+    { id: "tab-charts",     label: "Gráficos y Tendencias",                                shortLabel: "Gráficos",   Icon: TrendingUp      },
+    { id: "tab-semaphores", label: "Reglas de Semáforos",                                  shortLabel: "Semáforos",  Icon: TrafficCone     },
+    { id: "tab-table",      label: `Matriz de Datos ${year ?? new Date().getFullYear()}`,  shortLabel: "Matriz",     Icon: Table2          },
   ];
 
   async function handleExportPDF() {
@@ -577,7 +577,8 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
             ) : (
               <>
                 <i className="ti ti-file-type-pdf text-base" aria-hidden="true" />
-                <span>Exportar PDF</span>
+                <span className="hidden sm:inline">Exportar </span>
+                <span>PDF</span>
               </>
             )}
           </button>
@@ -585,10 +586,10 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
           {/* Toggle de moneda */}
           <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1 text-xs font-medium gap-0.5">
             {[
-              { label: 'ARS',         val: 'ARS'        },
-              { label: 'USD Oficial', val: 'USD_OFICIAL' },
-              { label: 'USD MEP',     val: 'USD_MEP'     },
-            ].map(({ label, val }) => (
+              { label: 'ARS',         shortLabel: 'ARS',     val: 'ARS'        },
+              { label: 'USD Oficial', shortLabel: 'Oficial',  val: 'USD_OFICIAL' },
+              { label: 'USD MEP',     shortLabel: 'MEP',      val: 'USD_MEP'     },
+            ].map(({ label, shortLabel, val }) => (
               <button
                 key={val}
                 onClick={() => setCurrency(val)}
@@ -597,13 +598,14 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
                   : val === 'USD_MEP'
                   ? `Dólar MEP: $${rates?.mep?.venta?.toLocaleString('es-AR') ?? '...'}`
                   : 'Pesos argentinos'}
-                className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap ${
+                className={`px-3 py-2 sm:py-1.5 rounded-lg transition whitespace-nowrap min-h-[36px] ${
                   currency === val
                     ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                 }`}
               >
-                {label}
+                <span className="hidden sm:inline">{label}</span>
+                <span className="sm:hidden">{shortLabel}</span>
               </button>
             ))}
           </div>
@@ -748,19 +750,20 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
 
       {/* Tab navigation */}
       <div className="border-b border-slate-200 dark:border-slate-800 mb-8">
-        <nav className="flex flex-wrap -mb-px space-x-6">
-          {TABS.map(({ id, label, Icon }) => (
+        <nav className="flex overflow-x-auto scrollbar-hide -mb-px">
+          {TABS.map(({ id, label, shortLabel, Icon }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id)}
-              className={`pb-4 px-1 text-sm flex items-center space-x-2 border-b-2 transition-colors ${
+              className={`pb-4 px-3 sm:px-4 flex-shrink-0 text-sm flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === id
                   ? "border-brand-500 text-brand-600 dark:text-sky-400 font-semibold"
                   : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-medium"
               }`}
             >
-              <Icon className="w-4 h-4" />
-              <span>{label}</span>
+              <Icon className="w-4 h-4 flex-shrink-0" />
+              <span className="hidden sm:inline">{label}</span>
+              <span className="sm:hidden">{shortLabel}</span>
             </button>
           ))}
         </nav>

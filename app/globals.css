@@ -82,3 +82,12 @@ body {
     animation-delay: 0ms !important;
   }
 }
+
+/* Hide scrollbar (mobile tab strip) */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

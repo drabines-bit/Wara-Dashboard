@@ -30,8 +30,10 @@ export default function DashboardHeader({ user, isAdmin }) {
             </div>
           </div>
 
-          {/* Cotizaciones */}
-          <CotizacionHeader />
+          {/* Cotizaciones (hidden on mobile — visible in MacroContextStrip below) */}
+          <div className="hidden md:flex">
+            <CotizacionHeader />
+          </div>
 
           {/* Right side */}
           <div className="flex items-center space-x-3">
