@@ -3,8 +3,8 @@ import { getServerSession } from 'next-auth';
 
 export const dynamic = 'force-dynamic';
 
-const ODOO_URL   = process.env.ODOO_URL   ?? 'https://wara-v1.odoo.com';
-const ODOO_DB    = process.env.ODOO_DB    ?? 'wara-v1';
+const ODOO_URL   = process.env.ODOO_URL;
+const ODOO_DB    = process.env.ODOO_DB;
 const ODOO_EMAIL = process.env.ODOO_EMAIL;
 const ODOO_KEY   = process.env.ODOO_API_KEY;
 
@@ -49,8 +49,13 @@ export async function GET() {
   const session = await getServerSession();
   if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  if (!ODOO_EMAIL || !ODOO_KEY)
-    return NextResponse.json({ error: 'Variables ODOO_EMAIL u ODOO_API_KEY no configuradas' }, { status: 500 });
+  const missing = ['ODOO_URL', 'ODOO_DB', 'ODOO_EMAIL', 'ODOO_API_KEY']
+    .filter(k => !process.env[k]);
+  if (missing.length > 0)
+    return NextResponse.json(
+      { error: `Variables de entorno faltantes: ${missing.join(', ')}` },
+      { status: 500 }
+    );
 
   try {
     const cookie = await odooAuth();
