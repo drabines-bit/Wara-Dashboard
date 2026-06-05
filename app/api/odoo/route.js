@@ -40,16 +40,34 @@ async function odooSearchRead(model, domain, fields, limit = 1000, order = '') {
 }
 
 export async function GET() {
-  const session = await getServerSession();
-  if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  console.log('[Odoo] inicio del handler');
+
+  let session;
+  try {
+    session = await getServerSession();
+  } catch (e) {
+    console.error('[Odoo] getServerSession falló:', e.message);
+    return NextResponse.json({ error: 'Error de sesión: ' + e.message }, { status: 500 });
+  }
+
+  if (!session) {
+    console.log('[Odoo] sin sesión, retornando 401');
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
+  console.log('[Odoo] sesión OK, verificando env vars');
 
   const missing = ['ODOO_URL', 'ODOO_DB', 'ODOO_EMAIL', 'ODOO_API_KEY']
     .filter(k => !process.env[k]);
-  if (missing.length > 0)
+  if (missing.length > 0) {
+    console.error('[Odoo] variables faltantes:', missing);
     return NextResponse.json(
       { error: `Variables faltantes: ${missing.join(', ')}` },
       { status: 500 }
     );
+  }
+
+  console.log('[Odoo] env vars OK, iniciando fetch a Odoo');
 
   try {
     const year = new Date().getFullYear();
@@ -79,6 +97,8 @@ export async function GET() {
         'amount_residual desc'
       ),
     ]);
+
+    console.log(`[Odoo] facturas ${year}: ${invoices2026.length}, pendientes: ${outstanding.length}`);
 
     const partnerIds = new Set();
     invoices2026.forEach(inv => {
@@ -128,10 +148,12 @@ export async function GET() {
       .sort((a, b) => b.deuda - a.deuda)
       .slice(0, 20);
 
+    console.log('[Odoo] procesamiento OK, retornando respuesta');
+
     return NextResponse.json(
       {
         year,
-        totalFacturado:   invoices2026.reduce((s, i) => s + (i.amount_total    ?? 0), 0),
+        totalFacturado:   invoices2026.reduce((s, i) => s + (i.amount_total   ?? 0), 0),
         cantidadFacturas: invoices2026.length,
         totalDeuda:       outstanding.reduce((s, i)  => s + (i.amount_residual ?? 0), 0),
         facturacionPorProvincia,
@@ -141,7 +163,7 @@ export async function GET() {
     );
 
   } catch (err) {
-    console.error('[Odoo]', err.message);
+    console.error('[Odoo] error en try:', err.message, err.stack);
     return NextResponse.json({ error: err.message ?? 'Error Odoo' }, { status: 502 });
   }
 }
