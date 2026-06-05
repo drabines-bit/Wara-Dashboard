@@ -38,10 +38,12 @@ export async function POST(req) {
   const cron = CRON_MAP[intervalHours];
   if (!cron) return NextResponse.json({ error: 'Intervalo inválido' }, { status: 400 });
 
-  const appUrl = process.env.APP_URL
-    ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
-  if (!appUrl)
-    return NextResponse.json({ error: 'APP_URL no configurada en Vercel' }, { status: 500 });
+  const host = req.headers.get('x-forwarded-host')
+             ?? req.headers.get('host')
+             ?? '';
+  if (!host)
+    return NextResponse.json({ error: 'No se pudo determinar el host' }, { status: 500 });
+  const appUrl = `https://${host}`;
 
   const config = await getDashboardConfig();
 
