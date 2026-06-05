@@ -50,7 +50,10 @@ export default function AutoSyncPanel() {
       const res  = await fetch('/api/auto-sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ intervalHours: hours }),
+        body: JSON.stringify({
+          intervalHours: hours,
+          appUrl: window.location.origin,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Error desconocido');

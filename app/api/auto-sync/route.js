@@ -34,16 +34,16 @@ export async function POST(req) {
   if (!session || !(await checkAdmin(session)))
     return NextResponse.json({ error: 'Sin permisos' }, { status: 403 });
 
-  const { intervalHours } = await req.json();
+  const { intervalHours, appUrl } = await req.json();
+
+  if (!appUrl?.startsWith('https://'))
+    return NextResponse.json(
+      { error: `URL inválida: "${appUrl}". Debe empezar con https://` },
+      { status: 400 }
+    );
+
   const cron = CRON_MAP[intervalHours];
   if (!cron) return NextResponse.json({ error: 'Intervalo inválido' }, { status: 400 });
-
-  const host = req.headers.get('x-forwarded-host')
-             ?? req.headers.get('host')
-             ?? '';
-  if (!host)
-    return NextResponse.json({ error: 'No se pudo determinar el host' }, { status: 500 });
-  const appUrl = `https://${host}`;
 
   const config = await getDashboardConfig();
 
