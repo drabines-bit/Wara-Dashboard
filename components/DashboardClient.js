@@ -674,7 +674,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
 
       {/* Alert */}
       {alert && (
-        <div className={`mb-6 p-4 rounded-xl border flex items-start space-x-3 ${
+        <div key={`${alert.type}-${alert.title}`} className={`animate-slide-down mb-6 p-4 rounded-xl border flex items-start space-x-3 ${
           alert.type === "success" ? "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30"
           : alert.type === "error"   ? "bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/30"
           : "bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30"
@@ -700,7 +700,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
           { title: "Variación m/m Facturación",  value: isExcelError(varFact) ? "trabajando datos" : (varFact || "0,00%"), subtitle: "Vs. mes anterior", badge: isExcelError(varFact) ? "Revisando" : (parseFloat(varFact) < 0 ? "Contracción" : "Aumento"), badgeClass: varSem.color, Icon: Percent,    iconColor: "text-amber-500 bg-amber-50 dark:bg-amber-950/50" },
           { title: "Ratio Liquidez Corriente",   value: isExcelError(actCorr) || isExcelError(pasCorr) ? "trabajando datos" : fmtNumber(ratioLiquidez, 2) + "x", subtitle: "Activo Corriente / Pasivo Corriente", badge: isExcelError(actCorr) || isExcelError(pasCorr) ? "trabajando datos" : liqSem.label, badgeClass: liqSem.color, Icon: Activity, iconColor: "text-indigo-500 bg-indigo-50 dark:bg-indigo-950/50" },
         ].map((m, idx) => (
-          <div key={m.title} className={`bg-white dark:bg-slate-800 rounded-2xl flex flex-col justify-between hover:shadow-md transition-all ${idx === 0 ? 'p-6 shadow-sm border border-sky-100 dark:border-sky-900/30' : 'p-5 shadow-sm border border-slate-100 dark:border-slate-800/80'}`}>
+          <div key={m.title} style={{ '--kpi-i': idx }} className={`animate-kpi-stagger bg-white dark:bg-slate-800 rounded-2xl flex flex-col justify-between hover:shadow-md transition-all ${idx === 0 ? 'p-6 shadow-sm border border-sky-100 dark:border-sky-900/30' : 'p-5 shadow-sm border border-slate-100 dark:border-slate-800/80'}`}>
             <div className="flex items-center justify-between mb-4">
               <span className="text-xs font-medium text-slate-500">{m.title}</span>
               <div className={`${m.iconColor} p-2.5 rounded-xl`}><m.Icon className="w-5 h-5" /></div>
@@ -725,7 +725,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
               const val = companyData.custom?.[cv.id]?.[selectedMonthIdx] ?? null;
               const hasData = val !== null && val !== undefined;
               return (
-                <div key={cv.id} className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800/80 flex flex-col justify-between hover:shadow-md transition-all">
+                <div key={cv.id} className="animate-kpi-stagger bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800/80 flex flex-col justify-between hover:shadow-md transition-all">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-xs font-medium text-slate-500">{cv.displayName}</span>
                     <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700">
@@ -767,7 +767,8 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
       </div>
 
       {/* ── TAB 1: Vista General ─────────────────────────────────────────── */}
-      <section className={activeTab === "tab-general" ? "block" : "hidden"}>
+      {activeTab === "tab-general" && (
+      <section className="animate-tab-enter">
         {/* Nota del período */}
         <NotaMensual
           nota={notas[String(selectedMonthIdx)] ?? null}
@@ -951,9 +952,11 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
         <ProyeccionAnual companyData={companyData} config={config} />
         <OdooPanel />
       </section>
+      )}
 
       {/* ── TAB 2: Gráficos ──────────────────────────────────────────────── */}
-      <section className={activeTab === "tab-charts" ? "block" : "hidden"}>
+      {activeTab === "tab-charts" && (
+      <section className="animate-tab-enter">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
             <h3 className="text-lg font-bold mb-4 flex items-center space-x-2">
@@ -992,9 +995,11 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
           <p className="text-xs text-slate-500 mt-4 italic">* Distribución porcentual de la facturación por canal: Abonos recurrentes, Instalaciones y Envíos/Otros.</p>
         </div>
       </section>
+      )}
 
       {/* ── TAB 3: Semáforos ─────────────────────────────────────────────── */}
-      <section className={activeTab === "tab-semaphores" ? "block" : "hidden"}>
+      {activeTab === "tab-semaphores" && (
+      <section className="animate-tab-enter">
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 mb-8">
           <div className="flex items-center space-x-3 mb-6">
             <TrafficCone className="w-6 h-6 text-sky-500" />
@@ -1027,9 +1032,11 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
           </div>
         </div>
       </section>
+      )}
 
       {/* ── TAB 4: Matriz ────────────────────────────────────────────────── */}
-      <section className={activeTab === "tab-table" ? "block" : "hidden"}>
+      {activeTab === "tab-table" && (
+      <section className="animate-tab-enter">
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
           <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
             <div>
@@ -1105,6 +1112,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
           </div>
         </div>
       </section>
+      )}
 
     </div>
   );

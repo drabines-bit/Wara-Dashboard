@@ -43,3 +43,42 @@ body {
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #475569;
 }
+
+/* ── Dashboard animations ─────────────────────────────────────────────────── */
+
+@keyframes tab-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes kpi-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-tab-enter {
+  animation: tab-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-kpi-stagger {
+  animation: kpi-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--kpi-i, 0) * 45ms);
+}
+
+.animate-slide-down {
+  animation: slide-down 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-tab-enter,
+  .animate-kpi-stagger,
+  .animate-slide-down {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+  }
+}
