@@ -60,7 +60,7 @@ export default function CotizacionHeader() {
   return (
     <div className="flex items-center gap-2">
       <div
-        className="flex items-center gap-2 bg-slate-800/70 border border-slate-700 rounded-lg px-3 py-1.5"
+        className="flex items-center gap-2 bg-slate-800/70 border border-slate-700 rounded-lg px-3 py-1.5 chip-glow"
         title={ars ? `Compra: ${formatARS(ars.compra)} · Actualizado ${minutosDesde(ars.actualizado)}` : 'Sin datos'}
       >
         <span className="text-xs" aria-hidden="true">🇦🇷</span>
@@ -74,7 +74,8 @@ export default function CotizacionHeader() {
       </div>
 
       <div
-        className="flex items-center gap-2 bg-slate-800/70 border border-slate-700 rounded-lg px-3 py-1.5"
+        className="flex items-center gap-2 bg-slate-800/70 border border-slate-700 rounded-lg px-3 py-1.5 chip-glow"
+        style={{ animationDelay: '2s' }}
         title={clp ? `Dólar observado BCC · Actualizado ${minutosDesde(clp.actualizado)}` : 'Sin datos'}
       >
         <span className="text-xs" aria-hidden="true">🇨🇱</span>

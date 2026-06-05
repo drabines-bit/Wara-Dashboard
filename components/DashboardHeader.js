@@ -1,17 +1,41 @@
 "use client";
 
+import { useRef, useEffect } from "react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 import CotizacionHeader from "@/components/CotizacionHeader";
 
 export default function DashboardHeader({ user, isAdmin }) {
+  const logoRef    = useRef(null);
+  const ratesRef   = useRef(null);
+  const actionsRef = useRef(null);
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const base = { easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'both' };
+    logoRef.current?.animate(
+      [{ opacity: 0, transform: 'translateX(-14px)' }, { opacity: 1, transform: 'translateX(0)' }],
+      { ...base, duration: 480, delay: 0 }
+    );
+    ratesRef.current?.animate(
+      [{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'translateY(0)' }],
+      { ...base, duration: 480, delay: 80 }
+    );
+    actionsRef.current?.animate(
+      [{ opacity: 0, transform: 'translateX(14px)' }, { opacity: 1, transform: 'translateX(0)' }],
+      { ...base, duration: 480, delay: 160 }
+    );
+  }, []);
+
   return (
     <header className="gradient-bg text-white shadow-lg sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="header-grid-overlay" aria-hidden="true" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-[1]">
         <div className="flex items-center justify-between h-16 sm:h-20">
+
           {/* Logo */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          <div ref={logoRef} className="flex items-center space-x-2 sm:space-x-3">
             <Image
               src="/logo_wara.svg"
               alt="Wara GPS"
@@ -30,13 +54,13 @@ export default function DashboardHeader({ user, isAdmin }) {
             </div>
           </div>
 
-          {/* Cotizaciones (hidden on mobile — visible in MacroContextStrip below) */}
-          <div className="hidden md:flex">
+          {/* Cotizaciones (hidden on mobile) */}
+          <div ref={ratesRef} className="hidden md:flex">
             <CotizacionHeader />
           </div>
 
           {/* Right side */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          <div ref={actionsRef} className="flex items-center space-x-2 sm:space-x-3">
             {isAdmin && (
               <Link
                 href="/admin"
@@ -67,6 +91,7 @@ export default function DashboardHeader({ user, isAdmin }) {
               Salir
             </button>
           </div>
+
         </div>
       </div>
     </header>

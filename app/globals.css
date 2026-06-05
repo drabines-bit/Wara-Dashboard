@@ -91,3 +91,38 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* ── Header overdrive ─────────────────────────────────────────────────────── */
+
+@keyframes header-grid-scan {
+  from { background-position: 0 0; }
+  to   { background-position: 24px 0; }
+}
+
+.header-grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.055) 1px, transparent 1px);
+  background-size: 24px 24px;
+  animation: header-grid-scan 6s linear infinite;
+  pointer-events: none;
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  will-change: background-position;
+}
+
+@keyframes chip-glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+  50%       { box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.3), 0 0 16px 0 rgba(99, 102, 241, 0.12); }
+}
+
+.chip-glow {
+  animation: chip-glow-pulse 4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-grid-overlay { animation: none; opacity: 0.15; }
+  .chip-glow           { animation: none; }
+}
