@@ -3,6 +3,7 @@
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { WARA_LOGO_BASE64 } from "@/lib/logo";
 
 const navItems = [
   { href: "/admin",        label: "Inicio"        },
@@ -19,9 +20,7 @@ export default function AdminNav({ user }) {
       <div className="max-w-5xl mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-2 mr-4">
-            <div className="w-7 h-7 bg-gradient-to-tr from-sky-400 to-indigo-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xs">W</span>
-            </div>
+            <img src={WARA_LOGO_BASE64} alt="Wara GPS" className="h-8 w-auto object-contain" />
             <span className="text-white font-semibold text-sm">Admin</span>
           </div>
           <nav className="flex items-center space-x-1">
