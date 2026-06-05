@@ -167,6 +167,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
   const [presentationMode, setPresentationMode] = useState(false);
   const [tvMode,           setTvMode]           = useState(false);
   const [notas,    setNotas]    = useState(initialNotas ?? {});
+  const [pinned,   setPinned]   = useState(false);
 
   function handleNotaSaved(mes, texto) {
     setNotas(prev => {
@@ -210,6 +211,16 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setRates(d); })
       .catch(() => {});
+  }, []);
+
+  // Restore saved initial period from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('wara:periodoInicial');
+    if (saved === null) return;
+    const idx = parseInt(saved, 10);
+    if (!isNaN(idx) && idx >= 0 && idx < companyData.months.length) {
+      setSelectedMonthIdx(idx);
+    }
   }, []);
 
   // ── Asset doughnut chart (tab-general) ────────────────────────────────────
@@ -562,6 +573,22 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
               <option key={i} value={i}>Periodo: {m}</option>
             ))}
           </select>
+
+          <button
+            onClick={() => {
+              localStorage.setItem('wara:periodoInicial', String(selectedMonthIdx));
+              setPinned(true);
+              setTimeout(() => setPinned(false), 2000);
+            }}
+            title="Fijar este mes como período de apertura por defecto"
+            className="flex items-center gap-1 text-xs text-slate-400 hover:text-indigo-500 transition-colors ml-2 flex-shrink-0"
+          >
+            <i className="ti ti-pin text-sm" aria-hidden="true" />
+            {pinned
+              ? <span className="text-green-500">✓ Guardado</span>
+              : <span>Fijar como inicio</span>
+            }
+          </button>
 
           <button
             onClick={handleExportPDF}
