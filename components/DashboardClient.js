@@ -527,6 +527,15 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
   async function handleExportPDF() {
     setGeneratingPDF(true);
     try {
+      const [pnlRes, comercialRes] = await Promise.allSettled([
+        fetch('/api/odoo-pnl'),
+        fetch('/api/odoo'),
+      ]);
+      const pnlData = pnlRes.status === 'fulfilled' && pnlRes.value.ok
+        ? await pnlRes.value.json() : null;
+      const comercialData = comercialRes.status === 'fulfilled' && comercialRes.value.ok
+        ? await comercialRes.value.json() : null;
+
       await generateMonthlyReport({
         companyData,
         config,
@@ -536,6 +545,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
           solvency:    solvencyCanvasRef?.current    ?? null,
           composition: compositionCanvasRef?.current ?? null,
         },
+        odooData: { pnlData, comercialData },
       });
     } catch (err) {
       console.error('Error generando PDF:', err);
@@ -605,14 +615,13 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
           >
             {generatingPDF ? (
               <>
-                <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                <span>Generando...</span>
+                <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
+                Preparando...
               </>
             ) : (
               <>
-                <i className="ti ti-file-type-pdf text-base" aria-hidden="true" />
-                <span className="hidden sm:inline">Exportar </span>
-                <span>PDF</span>
+                <i className="ti ti-file-export text-sm" aria-hidden="true" />
+                Exportar PDF
               </>
             )}
           </button>

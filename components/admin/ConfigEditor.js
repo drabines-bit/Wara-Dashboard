@@ -3,13 +3,15 @@
 import { useState } from "react";
 
 const PDF_SECTIONS_REGISTRY = [
-  { id: 'kpis',     label: 'KPIs y Diagnóstico',   desc: 'Indicadores del período seleccionado' },
-  { id: 'balance',  label: 'Balance',               desc: 'Activo corriente, no corriente y pasivo' },
-  { id: 'graficos', label: 'Gráficos y Tendencias', desc: 'Evolución mensual de facturación y cobranza' },
-  { id: 'matriz',   label: 'Matriz de Indicadores', desc: 'Tabla completa de los 12 meses' },
+  { id: 'kpis',           label: 'KPIs y Diagnóstico',      desc: 'Indicadores del período seleccionado' },
+  { id: 'balance',        label: 'Balance',                  desc: 'Activo corriente, no corriente y pasivo' },
+  { id: 'graficos',       label: 'Gráficos y Tendencias',   desc: 'Evolución mensual de facturación y cobranza' },
+  { id: 'matriz',         label: 'Matriz de Indicadores',   desc: 'Tabla completa de los 12 meses' },
+  { id: 'pnl',            label: 'P&L Odoo',                desc: 'Estado de resultados del año en curso' },
+  { id: 'odoo_comercial', label: 'Análisis Comercial Odoo', desc: 'Top deudores y facturación por provincia' },
 ];
 
-const PDF_SECTIONS_DEFAULT = ['kpis', 'balance', 'graficos', 'matriz'];
+const PDF_SECTIONS_DEFAULT = ['kpis', 'balance', 'graficos', 'matriz', 'pnl', 'odoo_comercial'];
 
 const TV_CARD_REGISTRY = [
   { id: 'cumplimientoFacturacion', label: 'Cumpl. Facturación',    icon: 'ti-chart-bar'       },
