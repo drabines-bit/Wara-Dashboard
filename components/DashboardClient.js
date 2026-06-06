@@ -547,9 +547,9 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
         },
         odooData: { pnlData, comercialData },
       });
-    } catch (err) {
-      console.error('Error generando PDF:', err);
-      alert('Error al generar el PDF. Intentá nuevamente.');
+    } catch (e) {
+      console.error('[PDF]', e);
+      alert('Error al generar el PDF: ' + e.message);
     } finally {
       setGeneratingPDF(false);
     }
