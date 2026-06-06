@@ -96,15 +96,17 @@ export default function MacroContextStrip() {
           tooltip="Suma compuesta de inflación mensual del año en curso · Fuente: INDEC"
         />
 
-        <Pill
-          icon="ti-building-bank"
-          label="Tasa de política monetaria BCRA"
-          value={bcra ? `${fmt1(bcra.tna)} TNA` : '–'}
-          sub={bcra ? `≈ ${fmt1(bcra.tem)} TEM` : 'Sin datos'}
-          color="text-indigo-600 dark:text-indigo-400"
-          bg="bg-white dark:bg-slate-800"
-          tooltip="Tasa de política monetaria (TNA) · Fuente: BCRA"
-        />
+        {bcra?.tna != null && bcra.tna !== 0 && (
+          <Pill
+            icon="ti-building-bank"
+            label="Tasa de política monetaria BCRA"
+            value={`${fmt1(bcra.tna)} TNA`}
+            sub={`≈ ${fmt1(bcra.tem)} TEM`}
+            color="text-indigo-600 dark:text-indigo-400"
+            bg="bg-white dark:bg-slate-800"
+            tooltip="Tasa de política monetaria (TNA) · Fuente: BCRA"
+          />
+        )}
       </div>
 
       <p className="text-xs text-slate-400 dark:text-slate-600 mt-2 text-right">
