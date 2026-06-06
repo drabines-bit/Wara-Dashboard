@@ -7,7 +7,7 @@ import { WARA_LOGO_BASE64 } from "@/lib/logo";
 
 const navItems = [
   { href: "/admin",        label: "Inicio"        },
-  { href: "/admin/import", label: "Importar Excel" },
+  { href: "/admin/import", label: "Sincronización"  },
   { href: "/admin/config", label: "Configuración"  },
   { href: "/dashboard",    label: "Ver Dashboard"  },
 ];
