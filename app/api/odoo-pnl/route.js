@@ -107,6 +107,14 @@ export async function GET() {
       ingresos: 0, costoVentas: 0, gastosOperativos: 0, depreciaciones: 0,
     }));
 
+    // Mes actual en hora de Buenos Aires (evita desfase UTC)
+    const ahora = new Date(
+      new Date().toLocaleString('en-US', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+      })
+    );
+    const currentMonth = ahora.getMonth(); // 0-indexed: enero=0, junio=5
+
     lines.forEach(line => {
       const acc = accountMap[line.account_id[0]];
       if (!acc || !line.date) return;
@@ -126,14 +134,7 @@ export async function GET() {
       else if (DEPR_TYPES.includes(tipo))     meses[idx].depreciaciones    += monto;
     });
 
-    // Mes actual en hora de Buenos Aires (evita desfase UTC)
-    const ahora = new Date(
-      new Date().toLocaleString('en-US', {
-        timeZone: 'America/Argentina/Buenos_Aires',
-      })
-    );
-    const currentMonth = ahora.getMonth(); // 0-indexed: enero=0, junio=5
-    const mensual      = meses.slice(0, currentMonth + 1);
+    const mensual = meses.slice(0, currentMonth + 1);
 
     return NextResponse.json(
       {
