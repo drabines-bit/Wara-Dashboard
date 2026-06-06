@@ -3,31 +3,49 @@ import { getServerSession } from 'next-auth';
 
 export const dynamic = 'force-dynamic';
 
+// BADLAR bancos privados — variable 7, BCRA API v2
+async function fetchBadlar() {
+  try {
+    const arNow = new Date(Date.now() - 3 * 60 * 60 * 1000);
+    const hasta = arNow.toISOString().split('T')[0];
+    const desde = new Date(arNow.getTime() - 10 * 24 * 60 * 60 * 1000)
+                    .toISOString().split('T')[0];
+    const res = await fetch(
+      `https://api.bcra.gob.ar/estadisticas/v2.0/datosvariable/7/${desde}/${hasta}`,
+      { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000) }
+    );
+    if (!res.ok) return null;
+    const json = await res.json();
+    const rows = json?.results ?? [];
+    if (rows.length === 0) return null;
+    const tna   = rows[rows.length - 1].valor;          // último dato disponible
+    const tem   = (Math.pow(1 + tna / 100 / 365, 30) - 1) * 100;
+    const fecha = rows[rows.length - 1].fecha;
+    return { tna, tem: parseFloat(tem.toFixed(2)), fecha };
+  } catch {
+    return null;
+  }
+}
+
 export async function GET() {
   const session = await getServerSession();
   if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  const hoy    = new Date();
-  const hace90 = new Date(hoy.getTime() - 90 * 24 * 60 * 60 * 1000);
-  const desde  = hace90.toISOString().split('T')[0];
-  const hasta  = hoy.toISOString().split('T')[0];
+  const hoy = new Date();
 
-  const [inflResult, bcraResult] = await Promise.allSettled([
+  const [inflResponse, badlar] = await Promise.all([
     fetch('https://api.argentinadatos.com/v1/finanzas/indices/inflacion', {
       next: { revalidate: 21600 },
       headers: { 'Accept': 'application/json' },
-    }),
-    fetch(`https://api.bcra.gob.ar/estadisticas/v2.0/datosVariable/6/${desde}/${hasta}`, {
-      next: { revalidate: 21600 },
-      headers: { 'Accept': 'application/json' },
-    }),
+    }).catch(() => null),
+    fetchBadlar(),
   ]);
 
   // ── Inflación ──────────────────────────────────────────────────────────
   let inflacion = null;
-  if (inflResult.status === 'fulfilled' && inflResult.value.ok) {
+  if (inflResponse?.ok) {
     try {
-      const serie = await inflResult.value.json(); // [{ fecha, valor }, ...]
+      const serie = await inflResponse.json(); // [{ fecha, valor }, ...]
       const anio  = hoy.getFullYear();
       const enAño = serie.filter(d => d.fecha?.startsWith(String(anio)));
 
@@ -58,26 +76,7 @@ export async function GET() {
     } catch { /* silencioso */ }
   }
 
-  // ── Tasa BCRA ─────────────────────────────────────────────────────────
-  let bcra = null;
-  if (bcraResult.status === 'fulfilled' && bcraResult.value.ok) {
-    try {
-      const data    = await bcraResult.value.json();
-      const results = data?.results ?? [];
-      if (results.length > 0) {
-        const last = results[results.length - 1];
-        const tna  = last.v ?? 0;
-        const tem  = (Math.pow(1 + tna / 100 / 365, 30) - 1) * 100;
-        bcra = {
-          tna:   tna,
-          tem:   parseFloat(tem.toFixed(2)),
-          fecha: last.d ?? null,
-        };
-      }
-    } catch { /* silencioso */ }
-  }
-
-  return NextResponse.json({ inflacion, bcra }, {
+  return NextResponse.json({ inflacion, badlar }, {
     headers: { 'Cache-Control': 'private, max-age=21600' },
   });
 }

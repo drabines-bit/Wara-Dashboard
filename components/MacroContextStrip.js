@@ -63,7 +63,7 @@ export default function MacroContextStrip() {
 
   if (!data) return null;
 
-  const { inflacion, bcra } = data;
+  const { inflacion, badlar } = data;
 
   const fmt1 = v => v != null
     ? new Intl.NumberFormat('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 2 }).format(v) + '%'
@@ -96,16 +96,30 @@ export default function MacroContextStrip() {
           tooltip="Suma compuesta de inflación mensual del año en curso · Fuente: INDEC"
         />
 
-        {bcra?.tna != null && bcra.tna !== 0 && (
-          <Pill
-            icon="ti-building-bank"
-            label="Tasa de política monetaria BCRA"
-            value={`${fmt1(bcra.tna)} TNA`}
-            sub={`≈ ${fmt1(bcra.tem)} TEM`}
-            color="text-indigo-600 dark:text-indigo-400"
-            bg="bg-white dark:bg-slate-800"
-            tooltip="Tasa de política monetaria (TNA) · Fuente: BCRA"
-          />
+        {data?.badlar && (
+          <div className="flex flex-col gap-0.5 px-4 py-3 rounded-xl border border-slate-100
+                          dark:border-slate-700 bg-white dark:bg-slate-800">
+            <span className="text-xs text-slate-400 uppercase tracking-wide">
+              BADLAR · Plazo fijo 30d
+            </span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-lg font-semibold text-slate-800 dark:text-white tabular-nums">
+                {data.badlar.tna.toFixed(2)}%
+              </span>
+              <span className="text-xs text-slate-400">TNA</span>
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-sm font-medium tabular-nums text-violet-600 dark:text-violet-400">
+                {data.badlar.tem.toFixed(2)}%
+              </span>
+              <span className="text-xs text-slate-400">TEM</span>
+            </div>
+            <span className="text-xs text-slate-400">
+              Al {new Date(data.badlar.fecha + 'T12:00:00').toLocaleDateString(
+                'es-AR', { day: '2-digit', month: 'short' }
+              )}
+            </span>
+          </div>
         )}
       </div>
 
