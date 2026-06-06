@@ -122,9 +122,8 @@ export async function GET() {
       else if (DEPR_TYPES.includes(tipo))     meses[idx].depreciaciones    += monto;
     });
 
-    const mensual = meses.filter(m =>
-      m.ingresos !== 0 || m.costoVentas !== 0 || m.gastosOperativos !== 0
-    );
+    const mesActual = new Date().getMonth(); // 0 = enero
+    const mensual   = meses.slice(0, mesActual + 1);
 
     return NextResponse.json(
       {
