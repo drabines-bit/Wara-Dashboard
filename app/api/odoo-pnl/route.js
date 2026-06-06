@@ -110,7 +110,11 @@ export async function GET() {
     lines.forEach(line => {
       const acc = accountMap[line.account_id[0]];
       if (!acc || !line.date) return;
-      const idx  = parseInt(line.date.substring(5, 7)) - 1;
+      const lineYear  = parseInt(line.date.substring(0, 4));
+      const lineMonth = parseInt(line.date.substring(5, 7)); // 1-12
+      if (lineYear !== year)              return; // año incorrecto
+      if (lineMonth - 1 > currentMonth)   return; // mes futuro
+      const idx = lineMonth - 1;
       const tipo = acc.account_type;
       const monto = INCOME_TYPES.includes(tipo)
         ? line.credit - line.debit
@@ -122,8 +126,14 @@ export async function GET() {
       else if (DEPR_TYPES.includes(tipo))     meses[idx].depreciaciones    += monto;
     });
 
-    const mesActual = new Date().getMonth(); // 0 = enero
-    const mensual   = meses.slice(0, mesActual + 1);
+    // Mes actual en hora de Buenos Aires (evita desfase UTC)
+    const ahora = new Date(
+      new Date().toLocaleString('en-US', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+      })
+    );
+    const currentMonth = ahora.getMonth(); // 0-indexed: enero=0, junio=5
+    const mensual      = meses.slice(0, currentMonth + 1);
 
     return NextResponse.json(
       {
