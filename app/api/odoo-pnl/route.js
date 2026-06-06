@@ -43,7 +43,17 @@ export async function GET() {
     const uid = await jsonrpc('common', 'authenticate', [ODOO_DB, ODOO_EMAIL, ODOO_KEY, {}]);
     if (!uid) throw new Error('Autenticación Odoo fallida');
 
-    const year = new Date().getFullYear();
+    // Argentina siempre es UTC-3 (sin horario de verano)
+    const utcNow          = new Date();
+    const arNow           = new Date(utcNow.getTime() - 3 * 60 * 60 * 1000);
+    const year            = arNow.getUTCFullYear();
+    const currentMonthIdx = arNow.getUTCMonth();      // 0-indexed (junio=5)
+    const currentMonthNum = currentMonthIdx + 1;       // 1-indexed (junio=6)
+
+    // Último día del mes actual
+    const lastDay   = new Date(Date.UTC(year, currentMonthNum, 0)).getUTCDate();
+    const startDate = `${year}-01-01`;
+    const endDate   = `${year}-${String(currentMonthNum).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
 
     const lines = await jsonrpc('object', 'execute_kw', [
       ODOO_DB, uid, ODOO_KEY,
@@ -51,8 +61,8 @@ export async function GET() {
       [[
         ['account_id.account_type', 'in', ALL_PNL],
         ['move_id.state', '=', 'posted'],
-        ['date', '>=', `${year}-01-01`],
-        ['date', '<=', `${year}-12-31`],
+        ['date', '>=', startDate],
+        ['date', '<=', endDate],
       ]],
       { fields: ['account_id', 'date', 'debit', 'credit'], limit: 10000, order: 'date asc' },
     ]);
@@ -107,22 +117,10 @@ export async function GET() {
       ingresos: 0, costoVentas: 0, gastosOperativos: 0, depreciaciones: 0,
     }));
 
-    // Mes actual en hora de Buenos Aires (evita desfase UTC)
-    const ahora = new Date(
-      new Date().toLocaleString('en-US', {
-        timeZone: 'America/Argentina/Buenos_Aires',
-      })
-    );
-    const currentMonth = ahora.getMonth(); // 0-indexed: enero=0, junio=5
-
     lines.forEach(line => {
       const acc = accountMap[line.account_id[0]];
       if (!acc || !line.date) return;
-      const lineYear  = parseInt(line.date.substring(0, 4));
-      const lineMonth = parseInt(line.date.substring(5, 7)); // 1-12
-      if (lineYear !== year)              return; // año incorrecto
-      if (lineMonth - 1 > currentMonth)   return; // mes futuro
-      const idx = lineMonth - 1;
+      const idx = parseInt(line.date.substring(5, 7)) - 1;
       const tipo = acc.account_type;
       const monto = INCOME_TYPES.includes(tipo)
         ? line.credit - line.debit
@@ -134,7 +132,7 @@ export async function GET() {
       else if (DEPR_TYPES.includes(tipo))     meses[idx].depreciaciones    += monto;
     });
 
-    const mensual = meses.slice(0, currentMonth + 1);
+    const mensual = meses.slice(0, currentMonthIdx + 1);
 
     return NextResponse.json(
       {
