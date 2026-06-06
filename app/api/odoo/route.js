@@ -52,7 +52,7 @@ export async function GET() {
       searchRead(uid, 'account.move',
         [['move_type', '=', 'out_invoice'], ['state', '=', 'posted'],
          ['invoice_date', '>=', `${year}-01-01`], ['invoice_date', '<=', `${year}-12-31`]],
-        ['partner_id', 'partner_shipping_id', 'amount_total'], 2000),
+        ['partner_id', 'partner_shipping_id', 'amount_total'], 5000),
       searchRead(uid, 'account.move',
         [['move_type', '=', 'out_invoice'], ['state', '=', 'posted'],
          ['payment_state', 'in', ['not_paid', 'partial']], ['amount_residual', '>', 0]],
