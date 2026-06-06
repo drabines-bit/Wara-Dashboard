@@ -44,37 +44,63 @@ function ProyCard({ label, labelColor, data }) {
     ytdPct, proyPct, addPct,
   } = data;
 
-  const superavit   = gap !== null && gap >= 0;
-  const sinObjetivo = objetivo === 0;
-  const cumplColor  = !cumplimiento ? 'text-slate-400'
-    : cumplimiento >= 95 ? 'text-emerald-500 dark:text-emerald-400'
-    : cumplimiento >= 80 ? 'text-amber-500  dark:text-amber-400'
-    : 'text-red-500 dark:text-red-400';
+  const superavit       = gap !== null && gap >= 0;
+  const sinObjetivo     = objetivo === 0;
+  const mesActualNombre = new Date().toLocaleString('es-AR', {
+    month: 'long', timeZone: 'America/Argentina/Buenos_Aires',
+  });
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100
                     dark:border-slate-700 p-5 shadow-sm flex flex-col gap-4">
 
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold text-slate-400 dark:text-slate-500
-                        uppercase tracking-wider mb-1">
-            {label}
-          </p>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">
-            {fmtCurrency(proyeccion)}
-          </p>
-          <p className="text-xs text-slate-400 mt-0.5">Proyección anual</p>
-        </div>
-        {cumplimiento !== null && (
-          <div className="text-right flex-shrink-0">
-            <p className={`text-2xl font-bold leading-tight ${cumplColor}`}>
-              {fmtNumber(cumplimiento, 1)}%
+      <div>
+        <p className="text-xs font-semibold text-slate-400 dark:text-slate-500
+                      uppercase tracking-wider mb-3">
+          {label}
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+
+          {/* YTD Real */}
+          <div className="bg-slate-50 dark:bg-white/5 rounded-xl p-3.5">
+            <p className="text-xs font-semibold uppercase tracking-widest
+                          text-slate-400 dark:text-white/40 mb-2">
+              YTD real
             </p>
-            <p className="text-xs text-slate-400">cumplimiento</p>
-            <p className="text-xs text-slate-400">proyectado</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white leading-tight
+                          tabular-nums break-all">
+              {fmtCurrency(ytd)}
+            </p>
+            <p className="text-xs text-slate-400 dark:text-white/35 mt-1.5">
+              al {mesActualNombre} · {conDatos} {conDatos === 1 ? 'mes' : 'meses'}
+            </p>
           </div>
-        )}
+
+          {/* Proyección Anual */}
+          <div className="bg-slate-50 dark:bg-white/5 rounded-xl p-3.5">
+            <p className="text-xs font-semibold uppercase tracking-widest
+                          text-slate-400 dark:text-white/40 mb-2">
+              Proyección anual
+            </p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white leading-tight
+                          tabular-nums break-all">
+              {fmtCurrency(proyeccion)}
+            </p>
+            {cumplimiento !== null && (
+              <span className={`inline-block mt-1.5 text-xs font-bold px-2.5 py-0.5
+                                rounded-full ${
+                cumplimiento >= 100
+                  ? 'bg-emerald-500/15 text-emerald-400'
+                  : cumplimiento >= 80
+                    ? 'bg-yellow-500/15 text-yellow-400'
+                    : 'bg-red-500/15 text-red-400'
+              }`}>
+                {fmtPercent(cumplimiento / 100)} cumpl. proy.
+              </span>
+            )}
+          </div>
+
+        </div>
       </div>
 
       {!sinObjetivo && (
