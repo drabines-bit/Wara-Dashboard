@@ -110,8 +110,7 @@ export default function PnlPanel() {
 
   if (!data) return null;
 
-  const { year, resumen, cuentas, mensual } = data;
-  const maxIngreso = Math.max(...mensual.map(m => m.ingresos), 1);
+  const { year, resumen, cuentas } = data;
 
   const porTipo = (tipos) => cuentas.filter(c => tipos.includes(c.tipo));
 
@@ -195,52 +194,7 @@ export default function PnlPanel() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-        {/* Gráfico mensual */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100
-                        dark:border-slate-700 p-5 shadow-sm">
-          <h4 className="font-semibold text-slate-800 dark:text-white text-sm mb-4">
-            Evolución mensual
-          </h4>
-          <div className="space-y-2">
-            {mensual.map(m => {
-              const neto = m.ingresos - m.costoVentas - m.gastosOperativos - m.depreciaciones;
-              return (
-                <div key={m.mes} className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400 w-8 text-right flex-shrink-0 capitalize">
-                    {m.nombre}
-                  </span>
-                  <div className="flex-1 h-5 bg-slate-100 dark:bg-slate-700 rounded overflow-hidden">
-                    <div
-                      className="h-full bg-violet-500 rounded transition-all duration-500"
-                      style={{ width: `${(m.ingresos / maxIngreso) * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-medium text-slate-700 dark:text-slate-300
-                                   w-24 text-right tabular-nums flex-shrink-0">
-                    {fmtCurrency(m.ingresos)}
-                  </span>
-                  <span className={`text-xs w-20 text-right tabular-nums flex-shrink-0 ${
-                    neto >= 0 ? 'text-emerald-500' : 'text-red-500'
-                  }`}>
-                    {fmtCurrency(neto)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-          <div className="flex gap-4 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
-            <span className="flex items-center gap-1.5 text-xs text-slate-400">
-              <span className="w-3 h-3 rounded bg-violet-500 inline-block"/>
-              Ingresos
-            </span>
-            <span className="flex items-center gap-1.5 text-xs text-slate-400">
-              <span className="w-3 h-3 rounded bg-emerald-500 inline-block"/>
-              Resultado neto
-            </span>
-          </div>
-        </div>
+      <div>
 
         {/* Estado de resultados */}
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100
@@ -248,7 +202,7 @@ export default function PnlPanel() {
           <h4 className="font-semibold text-slate-800 dark:text-white text-sm mb-4">
             Estado de resultados YTD
           </h4>
-          <div className="overflow-y-auto" style={{ maxHeight: '320px' }}>
+          <div className="overflow-y-auto" style={{}}>
             <table className="w-full">
               <tbody>
 
