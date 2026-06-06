@@ -130,11 +130,11 @@ export async function GET() {
     const resultadoNeto    = resultadoBruto - gastosOperativos - depreciaciones;
 
     // ── 5. Desglose mensual (enero → mes actual) ─────────────────────────────
+    const MESES = ['ene','feb','mar','abr','may','jun',
+                   'jul','ago','sep','oct','nov','dic'];
     const meses = Array.from({ length: 12 }, (_, i) => ({
       mes:    i + 1,
-      nombre: new Date(year, i, 1).toLocaleString('es-AR', {
-        month: 'short', timeZone: 'America/Argentina/Buenos_Aires',
-      }),
+      nombre: MESES[i],
       ingresos: 0, costoVentas: 0, gastosOperativos: 0, depreciaciones: 0,
     }));
 
