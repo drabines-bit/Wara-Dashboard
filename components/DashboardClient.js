@@ -559,6 +559,10 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
         mode: 'base64',
       });
 
+      if (!pdfBase64) {
+        throw new Error('generatePDF no retornó el PDF en base64. Verificar lib/generatePDF.js');
+      }
+
       const res = await fetch('/api/send-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
