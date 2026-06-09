@@ -1246,101 +1246,99 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
       </section>
       )}
 
-    </div>
-
-    {emailModal && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center
-                      bg-black/40 backdrop-blur-sm"
-           onClick={e => { if (e.target === e.currentTarget) setEmailModal(false); }}>
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl
-                        border border-slate-200 dark:border-slate-700
-                        p-6 w-full max-w-md mx-4">
-
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <i className="ti ti-mail text-xl text-indigo-500" aria-hidden="true"/>
-              <h3 className="font-semibold text-slate-800 dark:text-white">
-                Enviar reporte por email
-              </h3>
+      {emailModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center
+                     bg-black/40 backdrop-blur-sm"
+          onClick={e => { if (e.target === e.currentTarget) setEmailModal(false); }}
+        >
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl
+                          border border-slate-200 dark:border-slate-700
+                          p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <i className="ti ti-mail text-xl text-indigo-500" aria-hidden="true"/>
+                <h3 className="font-semibold text-slate-800 dark:text-white">
+                  Enviar reporte por email
+                </h3>
+              </div>
+              <button onClick={() => setEmailModal(false)}
+                      className="text-slate-400 hover:text-slate-600 transition">
+                <i className="ti ti-x text-xl" aria-hidden="true"/>
+              </button>
             </div>
-            <button onClick={() => setEmailModal(false)}
-                    className="text-slate-400 hover:text-slate-600 transition">
-              <i className="ti ti-x text-xl" aria-hidden="true"/>
-            </button>
-          </div>
-
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-            Se generará el PDF del período{' '}
-            <strong className="text-slate-700 dark:text-slate-300">
-              {companyData.months[selectedMonthIdx]}
-            </strong>{' '}
-            y se enviará como adjunto.
-          </p>
-
-          <label className="block text-xs font-semibold text-slate-500
-                             dark:text-slate-400 uppercase tracking-wide mb-1.5">
-            Destinatario
-          </label>
-          <input
-            type="email"
-            placeholder="email@ejemplo.com"
-            value={emailDest}
-            onChange={e => setEmailDest(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSendEmail()}
-            disabled={enviandoMail}
-            className="w-full px-4 py-2.5 rounded-xl border border-slate-200
-                       dark:border-slate-600 bg-white dark:bg-slate-900
-                       text-slate-800 dark:text-slate-200 text-sm
-                       focus:outline-none focus:ring-2 focus:ring-indigo-500
-                       disabled:opacity-50 mb-4"
-          />
-
-          {emailEstado === 'ok' && (
-            <div className="flex items-center gap-2 text-emerald-600
-                             dark:text-emerald-400 text-sm mb-4">
-              <i className="ti ti-circle-check text-lg" aria-hidden="true"/>
-              Email enviado correctamente
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+              Se generará el PDF del período{' '}
+              <strong className="text-slate-700 dark:text-slate-300">
+                {companyData.months[selectedMonthIdx]}
+              </strong>{' '}
+              y se enviará como adjunto.
+            </p>
+            <label className="block text-xs font-semibold text-slate-500
+                               dark:text-slate-400 uppercase tracking-wide mb-1.5">
+              Destinatario
+            </label>
+            <input
+              type="email"
+              placeholder="email@ejemplo.com"
+              value={emailDest}
+              onChange={e => setEmailDest(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSendEmail()}
+              disabled={enviandoMail}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200
+                         dark:border-slate-600 bg-white dark:bg-slate-900
+                         text-slate-800 dark:text-slate-200 text-sm
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500
+                         disabled:opacity-50 mb-4"
+            />
+            {emailEstado === 'ok' && (
+              <div className="flex items-center gap-2 text-emerald-600
+                               dark:text-emerald-400 text-sm mb-4">
+                <i className="ti ti-circle-check text-lg" aria-hidden="true"/>
+                Email enviado correctamente
+              </div>
+            )}
+            {emailEstado === 'error' && (
+              <div className="flex items-start gap-2 text-red-600
+                               dark:text-red-400 text-sm mb-4">
+                <i className="ti ti-alert-circle text-lg flex-shrink-0" aria-hidden="true"/>
+                <span>{emailError}</span>
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setEmailModal(false)}
+                disabled={enviandoMail}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200
+                           dark:border-slate-700 text-slate-600 dark:text-slate-400
+                           text-sm hover:bg-slate-50 dark:hover:bg-slate-700
+                           transition disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSendEmail}
+                disabled={enviandoMail || !emailDest.trim()}
+                className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700
+                           text-white text-sm font-medium transition
+                           disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {enviandoMail ? (
+                  <>
+                    <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true"/>
+                    Enviando...
+                  </>
+                ) : (
+                  <>
+                    <i className="ti ti-send text-sm" aria-hidden="true"/>
+                    Enviar PDF
+                  </>
+                )}
+              </button>
             </div>
-          )}
-          {emailEstado === 'error' && (
-            <div className="flex items-start gap-2 text-red-600
-                             dark:text-red-400 text-sm mb-4">
-              <i className="ti ti-alert-circle text-lg flex-shrink-0" aria-hidden="true"/>
-              <span>{emailError}</span>
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <button onClick={() => setEmailModal(false)}
-                    disabled={enviandoMail}
-                    className="flex-1 py-2.5 rounded-xl border border-slate-200
-                               dark:border-slate-700 text-slate-600 dark:text-slate-400
-                               text-sm hover:bg-slate-50 dark:hover:bg-slate-700
-                               transition disabled:opacity-50">
-              Cancelar
-            </button>
-            <button
-              onClick={handleSendEmail}
-              disabled={enviandoMail || !emailDest.trim()}
-              className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700
-                         text-white text-sm font-medium transition
-                         disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {enviandoMail ? (
-                <>
-                  <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true"/>
-                  Enviando...
-                </>
-              ) : (
-                <>
-                  <i className="ti ti-send text-sm" aria-hidden="true"/>
-                  Enviar PDF
-                </>
-              )}
-            </button>
           </div>
         </div>
-      </div>
-    )}
+      )}
+    </div>
   );
 }
