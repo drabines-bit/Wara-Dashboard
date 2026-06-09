@@ -7,6 +7,7 @@ import Link from "next/link";
 import { fmtCurrency, fmtPercent, fmtNumber } from '@/lib/format';
 import ProyeccionAnual from '@/components/ProyeccionAnual';
 import NotaMensual from '@/components/NotaMensual';
+import FacturacionMixPanel from '@/components/FacturacionMixPanel';
 import OdooPanel from '@/components/OdooPanel';
 import PnlPanel from '@/components/PnlPanel';
 import PresentationMode from '@/components/PresentationMode';
@@ -1086,6 +1087,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
         {/* Proyección anual */}
         <ProyeccionAnual companyData={companyData} config={config} />
         <OdooPanel />
+        <FacturacionMixPanel />
         <PnlPanel />
       </section>
       )}
