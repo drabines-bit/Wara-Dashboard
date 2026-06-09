@@ -770,7 +770,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
               const val = companyData.custom?.[cv.id]?.[selectedMonthIdx] ?? null;
               const hasData = val !== null && val !== undefined;
               return (
-                <div key={cv.id} className="animate-kpi-stagger bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800/80 flex flex-col justify-between hover:shadow-md transition-all">
+                <div key={cv.id} className="relative group animate-kpi-stagger bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800/80 flex flex-col justify-between hover:shadow-md transition-all">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-xs font-medium text-slate-500">{cv.displayName}</span>
                     <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700">
@@ -785,6 +785,22 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
                       {cv.dataType === 'currency' ? 'Moneda local' : cv.dataType === 'percent' ? 'Porcentaje' : 'Valor numérico'}
                     </p>
                   </div>
+                  {cv.tooltip && (
+                    <div
+                      className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2
+                                 w-72 bg-slate-900 dark:bg-slate-950 text-white text-xs
+                                 rounded-xl px-4 py-3 shadow-2xl leading-relaxed
+                                 opacity-0 group-hover:opacity-100
+                                 transition-opacity duration-200 pointer-events-none
+                                 z-50 border border-slate-700"
+                      role="tooltip"
+                    >
+                      {cv.tooltip}
+                      <div className="absolute top-full left-1/2 -translate-x-1/2
+                                      border-4 border-transparent
+                                      border-t-slate-900 dark:border-t-slate-950"/>
+                    </div>
+                  )}
                 </div>
               );
             })}

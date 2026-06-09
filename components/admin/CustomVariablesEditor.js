@@ -17,6 +17,7 @@ const EMPTY_VAR = {
   id: null,
   sheetLabel: "",
   displayName: "",
+  tooltip: "",
   dataType: "currency",
   showInMatrix: true,
   showAsKPI: false,
@@ -192,6 +193,21 @@ export default function CustomVariablesEditor({ initialVariables }) {
                 onChange={e => setEditing(prev => ({ ...prev, displayName: e.target.value }))}
                 placeholder="Ej: Facturación Recurrente"
                 className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium text-slate-500 mb-1.5">
+                Descripción (aparece al pasar el mouse)
+              </label>
+              <textarea
+                rows={2}
+                placeholder="Ej: Abono promedio por usuario activo..."
+                value={editing.tooltip ?? ''}
+                onChange={e => setEditing(prev => ({ ...prev, tooltip: e.target.value }))}
+                className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700
+                           bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300
+                           px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
