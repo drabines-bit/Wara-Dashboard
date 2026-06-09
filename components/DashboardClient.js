@@ -354,14 +354,17 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
     // Solvency
     if (solvencyCanvasRef.current) {
       if (solvencyChart.current) solvencyChart.current.destroy();
-      const labels = [], actArr = [], pasCArr = [], pasNCArr = [];
+      const labels = [], activoTotalArr = [], pasivoTotalArr = [];
       companyData.months.forEach((m, i) => {
-        const tot = companyData.activoCorriente.total[i];
-        if (tot !== null && tot > 0) {
+        const ac = companyData.activoCorriente.total[i];
+        const anc = companyData.activoNoCorriente.total[i];
+        if (ac !== null || anc !== null) {
           labels.push(m);
-          actArr.push(tot);
-          pasCArr.push(companyData.pasivoCorriente.total[i] || 0);
-          pasNCArr.push(companyData.pasivoNoCorriente.total[i] || 0);
+          activoTotalArr.push((ac ?? 0) + (anc ?? 0));
+          pasivoTotalArr.push(
+            (companyData.pasivoCorriente.total[i]   ?? 0) +
+            (companyData.pasivoNoCorriente.total[i] ?? 0)
+          );
         }
       });
       solvencyChart.current = new Chart(solvencyCanvasRef.current, {
@@ -369,9 +372,8 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
         data: {
           labels,
           datasets: [
-            { label: "Activo Corriente",    data: actArr,   backgroundColor: "#6366f1", borderRadius: 6 },
-            { label: "Pasivo Corriente",    data: pasCArr,  backgroundColor: "#f43f5e", borderRadius: 6 },
-            { label: "Pasivo No Corriente", data: pasNCArr, backgroundColor: "#f59e0b", borderRadius: 6 },
+            { label: "Activo Total", data: activoTotalArr, backgroundColor: "rgba(99, 102, 241, 0.85)", borderRadius: 6 },
+            { label: "Pasivo Total", data: pasivoTotalArr, backgroundColor: "rgba(249, 115, 22, 0.85)",  borderRadius: 6 },
           ],
         },
         options: {
@@ -1046,7 +1048,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
               <span>Estructura de Capital y Solvencia</span>
             </h3>
             <div className="h-80 w-full"><canvas ref={solvencyCanvasRef} /></div>
-            <p className="text-xs text-slate-500 mt-4 italic">* Comparación entre activos corrientes disponibles contra las obligaciones operativas a corto y largo plazo.</p>
+            <p className="text-xs text-slate-500 mt-4 italic">* Activo Total = Activo Corriente + Activo No Corriente. Pasivo Total = Pasivo Corriente + Pasivo No Corriente.</p>
           </div>
         </div>
 
