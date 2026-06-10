@@ -105,7 +105,8 @@ export default function ScoreGlobal({ companyData, selectedMonthIdx, variant = '
   // ── Variante card (Vista General) ────────────────────────────────
   return (
     <div className="mb-6 bg-white dark:bg-slate-800 rounded-2xl border
-                    border-slate-100 dark:border-slate-700 p-5 shadow-sm">
+                    border-slate-100 dark:border-slate-700 p-5 shadow-sm
+                    relative group">
       <div className="flex items-center gap-6 flex-wrap">
 
         {/* Gauge + score */}
@@ -119,8 +120,12 @@ export default function ScoreGlobal({ companyData, selectedMonthIdx, variant = '
 
         {/* Título + nivel */}
         <div className="flex-shrink-0">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300
+                         flex items-center gap-1.5">
             Score Global del Mes
+            <i className="ti ti-info-circle text-sm text-slate-400
+                          group-hover:text-indigo-500 transition-colors"
+               aria-hidden="true"/>
           </h3>
           <span className={`inline-flex items-center gap-1.5 mt-1.5 text-xs font-bold
                             px-2.5 py-1 rounded-full border ${st.bg} ${st.text} ${st.border}`}>
@@ -146,6 +151,48 @@ export default function ScoreGlobal({ companyData, selectedMonthIdx, variant = '
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Tooltip explicativo del cálculo */}
+      <div
+        role="tooltip"
+        className="absolute left-4 right-4 top-full mt-2 z-50
+                   bg-slate-900 dark:bg-slate-950 text-white rounded-xl
+                   px-5 py-4 shadow-2xl border border-slate-700
+                   opacity-0 invisible group-hover:opacity-100 group-hover:visible
+                   transition-all duration-200 pointer-events-none"
+      >
+        <p className="text-xs font-semibold text-slate-300 uppercase
+                      tracking-wide mb-2">
+          ¿Cómo se calcula este score?
+        </p>
+        <p className="text-xs text-slate-400 leading-relaxed mb-3">
+          Promedio ponderado de {indicadores.length} indicadores, cada uno
+          normalizado a una escala de 0 a 100. Cobranza y facturación pesan
+          más porque son el corazón del negocio.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
+          {[
+            { regla: 'Cumpl. Cobranza · 25%',    detalle: 'el % de cumplimiento directo' },
+            { regla: 'Cumpl. Facturación · 25%', detalle: 'el % de cumplimiento directo' },
+            { regla: 'Liquidez · 15%',           detalle: '2x o más = 100 pts · 1x = 50 pts' },
+            { regla: 'DSO · 15%',                detalle: '30 días = 100 pts · 90 días = 0 pts' },
+            { regla: 'Variación m/m · 10%',      detalle: '+10% = 100 pts · 0% = 50 pts' },
+            { regla: 'Margen neto · 10%',        detalle: '20% o más = 100 pts · 0% = 0 pts' },
+          ].map((r, i) => (
+            <div key={i} className="flex flex-col">
+              <span className="text-xs font-medium text-slate-200">{r.regla}</span>
+              <span className="text-xs text-slate-500">{r.detalle}</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-slate-500 mt-3 pt-3 border-t border-slate-800">
+          <span className="text-emerald-400 font-medium">Verde ≥ 75</span> ·{' '}
+          <span className="text-amber-400 font-medium">Amarillo 50-74</span> ·{' '}
+          <span className="text-red-400 font-medium">Rojo &lt; 50</span> ·{' '}
+          Si un dato no está disponible (ej: Odoo caído), los pesos se
+          redistribuyen entre los indicadores presentes.
+        </p>
       </div>
     </div>
   );
