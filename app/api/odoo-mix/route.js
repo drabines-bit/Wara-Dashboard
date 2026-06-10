@@ -58,12 +58,12 @@ export async function GET() {
       ODOO_DB, uid, ODOO_KEY,
       'account.invoice.report', 'search_read',
       [[
-        ['move_type',    '=',  'out_invoice'],
+        ['move_type',    'in', ['out_invoice', 'out_refund']],
         ['invoice_date', '>=', startDate],
         ['invoice_date', '<=', endDate],
       ]],
       {
-        fields: ['product_categ_id', 'invoice_date', 'price_total'],
+        fields: ['product_categ_id', 'invoice_date', 'price_total', 'move_type'],
         limit:  100000,
       },
     ]);
@@ -82,7 +82,11 @@ export async function GET() {
       allCats.add(cat);
       if (!pivot[monthIdx])      pivot[monthIdx]      = {};
       if (!pivot[monthIdx][cat]) pivot[monthIdx][cat] = 0;
-      pivot[monthIdx][cat] += line.price_total ?? 0;
+      // Facturas suman, notas de crédito restan.
+      // Math.abs + signo explícito cubre ambas convenciones de Odoo
+      // (algunas versiones ya devuelven el monto negativo en refunds).
+      const monto = Math.abs(line.price_total ?? 0);
+      pivot[monthIdx][cat] += line.move_type === 'out_refund' ? -monto : monto;
     });
 
     const CAT_ORDER = ['Abonos', 'INSTALACIONES', MERGE_INTO];
