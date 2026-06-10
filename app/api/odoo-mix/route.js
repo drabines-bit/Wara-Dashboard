@@ -14,7 +14,10 @@ const MESES      = ['ene','feb','mar','abr','may','jun',
 
 function debeUnirse(cat) {
   const n = (cat ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-  return n === 'envios' || n === 'todos' || n === 'all' || n === 'todo';
+  // Matchea "envios", "todos", "all", "todos / saleable" y variantes
+  // con ruta de árbol de categorías de Odoo
+  return n.includes('envio') || n.includes('todos') ||
+         n.includes('saleable') || n === 'all' || n === 'todo';
 }
 
 async function jsonrpc(service, method, args) {
@@ -105,6 +108,12 @@ export async function GET() {
     categorias.forEach(cat => {
       ytd[cat] = meses.reduce((s, m) => s + (m.data[cat] ?? 0), 0);
     });
+
+    // Excluir categorías sin movimiento neto en el año
+    const categoriasFinales = categorias.filter(c => Math.abs(ytd[c] ?? 0) >= 1);
+    categorias.length = 0;
+    categorias.push(...categoriasFinales);
+
     const ytdTotal = Object.values(ytd).reduce((s, v) => s + v, 0);
 
     return NextResponse.json(

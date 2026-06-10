@@ -19,7 +19,7 @@ export default function FacturacionMixPanel() {
   const fetchData = useCallback(async () => {
     setLoading(true); setError(null);
     try {
-      const res  = await fetch('/api/odoo-mix');
+      const res  = await fetch('/api/odoo-mix', { cache: 'no-store' });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Error desconocido');
       setData(json);
