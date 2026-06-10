@@ -25,12 +25,21 @@ export default async function DashboardPage() {
   const adminEmails = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim());
   const isAdmin = adminEmails.includes(session.user?.email ?? '');
 
+  const defaultMonthIdx = (() => {
+    const real = data?.facturacion?.real ?? [];
+    let last = 0;
+    for (let i = 0; i < 12; i++) { if (real[i] !== null && real[i] !== undefined) last = i; }
+    return last;
+  })();
+
   return (
     <div className="min-h-screen bg-slate-50 dashboard-bg">
       <WelcomeVideoModal userName={session.user.name} />
       <DashboardHeader
         user={session.user}
         isAdmin={session.user.role === "admin"}
+        companyData={data}
+        selectedMonthIdx={defaultMonthIdx}
       />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <WelcomeBanner

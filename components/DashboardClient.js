@@ -10,6 +10,7 @@ import NotaMensual from '@/components/NotaMensual';
 import FacturacionMixPanel from '@/components/FacturacionMixPanel';
 import OdooPanel from '@/components/OdooPanel';
 import PnlPanel from '@/components/PnlPanel';
+import ScoreGlobal from '@/components/ScoreGlobal';
 import PresentationMode from '@/components/PresentationMode';
 import TVMode from '@/components/TVMode';
 import {
@@ -22,6 +23,7 @@ import {
 Chart.register(...registerables);
 
 const TV_CARDS_DEFAULT = [
+  'scoreGlobal',
   'cumplimientoFacturacion', 'cumplimientoCobranza', 'variacionFacturacion',
   'liquidez', 'inflacion', 'dolarOficial',
 ];
@@ -905,6 +907,8 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
       {/* ── TAB 1: Vista General ─────────────────────────────────────────── */}
       {activeTab === "tab-general" && (
       <section className="animate-tab-enter">
+        <ScoreGlobal companyData={companyData} selectedMonthIdx={selectedMonthIdx} />
+
         {/* Nota del período */}
         <NotaMensual
           nota={notas[String(selectedMonthIdx)] ?? null}

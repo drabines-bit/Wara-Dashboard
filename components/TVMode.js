@@ -2,8 +2,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { WARA_LOGO_BASE64 } from '@/lib/logo';
 import { fmtNumber } from '@/lib/format';
+import ScoreGlobal from '@/components/ScoreGlobal';
 
 const TV_CARD_REGISTRY = [
+  { id: 'scoreGlobal',             label: 'Score Global',          icon: 'ti-gauge'           },
   { id: 'cumplimientoFacturacion', label: 'Cumpl. Facturación',    icon: 'ti-chart-bar'       },
   { id: 'cumplimientoCobranza',    label: 'Cumpl. Cobranza',       icon: 'ti-cash'            },
   { id: 'variacionFacturacion',    label: 'Variación Facturación', icon: 'ti-trending-up'     },
@@ -16,6 +18,7 @@ const TV_CARD_REGISTRY = [
 ];
 
 const TV_CARDS_DEFAULT = [
+  'scoreGlobal',
   'cumplimientoFacturacion', 'cumplimientoCobranza', 'variacionFacturacion',
   'liquidez', 'inflacion', 'dolarOficial',
 ];
@@ -233,6 +236,17 @@ export default function TVMode({ companyData, config, lastSync, onExit, tvCards 
 
         {/* Fila 1: indicadores operativos */}
         <div className="flex gap-4 flex-1 min-h-0">
+          {tvCards.includes('scoreGlobal') && (
+            <div className="flex-1 bg-slate-950 rounded-2xl p-6 ring-1 ring-slate-800
+                            shadow-xl flex flex-col justify-between min-h-0"
+                 style={{ position: 'relative', overflow: 'hidden' }}>
+              <ScoreGlobal
+                companyData={companyData}
+                selectedMonthIdx={mIdx}
+                variant="tv"
+              />
+            </div>
+          )}
           {tvCards.includes('cumplimientoFacturacion') && (
             <TVCard
               label={`Cumplimiento · ${config?.labels?.facturacion ?? 'Facturación'}`}

@@ -14,6 +14,7 @@ const PDF_SECTIONS_REGISTRY = [
 const PDF_SECTIONS_DEFAULT = ['kpis', 'balance', 'graficos', 'matriz', 'pnl', 'odoo_comercial'];
 
 const TV_CARD_REGISTRY = [
+  { id: 'scoreGlobal',             label: 'Score Global',          icon: 'ti-gauge'           },
   { id: 'cumplimientoFacturacion', label: 'Cumpl. Facturación',    icon: 'ti-chart-bar'       },
   { id: 'cumplimientoCobranza',    label: 'Cumpl. Cobranza',       icon: 'ti-cash'            },
   { id: 'variacionFacturacion',    label: 'Variación Facturación', icon: 'ti-trending-up'     },

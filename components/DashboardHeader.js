@@ -6,8 +6,9 @@ import Link from "next/link";
 import Image from "next/image";
 import CotizacionHeader from "@/components/CotizacionHeader";
 import ThemeSelector from "@/components/ThemeSelector";
+import ScoreGlobal from "@/components/ScoreGlobal";
 
-export default function DashboardHeader({ user, isAdmin }) {
+export default function DashboardHeader({ user, isAdmin, companyData, selectedMonthIdx }) {
   const logoRef    = useRef(null);
   const ratesRef   = useRef(null);
   const actionsRef = useRef(null);
@@ -71,6 +72,11 @@ export default function DashboardHeader({ user, isAdmin }) {
               </Link>
             )}
 
+            <ScoreGlobal
+              companyData={companyData}
+              selectedMonthIdx={selectedMonthIdx ?? 0}
+              variant="badge"
+            />
             <ThemeSelector />
 
             <div className="flex items-center space-x-2">
