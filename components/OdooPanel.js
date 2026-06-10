@@ -90,7 +90,7 @@ export default function OdooPanel() {
   if (!data) return null;
 
   const { year, totalFacturado, cantidadFacturas, totalDeuda,
-          facturacionPorProvincia, topDeudores } = data;
+          facturacionPorProvincia, topDeudores, dso } = data;
 
   const maxProv = facturacionPorProvincia[0]?.total ?? 1;
   const top20Total = topDeudores.reduce((s, d) => s + d.deuda, 0);
@@ -110,6 +110,22 @@ export default function OdooPanel() {
             <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse inline-block"/>
             En tiempo real
           </span>
+          {dso != null && (
+            <span
+              title="DSO — Days Sales Outstanding: días promedio que tarda la empresa en cobrar. Deuda pendiente dividida por la facturación diaria promedio del año."
+              className={`inline-flex items-center gap-1.5 text-xs font-semibold
+                          px-2.5 py-1 rounded-full border cursor-help ${
+                dso <= 45
+                  ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                  : dso <= 75
+                    ? 'bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+                    : 'bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800'
+              }`}
+            >
+              <i className="ti ti-hourglass text-sm" aria-hidden="true"/>
+              DSO: {dso} días
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-3">
           {updatedAt && (

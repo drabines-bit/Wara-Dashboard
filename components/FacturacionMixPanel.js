@@ -166,6 +166,26 @@ export default function FacturacionMixPanel() {
                 {fmtCurrency(ytdTotal)}
               </td>
             </tr>
+            <tr className="bg-slate-50 dark:bg-slate-700/30">
+              <td className="px-4 pb-3 text-xs font-semibold text-slate-400
+                             uppercase tracking-wider sticky left-0
+                             bg-slate-50 dark:bg-slate-700/30">
+                % Mix
+              </td>
+              {categorias.map((cat, i) => (
+                <td key={cat}
+                    className={`px-4 pb-3 text-right tabular-nums text-xs font-medium
+                                ${CAT_COLORS[i % CAT_COLORS.length]}`}>
+                  {ytdTotal > 0
+                    ? ((ytd[cat] ?? 0) / ytdTotal * 100).toFixed(1) + '%'
+                    : '—'}
+                </td>
+              ))}
+              <td className="px-4 pb-3 text-right tabular-nums text-xs font-semibold
+                             text-slate-500 dark:text-slate-400">
+                100%
+              </td>
+            </tr>
           </tfoot>
         </table>
       </div>

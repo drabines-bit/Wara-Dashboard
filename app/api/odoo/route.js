@@ -100,14 +100,31 @@ export async function GET() {
       .sort((a, b) => b.deuda - a.deuda)
       .slice(0, 20);
 
+    const totalFacturado = invoices.reduce((s, i) => s + (i.amount_total ?? 0), 0);
+    const totalDeuda     = outstanding.reduce((s, i) => s + (i.amount_residual ?? 0), 0);
+
+    // ── DSO: Days Sales Outstanding ──────────────────────────────────
+    // Deuda pendiente ÷ facturación diaria promedio del año
+    const arNow       = new Date(Date.now() - 3 * 60 * 60 * 1000);
+    const inicioAnio  = Date.UTC(arNow.getUTCFullYear(), 0, 1);
+    const diasTranscurridos = Math.max(1,
+      Math.floor((arNow.getTime() - inicioAnio) / 86400000) + 1
+    );
+    const facturacionDiaria = totalFacturado / diasTranscurridos;
+    const dso = facturacionDiaria > 0
+      ? Math.round(totalDeuda / facturacionDiaria)
+      : null;
+
     return NextResponse.json(
       {
         year,
-        totalFacturado:   invoices.reduce((s, i) => s + (i.amount_total    ?? 0), 0),
+        totalFacturado,
         cantidadFacturas: invoices.length,
-        totalDeuda:       outstanding.reduce((s, i) => s + (i.amount_residual ?? 0), 0),
+        totalDeuda,
         facturacionPorProvincia,
         topDeudores,
+        dso,
+        diasTranscurridos,
       },
       { headers: { 'Cache-Control': 'private, max-age=1800' } }
     );
