@@ -5,6 +5,7 @@ import { signOut } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 import CotizacionHeader from "@/components/CotizacionHeader";
+import ThemeSelector from "@/components/ThemeSelector";
 
 export default function DashboardHeader({ user, isAdmin }) {
   const logoRef    = useRef(null);
@@ -69,6 +70,8 @@ export default function DashboardHeader({ user, isAdmin }) {
                 <span className="hidden sm:inline">Panel </span>Admin
               </Link>
             )}
+
+            <ThemeSelector />
 
             <div className="flex items-center space-x-2">
               {user.image && (

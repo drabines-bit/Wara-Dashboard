@@ -126,3 +126,20 @@ body {
   .header-grid-overlay { animation: none; opacity: 0.15; }
   .chip-glow           { animation: none; }
 }
+
+/* ── Temas personalizables ─────────────────────────────────────── */
+/* Negro puro */
+html[data-theme='negro'] body,
+html[data-theme='negro'] .dashboard-bg {
+  background-color: #000000 !important;
+}
+html[data-theme='negro'] .dark\:bg-slate-800,
+html[data-theme='negro'] .dark .bg-white {
+  --tw-bg-opacity: 1;
+}
+
+/* Marino */
+html[data-theme='marino'] body,
+html[data-theme='marino'] .dashboard-bg {
+  background-color: #0c1c3d !important;
+}

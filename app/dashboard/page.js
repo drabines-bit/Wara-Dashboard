@@ -26,7 +26,7 @@ export default async function DashboardPage() {
   const isAdmin = adminEmails.includes(session.user?.email ?? '');
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dashboard-bg">
       <WelcomeVideoModal userName={session.user.name} />
       <DashboardHeader
         user={session.user}
