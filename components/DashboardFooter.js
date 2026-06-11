@@ -1,3 +1,5 @@
+import MusicPlayer from '@/components/MusicPlayer';
+
 const ICONS = {
   web:        "ti-world",
   instagram:  "ti-brand-instagram",
@@ -63,9 +65,12 @@ export default function DashboardFooter({ links }) {
           </div>
         )}
 
-        <p className="text-slate-400 dark:text-slate-600 text-xs">
-          © {new Date().getFullYear()} Blo, bienestar, logística y organización S.A.
-        </p>
+        <div className="flex items-center gap-3">
+          <MusicPlayer />
+          <p className="text-slate-400 dark:text-slate-600 text-xs">
+            © {new Date().getFullYear()} Blo, bienestar, logística y organización S.A.
+          </p>
+        </div>
       </div>
     </footer>
   );
