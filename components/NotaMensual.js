@@ -159,7 +159,7 @@ export default function NotaMensual({
           <button
             onClick={cancelar}
             disabled={guardando}
-            className="text-sm text-slate-500 hover:text-slate-700 px-3 py-1.5
+            className="text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 px-3 py-1.5
                        rounded-lg transition disabled:opacity-50"
           >
             Cancelar

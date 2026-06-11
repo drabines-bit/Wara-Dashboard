@@ -20,6 +20,13 @@ export default function ThemeSelector() {
     aplicar(saved);
   }, []);
 
+  // Sync con cambios de tema hechos desde otros controles (botón sol/luna)
+  useEffect(() => {
+    const onTheme = (e) => setTheme(e.detail);
+    window.addEventListener('wara:themechange', onTheme);
+    return () => window.removeEventListener('wara:themechange', onTheme);
+  }, []);
+
   // Cerrar al hacer click afuera
   useEffect(() => {
     const handler = (e) => {
@@ -34,6 +41,7 @@ export default function ThemeSelector() {
     // El tema claro desactiva la clase dark de Tailwind; los demás la activan
     if (id === 'claro') document.documentElement.classList.remove('dark');
     else                document.documentElement.classList.add('dark');
+    window.dispatchEvent(new CustomEvent('wara:themechange', { detail: id }));
   }
 
   function elegir(id) {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { generateMonthlyReport } from '@/lib/generatePDF';
+import { renderChartSnapshots } from '@/lib/chartSnapshots';
 import { Chart, registerables } from "chart.js";
 import Link from "next/link";
 import { fmtCurrency, fmtPercent, fmtNumber } from '@/lib/format';
@@ -106,7 +107,7 @@ function getSemaphoreColor(type, value) {
     if (n >= 1.0) return { color: "text-amber-700 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800", label: "Ajustado (Amarillo)", bg: "bg-amber-400" };
     return { color: "text-rose-700 bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800", label: "Crítico (Rojo)", bg: "bg-rose-500" };
   }
-  return { color: "text-slate-700 bg-slate-50 dark:bg-slate-800", label: "Neutro", bg: "bg-slate-400" };
+  return { color: "text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800", label: "Neutro", bg: "bg-slate-400" };
 }
 
 // Matrix cell component — renders "trabajando datos" badge or formatted value
@@ -220,12 +221,17 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
   const solvencyChart = useRef(null);
   const compositionChart = useRef(null);
 
-  // Init dark mode from storage / system preference
+  // Init dark mode desde el tema elegido en el header (clave 'wara:theme').
+  // Todos los temas salvo 'claro' son oscuros.
   useEffect(() => {
-    const dark =
-      localStorage.theme === "dark" ||
-      (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    const saved = localStorage.getItem('wara:theme');
+    const dark = saved
+      ? saved !== 'claro'
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
     setIsDark(dark);
+    const onTheme = (e) => setIsDark(e.detail !== 'claro');
+    window.addEventListener('wara:themechange', onTheme);
+    return () => window.removeEventListener('wara:themechange', onTheme);
   }, []);
 
   // Apply .dark class to <html>
@@ -564,15 +570,18 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
     if (!emailDest.trim()) return;
     setEnviandoMail(true);
     setEmailEstado(null);
+    // Los gráficos se renderizan fuera de pantalla: siempre presentes en el PDF,
+    // sin importar qué pestaña esté activa ni el tema elegido.
+    const snapshots = renderChartSnapshots(companyData, config);
     try {
       const pdfBase64 = await generateMonthlyReport({
         companyData,
         config,
         selectedMonthIdx,
         chartRefs: {
-          trends:      trendsCanvasRef?.current      ?? null,
-          solvency:    solvencyCanvasRef?.current    ?? null,
-          composition: compositionCanvasRef?.current ?? null,
+          trends:      snapshots.trends,
+          solvency:    snapshots.solvency,
+          composition: snapshots.composition,
         },
         odooData: { pnlData: null, comercialData: null },
         mode: 'base64',
@@ -600,12 +609,14 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
       setEmailEstado('error');
       setEmailError(e.message);
     } finally {
+      snapshots.destroy();
       setEnviandoMail(false);
     }
   }
 
   async function handleExportPDF() {
     setGeneratingPDF(true);
+    const snapshots = renderChartSnapshots(companyData, config);
     try {
       const [pnlRes, comercialRes] = await Promise.allSettled([
         fetch('/api/odoo-pnl'),
@@ -621,9 +632,9 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
         config,
         selectedMonthIdx,
         chartRefs: {
-          trends:      trendsCanvasRef?.current      ?? null,
-          solvency:    solvencyCanvasRef?.current    ?? null,
-          composition: compositionCanvasRef?.current ?? null,
+          trends:      snapshots.trends,
+          solvency:    snapshots.solvency,
+          composition: snapshots.composition,
         },
         odooData: { pnlData, comercialData },
       });
@@ -631,6 +642,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
       console.error('[PDF]', e);
       alert('Error al generar el PDF: ' + e.message);
     } finally {
+      snapshots.destroy();
       setGeneratingPDF(false);
     }
   }
@@ -687,36 +699,41 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
             }
           </button>
 
-          <button
-            onClick={handleExportPDF}
-            disabled={generatingPDF}
-            className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 text-slate-700 dark:text-slate-300 hover:text-indigo-600 font-medium px-4 py-2 rounded-xl text-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Exportar reporte mensual en PDF"
-          >
-            {generatingPDF ? (
-              <>
-                <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
-                Preparando...
-              </>
-            ) : (
-              <>
-                <i className="ti ti-file-export text-sm" aria-hidden="true" />
-                Exportar PDF
-              </>
-            )}
-          </button>
+          {/* Exportar y enviar reportes: solo administradores */}
+          {isAdmin && (
+            <>
+              <button
+                onClick={handleExportPDF}
+                disabled={generatingPDF}
+                className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 text-slate-700 dark:text-slate-300 hover:text-indigo-600 font-medium px-4 py-2 rounded-xl text-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Exportar reporte mensual en PDF"
+              >
+                {generatingPDF ? (
+                  <>
+                    <i className="ti ti-loader-2 animate-spin text-sm" aria-hidden="true" />
+                    Preparando...
+                  </>
+                ) : (
+                  <>
+                    <i className="ti ti-file-export text-sm" aria-hidden="true" />
+                    Exportar PDF
+                  </>
+                )}
+              </button>
 
-          <button
-            onClick={() => { setEmailModal(true); setEmailEstado(null); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg
-                       border border-slate-200 dark:border-slate-700
-                       text-slate-600 dark:text-slate-400
-                       hover:border-indigo-400 hover:text-indigo-600
-                       transition-all"
-          >
-            <i className="ti ti-mail text-sm" aria-hidden="true"/>
-            Enviar por email
-          </button>
+              <button
+                onClick={() => { setEmailModal(true); setEmailEstado(null); }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg
+                           border border-slate-200 dark:border-slate-700
+                           text-slate-600 dark:text-slate-400
+                           hover:border-indigo-400 hover:text-indigo-600
+                           transition-all"
+              >
+                <i className="ti ti-mail text-sm" aria-hidden="true"/>
+                Enviar por email
+              </button>
+            </>
+          )}
 
           {/* Toggle de moneda */}
           <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1 text-xs font-medium gap-0.5">
@@ -779,7 +796,12 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
         </div>
 
         <button
-          onClick={() => { const d = !isDark; setIsDark(d); localStorage.theme = d ? "dark" : "light"; }}
+          onClick={() => {
+            const next = isDark ? 'claro' : 'oscuro';
+            localStorage.setItem('wara:theme', next);
+            document.documentElement.setAttribute('data-theme', next);
+            window.dispatchEvent(new CustomEvent('wara:themechange', { detail: next }));
+          }}
           className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors focus:outline-none"
         >
           {isDark ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5" />}
@@ -1341,7 +1363,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
                 </h3>
               </div>
               <button onClick={() => setEmailModal(false)}
-                      className="text-slate-400 hover:text-slate-600 transition">
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
                 <i className="ti ti-x text-xl" aria-hidden="true"/>
               </button>
             </div>

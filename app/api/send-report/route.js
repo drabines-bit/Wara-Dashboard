@@ -2,12 +2,22 @@ import { NextResponse }     from 'next/server';
 import { getServerSession } from 'next-auth';
 import { Resend }           from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(req) {
   let session;
   try { session = await getServerSession(); } catch {}
   if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+
+  // Solo administradores pueden enviar reportes por email
+  const adminEmails = (process.env.ADMIN_EMAILS ?? '')
+    .split(',').map(e => e.trim()).filter(Boolean);
+  if (!adminEmails.includes(session.user?.email ?? ''))
+    return NextResponse.json({ error: 'Solo administradores pueden enviar reportes' }, { status: 403 });
+
+  // Instanciado dentro del handler: a nivel de módulo rompe el build cuando
+  // RESEND_API_KEY no está definida en el entorno.
+  if (!process.env.RESEND_API_KEY)
+    return NextResponse.json({ error: 'RESEND_API_KEY no configurada' }, { status: 500 });
+  const resend = new Resend(process.env.RESEND_API_KEY);
 
   const { to, pdfBase64, mes, year } = await req.json();
   if (!to?.trim() || !pdfBase64)

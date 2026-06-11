@@ -18,6 +18,16 @@
   --foreground: #0f172a;
 }
 
+/* Temas oscuros: el texto por defecto pasa a claro, así los títulos y
+   subtítulos sin clase de color explícita siguen siendo legibles. */
+html.dark {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  /* slate-500 (#64748b) no alcanza 4.5:1 sobre tarjetas slate-800;
+     se sube un paso (= slate-400) en todos los temas oscuros. */
+  --color-slate-500: #94a3b8;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -128,6 +138,12 @@ body {
 }
 
 /* ── Temas personalizables ─────────────────────────────────────── */
+/* Oscuro (default de los temas dark): el fondo de página acompaña al tema
+   en lugar de quedar en bg-slate-50 con tarjetas oscuras encima. */
+html.dark .dashboard-bg {
+  background-color: #0f172a;
+}
+
 /* Negro puro */
 html[data-theme='negro'] body,
 html[data-theme='negro'] .dashboard-bg {
