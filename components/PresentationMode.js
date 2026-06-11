@@ -44,8 +44,10 @@ function sem(type, val, config) {
 function PKpi({ label, value, sub, badge, semColors }) {
   return (
     <div className={`flex-1 bg-slate-900 rounded-2xl p-6 ring-1 ${semColors.ring} flex flex-col gap-2`}>
-      <p className="text-slate-500 text-xs font-semibold uppercase tracking-widest">{label}</p>
-      <p className={`text-5xl font-bold leading-none ${semColors.text}`}>{value ?? '–'}</p>
+      <p className="text-slate-500 font-semibold uppercase tracking-widest"
+         style={{ fontSize: 'clamp(0.6rem, 0.8vw, 0.75rem)' }}>{label}</p>
+      <p className={`font-bold leading-none ${semColors.text}`}
+         style={{ fontSize: 'clamp(1.4rem, 2.2vw, 2.4rem)' }}>{value ?? '–'}</p>
       {sub  && <p className="text-slate-500 text-sm">{sub}</p>}
       {badge && (
         <span className={`self-start mt-1 px-3 py-1 rounded-full text-xs font-bold ${semColors.badge}`}>
@@ -150,7 +152,8 @@ export default function PresentationMode({
   const proyPct   = objAnual > 0 ? ((proyAnual / objAnual) * 100).toFixed(1) : null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950 text-white flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-slate-950 text-white flex flex-col overflow-hidden"
+         style={{ maxHeight: '100vh' }}>
 
       {/* ── Header ───────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-8 py-4
@@ -247,7 +250,8 @@ export default function PresentationMode({
 
         {/* Custom KPIs */}
         {customKPIs.length > 0 && (
-          <div className="flex gap-4">
+          <div className="grid gap-4 w-full"
+               style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))' }}>
             {customKPIs.map(cv => {
               const val = companyData.custom?.[cv.id]?.[mIdx] ?? null;
               return (
