@@ -131,7 +131,7 @@ export default function IntroScreen({ userName }) {
                              bg-indigo-600/20 text-indigo-300 flex-shrink-0">
               <i className="ti ti-heart-rate-monitor text-2xl" aria-hidden="true" />
             </span>
-            <span className="text-left flex-1">
+            <span className="text-center flex-1">
               <span className="block text-white font-semibold text-base sm:text-lg">
                 Quiero conocer la salud financiera de WARA
               </span>
@@ -157,7 +157,7 @@ export default function IntroScreen({ userName }) {
                              bg-sky-600/15 text-sky-300/80 flex-shrink-0">
               <i className="ti ti-route text-2xl" aria-hidden="true" />
             </span>
-            <span className="text-left flex-1">
+            <span className="text-center flex-1">
               <span className="block text-slate-300 font-semibold text-base sm:text-lg">
                 Quiero saber cómo está la operación de la empresa
               </span>
