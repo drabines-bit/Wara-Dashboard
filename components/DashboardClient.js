@@ -192,6 +192,8 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
   const [tvMode,           setTvMode]           = useState(false);
   const [notas,    setNotas]    = useState(initialNotas ?? {});
   const [pinned,   setPinned]   = useState(false);
+  const [kpiOrder, setKpiOrder] = useState(null);
+  const [dragId,   setDragId]   = useState(null);
 
   function handleNotaSaved(mes, texto) {
     setNotas(prev => {
@@ -246,6 +248,19 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
       setSelectedMonthIdx(idx);
     }
   }, []);
+
+  // Cargar orden de KPIs guardado
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('wara:kpiOrder');
+      if (saved) setKpiOrder(JSON.parse(saved));
+    } catch {}
+  }, []);
+
+  function guardarOrden(nuevoOrden) {
+    setKpiOrder(nuevoOrden);
+    localStorage.setItem('wara:kpiOrder', JSON.stringify(nuevoOrden));
+  }
 
   // ── Asset doughnut chart (tab-general) ────────────────────────────────────
   useEffect(() => {
@@ -838,19 +853,54 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
       </div>
 
       {/* ── KPI Cards de variables custom ── */}
-      {(config?.customVariables ?? []).filter(cv => cv.enabled && cv.showAsKPI).length > 0 && (
+      {(config?.customVariables ?? []).filter(cv => cv.enabled && cv.showAsKPI).length > 0 && (() => {
+        const kpis = (config?.customVariables ?? []).filter(cv => cv.enabled && cv.showAsKPI);
+        const kpisOrdenados = kpiOrder
+          ? [...kpis].sort((a, b) => {
+              const ia = kpiOrder.indexOf(a.id);
+              const ib = kpiOrder.indexOf(b.id);
+              return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+            })
+          : kpis;
+        return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {(config?.customVariables ?? [])
-            .filter(cv => cv.enabled && cv.showAsKPI)
+          {kpisOrdenados
             .map(cv => {
               const val = companyData.custom?.[cv.id]?.[selectedMonthIdx] ?? null;
               const hasData = val !== null && val !== undefined;
               return (
-                <div key={cv.id} className="relative group animate-kpi-stagger bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800/80 flex flex-col justify-between hover:shadow-md transition-all">
+                <div
+                  key={cv.id}
+                  draggable
+                  onDragStart={(e) => {
+                    setDragId(cv.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                  }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (!dragId || dragId === cv.id) return;
+                    const ids  = kpisOrdenados.map(k => k.id);
+                    const from = ids.indexOf(dragId);
+                    const to   = ids.indexOf(cv.id);
+                    ids.splice(to, 0, ids.splice(from, 1)[0]);
+                    guardarOrden(ids);
+                    setDragId(null);
+                  }}
+                  onDragEnd={() => setDragId(null)}
+                  className={`relative group animate-kpi-stagger bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800/80 flex flex-col justify-between hover:shadow-md transition-all cursor-grab active:cursor-grabbing ${
+                    dragId === cv.id ? 'opacity-40 scale-95' : ''
+                  }`}
+                >
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-xs font-medium text-slate-500">{cv.displayName}</span>
-                    <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700">
-                      <span className="w-5 h-5 block rounded-full" style={{ background: cv.chartColor }} />
+                    <div className="flex items-center gap-2">
+                      <i className="ti ti-grip-vertical text-xs text-slate-300 dark:text-slate-600
+                                    opacity-0 group-hover:opacity-100 transition-opacity"
+                         aria-hidden="true"/>
+                      <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700">
+                        <span className="w-5 h-5 block rounded-full" style={{ background: cv.chartColor }} />
+                      </div>
                     </div>
                   </div>
                   <div className="mb-4">
@@ -881,7 +931,8 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
               );
             })}
         </div>
-      )}
+        );
+      })()}
 
       {/* Tab navigation */}
       <div className="border-b border-slate-200 dark:border-slate-800 mb-8">
