@@ -133,10 +133,10 @@ export default function IntroScreen({ userName }) {
             </span>
             <span className="text-left flex-1">
               <span className="block text-white font-semibold text-base sm:text-lg">
-                Quiero saber cómo está WARA hoy
+                Quiero conocer la salud financiera de WARA
               </span>
               <span className="block text-slate-400 text-xs mt-0.5">
-                Indicadores, finanzas y operación del mes
+                Indicadores, resultados y liquidez del mes
               </span>
             </span>
             <i className="ti ti-arrow-right text-xl text-indigo-300 ml-2
