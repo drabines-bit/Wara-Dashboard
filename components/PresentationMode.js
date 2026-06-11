@@ -45,14 +45,14 @@ function PKpi({ label, value, sub, badge, semColors }) {
   return (
     <div className={`flex-1 bg-slate-900 rounded-2xl p-6 ring-1 ${semColors.ring} flex flex-col gap-2`}>
       <p className="text-slate-500 font-semibold uppercase tracking-widest"
-         style={{ fontSize: 'clamp(0.6rem, 0.8vw, 0.75rem)' }}>{label}</p>
+         style={{ fontSize: 'clamp(0.75rem, 0.8vw, 0.85rem)' }}>{label}</p>
       <p className={`font-bold leading-none ${semColors.text}`}
          style={{ fontSize: 'clamp(1.4rem, 2.2vw, 2.4rem)' }}>
         <span className="font-mono">{value ?? '–'}</span>
       </p>
-      {sub  && <p className="text-slate-500 text-sm">{sub}</p>}
+      {sub  && <p className="text-slate-500 text-sm font-mono">{sub}</p>}
       {badge && (
-        <span className={`self-start mt-1 px-3 py-1 rounded-full text-xs font-bold ${semColors.badge}`}>
+        <span className={`self-start mt-1 px-3 py-1 rounded-full text-xs font-bold font-mono ${semColors.badge}`}>
           {badge}
         </span>
       )}
@@ -141,7 +141,8 @@ export default function PresentationMode({
   const cVar  = sem('variacion',    facVar,   config);
   const cLiq  = sem('liquidez',     liquidez, config);
 
-  const customKPIs = (config?.customVariables ?? []).filter(cv => cv.enabled && cv.showAsKPI);
+  const customKPIs  = (config?.customVariables ?? []).filter(cv => cv.enabled && cv.showAsKPI);
+  const monthEmpty  = facReal === null && cobReal === null;
 
   const realArr   = companyData.facturacion.real ?? [];
   const conDatos  = realArr.filter(v => typeof v === 'number' && v !== null);
@@ -214,7 +215,19 @@ export default function PresentationMode({
       {/* ── Contenido scrolleable ─────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
 
+        {/* Estado vacío cuando el mes no tiene datos */}
+        {monthEmpty && (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <i className="ti ti-calendar-off text-5xl text-slate-700 mb-4" aria-hidden="true"/>
+            <p className="text-slate-300 text-lg font-semibold">Sin datos para {mesNombre}</p>
+            <p className="text-slate-600 text-sm mt-1">
+              Usá ← → para navegar a un período con datos disponibles
+            </p>
+          </div>
+        )}
+
         {/* KPI cards principales */}
+        {!monthEmpty && (<>
         <div className="flex gap-4">
           <PKpi
             label={config?.labels?.facturacion ?? 'Facturación Real'}
@@ -274,7 +287,7 @@ export default function PresentationMode({
         )}
 
         {/* Progreso + Proyección */}
-        <div className="grid grid-cols-2 gap-6">
+        <div className={`grid gap-6 ${conDatos.length > 0 && objAnual > 0 ? 'grid-cols-2' : 'grid-cols-1'}`}>
 
           {/* Barras de cumplimiento */}
           <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800 space-y-5">
@@ -324,8 +337,8 @@ export default function PresentationMode({
                   <span className="font-mono">{proyPct}%</span> del objetivo anual
                 </p>
               )}
-              <p className="text-slate-600 text-xs mt-2">
-                Basado en {conDatos.length} meses · Promedio: {fmtCurrency(prom)}/mes
+              <p className="text-slate-400 text-xs mt-2">
+                Basado en <span className="font-mono">{conDatos.length}</span> meses · Promedio: <span className="font-mono">{fmtCurrency(prom)}</span>/mes
               </p>
             </div>
           )}
@@ -344,12 +357,13 @@ export default function PresentationMode({
             </div>
           </div>
         )}
+        </>)}
 
       </div>
 
       {/* ── Pie: atajos de teclado ────────────────────────────────────── */}
       <div className="flex-shrink-0 flex items-center justify-center gap-6
-                      py-2 border-t border-slate-900 text-xs text-slate-700">
+                      py-2 border-t border-slate-900 text-xs text-slate-500">
         <span><kbd className="bg-slate-900 px-1.5 py-0.5 rounded text-slate-500">←</kbd> mes anterior</span>
         <span><kbd className="bg-slate-900 px-1.5 py-0.5 rounded text-slate-500">→</kbd> mes siguiente</span>
         <span><kbd className="bg-slate-900 px-1.5 py-0.5 rounded text-slate-500">ESC</kbd> salir</span>
