@@ -1,8 +1,14 @@
 import "./globals.css";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import Providers from "@/components/Providers";
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"] });
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata = {
   title: "Wara GPS — Dashboard Financiero",
@@ -11,7 +17,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning className={jetbrainsMono.variable}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link

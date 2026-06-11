@@ -68,7 +68,7 @@ function TVCard({ label, value, badge, semColors, sub, icon }) {
         {label}
       </p>
       <p className={`text-[4.5rem] font-black leading-none tracking-tight ${semColors.text}`}>
-        {value}
+        <span className="font-mono">{value}</span>
       </p>
       <div className="mt-3 flex items-center justify-between gap-2">
         <span className={`px-3 py-1 rounded-full text-xs font-bold ${semColors.badge}`}>
@@ -220,7 +220,7 @@ export default function TVMode({ companyData, config, lastSync, onExit, tvCards 
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"/>
             <span className="text-emerald-600 text-xs font-bold uppercase tracking-widest">En vivo</span>
           </div>
-          <p className="text-white font-black text-2xl tabular-nums">{hora}</p>
+          <p className="text-white font-black text-2xl tabular-nums"><span className="font-mono">{hora}</span></p>
           <button
             onClick={onExit}
             className="text-slate-700 hover:text-slate-400 transition ml-4"
@@ -324,7 +324,7 @@ export default function TVMode({ companyData, config, lastSync, onExit, tvCards 
               Avance del mes de {avance.mesLabel}
             </p>
             <p className="text-white font-black text-2xl tabular-nums">
-              {fmtNumber(avance.pct, 1)}%
+              <span className="font-mono">{fmtNumber(avance.pct, 1)}%</span>
             </p>
           </div>
           <div className="relative h-2.5 bg-slate-900 rounded-full overflow-hidden">
@@ -334,7 +334,7 @@ export default function TVMode({ companyData, config, lastSync, onExit, tvCards 
             />
           </div>
           <p className="text-slate-700 text-xs mt-2">
-            {fecha} · Día {avance.dia} de {avance.total} · Restan {avance.total - avance.dia} días
+            {fecha} · Día <span className="font-mono">{avance.dia}</span> de <span className="font-mono">{avance.total}</span> · Restan <span className="font-mono">{avance.total - avance.dia}</span> días
           </p>
         </div>
       </div>

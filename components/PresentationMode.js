@@ -47,7 +47,9 @@ function PKpi({ label, value, sub, badge, semColors }) {
       <p className="text-slate-500 font-semibold uppercase tracking-widest"
          style={{ fontSize: 'clamp(0.6rem, 0.8vw, 0.75rem)' }}>{label}</p>
       <p className={`font-bold leading-none ${semColors.text}`}
-         style={{ fontSize: 'clamp(1.4rem, 2.2vw, 2.4rem)' }}>{value ?? '–'}</p>
+         style={{ fontSize: 'clamp(1.4rem, 2.2vw, 2.4rem)' }}>
+        <span className="font-mono">{value ?? '–'}</span>
+      </p>
       {sub  && <p className="text-slate-500 text-sm">{sub}</p>}
       {badge && (
         <span className={`self-start mt-1 px-3 py-1 rounded-full text-xs font-bold ${semColors.badge}`}>
@@ -67,7 +69,7 @@ function PBar({ label, real, objetivo, cumplimiento, semColors }) {
     <div>
       <div className="flex justify-between text-sm text-slate-400 mb-2">
         <span className="font-medium text-slate-200">{label}</span>
-        <span className={`font-bold ${semColors.text}`}>{fmtNumber(cumplimiento, 2)}%</span>
+        <span className={`font-bold ${semColors.text}`}><span className="font-mono">{fmtNumber(cumplimiento, 2)}%</span></span>
       </div>
       <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
         <div
@@ -78,8 +80,8 @@ function PBar({ label, real, objetivo, cumplimiento, semColors }) {
         />
       </div>
       <div className="flex justify-between text-xs text-slate-600 mt-1">
-        <span>{fmtCurrency(real)}</span>
-        <span>Meta: {fmtCurrency(objetivo)}</span>
+        <span className="font-mono">{fmtCurrency(real)}</span>
+        <span>Meta: <span className="font-mono">{fmtCurrency(objetivo)}</span></span>
       </div>
     </div>
   );
@@ -195,7 +197,7 @@ export default function PresentationMode({
         </div>
 
         <div className="flex items-center gap-4">
-          <p className="text-slate-500 text-sm tabular-nums">{horaActual}</p>
+          <p className="text-slate-500 text-sm tabular-nums"><span className="font-mono">{horaActual}</span></p>
           <button
             onClick={onExit}
             className="flex items-center gap-2 text-sm text-slate-400 hover:text-white
@@ -296,7 +298,7 @@ export default function PresentationMode({
                 Proyección Cierre {year}
               </p>
               <p className="text-4xl font-bold text-white leading-none mb-1">
-                {fmtCurrency(proyAnual)}
+                <span className="font-mono">{fmtCurrency(proyAnual)}</span>
               </p>
               <p className="text-slate-500 text-sm mb-4">
                 Proyección anual de facturación
@@ -311,15 +313,15 @@ export default function PresentationMode({
                 />
               </div>
               <div className="flex justify-between text-xs text-slate-500">
-                <span>{fmtCurrency(proyAnual)}</span>
-                <span>Objetivo: {fmtCurrency(objAnual)}</span>
+                <span className="font-mono">{fmtCurrency(proyAnual)}</span>
+                <span>Objetivo: <span className="font-mono">{fmtCurrency(objAnual)}</span></span>
               </div>
               {proyPct && (
                 <p className={`mt-3 text-lg font-bold ${
                   proyAnual >= objAnual ? 'text-emerald-400'
                   : proyAnual >= objAnual * 0.8 ? 'text-amber-400' : 'text-red-400'
                 }`}>
-                  {proyPct}% del objetivo anual
+                  <span className="font-mono">{proyPct}%</span> del objetivo anual
                 </p>
               )}
               <p className="text-slate-600 text-xs mt-2">
