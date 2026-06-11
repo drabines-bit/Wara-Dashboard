@@ -15,8 +15,15 @@ export default withAuth(
     const viewerEmails = process.env.VIEWER_EMAILS?.split(",").map(e => e.trim()) || [];
     const allowedEmails = [...adminEmails, ...viewerEmails];
 
-    // Si el email no está en ninguna lista autorizada → sin acceso
-    if (!token?.email || !allowedEmails.includes(token.email)) {
+    // Dominios con acceso automático como viewer (Google Workspace de la empresa)
+    const viewerDomains = (process.env.VIEWER_DOMAINS ?? "waragps.com")
+      .split(",").map(d => d.trim().toLowerCase()).filter(Boolean);
+    const emailDomain = token?.email?.split("@")[1]?.toLowerCase() ?? "";
+
+    // Acceso: email en lista autorizada, o cuenta del dominio de la empresa
+    const autorizado = token?.email &&
+      (allowedEmails.includes(token.email) || viewerDomains.includes(emailDomain));
+    if (!autorizado) {
       return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
 
