@@ -42,13 +42,18 @@ function sem(type, val, config) {
 // ── Tarjeta KPI de presentación ───────────────────────────────────────
 
 function PKpi({ label, value, sub, badge, semColors }) {
+  const str = value ?? '–';
+  // JetBrains Mono advance-width ≈ 0.62× font-size; card p-6 = 1.5rem × 2 = 3rem total h-padding
+  const fitFs = `calc((100cqw - 3rem) / ${(str.length * 0.62).toFixed(2)})`;
+
   return (
-    <div className={`flex-1 bg-slate-900 rounded-2xl p-6 ring-1 ${semColors.ring} flex flex-col gap-2`}>
+    <div className={`flex-1 bg-slate-900 rounded-2xl p-6 ring-1 ${semColors.ring} flex flex-col gap-2`}
+         style={{ containerType: 'inline-size' }}>
       <p className="text-slate-500 font-semibold uppercase tracking-widest"
          style={{ fontSize: 'clamp(0.75rem, 0.8vw, 0.85rem)' }}>{label}</p>
-      <p className={`font-bold leading-none ${semColors.text}`}
-         style={{ fontSize: 'clamp(1.4rem, 2.2vw, 2.4rem)' }}>
-        <span className="font-mono">{value ?? '–'}</span>
+      <p className={`font-bold leading-none whitespace-nowrap ${semColors.text}`}
+         style={{ fontSize: `min(clamp(0.85rem, 2.2vw, 2.4rem), ${fitFs})` }}>
+        <span className="font-mono">{str}</span>
       </p>
       {sub  && <p className="text-slate-500 text-sm font-mono">{sub}</p>}
       {badge && (
