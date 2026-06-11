@@ -3,7 +3,7 @@
 // identidad de marca, antes de entrar al dashboard. Reemplaza al video
 // de bienvenida y se muestra una vez por sesión de navegador.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 
 const MISION = `Innovar constantemente, ofreciendo al mercado soluciones integrales
@@ -17,7 +17,7 @@ nuestra capacidad de innovación y un servicio de nivel mundial.`;
 // Cada palabra entra con un fade + blur escalonado a partir de `base` ms
 function TextoAnimado({ texto, base }) {
   return texto.split(/\s+/).map((palabra, i) => (
-    <span key={i} className="intro-word" style={{ '--word-delay': `${base + i * 30}ms` }}>
+    <span key={i} className="intro-word" style={{ '--word-delay': `${base + i * 16}ms` }}>
       {palabra}&nbsp;
     </span>
   ));
@@ -26,6 +26,7 @@ function TextoAnimado({ texto, base }) {
 export default function IntroScreen({ userName }) {
   const [visible,  setVisible]  = useState(false);
   const [saliendo, setSaliendo] = useState(false);
+  const dialogRef = useRef(null);
 
   useEffect(() => {
     if (!sessionStorage.getItem('wara_intro_v1')) {
@@ -42,6 +43,26 @@ export default function IntroScreen({ userName }) {
     return () => { document.body.style.overflow = prev; };
   }, [visible]);
 
+  // Gestión de foco del diálogo: foco inicial, Escape/Enter para saltar
+  // y trampa de Tab para no tabular hacia el dashboard tapado.
+  useEffect(() => {
+    if (!visible) return;
+    dialogRef.current?.focus();
+    function onKey(e) {
+      if (e.key === 'Escape') { entrar(); return; }
+      if (e.key === 'Enter' && document.activeElement === dialogRef.current) { entrar(); return; }
+      if (e.key !== 'Tab') return;
+      const nodes = dialogRef.current?.querySelectorAll('a[href], button:not([disabled])');
+      if (!nodes?.length) return;
+      const list = Array.from(nodes);
+      const first = list[0], last = list[list.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [visible]);
+
   function entrar() {
     setSaliendo(true);
     setTimeout(() => setVisible(false), 500);
@@ -53,10 +74,13 @@ export default function IntroScreen({ userName }) {
 
   return (
     <div
-      className={`fixed inset-0 z-50 gradient-bg overflow-y-auto
+      ref={dialogRef}
+      tabIndex={-1}
+      className={`fixed inset-0 z-50 gradient-bg overflow-y-auto outline-none
                   transition-opacity duration-500 ease-out
                   ${saliendo ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       role="dialog"
+      aria-modal="true"
       aria-label="Bienvenida: misión y visión de Wara GPS"
     >
       <div className="header-grid-overlay" aria-hidden="true" />
@@ -72,7 +96,7 @@ export default function IntroScreen({ userName }) {
       </button>
 
       <div className="relative z-[1] min-h-full flex flex-col items-center
-                      justify-center px-6 py-16 max-w-4xl mx-auto">
+                      justify-center px-6 py-16 max-w-5xl mx-auto">
 
         {/* Logo y marca */}
         <div className="intro-stagger flex flex-col items-center text-center" style={{ '--intro-i': 0 }}>
@@ -97,7 +121,7 @@ export default function IntroScreen({ userName }) {
               Misión
             </h2>
             <p className="text-slate-200 text-base sm:text-lg leading-relaxed text-pretty">
-              <TextoAnimado texto={MISION} base={600} />
+              <TextoAnimado texto={MISION} base={350} />
             </p>
           </div>
           <div className="intro-stagger sm:pl-10" style={{ '--intro-i': 2 }}>
@@ -105,7 +129,7 @@ export default function IntroScreen({ userName }) {
               Visión
             </h2>
             <p className="text-slate-200 text-base sm:text-lg leading-relaxed text-pretty">
-              <TextoAnimado texto={VISION} base={1100} />
+              <TextoAnimado texto={VISION} base={750} />
             </p>
           </div>
         </div>
@@ -132,7 +156,7 @@ export default function IntroScreen({ userName }) {
               <i className="ti ti-heart-rate-monitor text-2xl" aria-hidden="true" />
             </span>
             <span className="text-center flex-1">
-              <span className="block text-white font-semibold text-base sm:text-lg">
+              <span className="block text-white font-semibold text-base">
                 Quiero conocer la salud financiera de WARA
               </span>
               <span className="block text-slate-400 text-xs mt-0.5">
@@ -144,21 +168,19 @@ export default function IntroScreen({ userName }) {
                aria-hidden="true" />
           </button>
 
-          {/* TODO: enlazar al panel de operación cuando esté definido el destino */}
-          <button
-            type="button"
-            aria-disabled="true"
+          {/* TODO: convertir en enlace cuando esté definido el destino del panel de operación */}
+          <div
             title="Disponible próximamente"
-            className="group flex items-center gap-4 cursor-default
+            className="flex items-center gap-4 cursor-default
                        bg-slate-800/50 rounded-2xl px-5 py-5
-                       ring-1 ring-slate-700/70 transition-all duration-300"
+                       ring-1 ring-slate-700/70"
           >
             <span className="flex items-center justify-center w-11 h-11 rounded-xl
                              bg-sky-600/15 text-sky-300/80 flex-shrink-0">
               <i className="ti ti-route text-2xl" aria-hidden="true" />
             </span>
             <span className="text-center flex-1">
-              <span className="block text-slate-300 font-semibold text-base sm:text-lg">
+              <span className="block text-slate-300 font-semibold text-base">
                 Quiero saber cómo está la operación de la empresa
               </span>
               <span className="block text-slate-500 text-xs mt-0.5">
@@ -170,7 +192,7 @@ export default function IntroScreen({ userName }) {
                              px-2.5 py-1 rounded-full">
               Próximamente
             </span>
-          </button>
+          </div>
 
           <a
             href="https://wara.dev/salas/"
@@ -178,23 +200,23 @@ export default function IntroScreen({ userName }) {
             rel="noopener noreferrer"
             className="group flex items-center gap-4
                        bg-slate-800/80 hover:bg-slate-800 rounded-2xl px-5 py-5
-                       ring-1 ring-slate-700 hover:ring-emerald-400
+                       ring-1 ring-slate-700 hover:ring-teal-400
                        transition-all duration-300 hover:-translate-y-0.5
-                       focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
           >
             <span className="flex items-center justify-center w-11 h-11 rounded-xl
-                             bg-emerald-600/20 text-emerald-300 flex-shrink-0">
+                             bg-teal-600/20 text-teal-300 flex-shrink-0">
               <i className="ti ti-calendar-event text-2xl" aria-hidden="true" />
             </span>
             <span className="text-center flex-1">
-              <span className="block text-white font-semibold text-base sm:text-lg">
+              <span className="block text-white font-semibold text-base">
                 Quiero reservar una sala de reunión
               </span>
               <span className="block text-slate-400 text-xs mt-0.5">
-                Agenda de salas en wara.dev
+                Abre wara.dev en una pestaña nueva
               </span>
             </span>
-            <i className="ti ti-external-link text-xl text-emerald-300 ml-2
+            <i className="ti ti-external-link text-xl text-teal-300 ml-2
                           transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                aria-hidden="true" />
           </a>

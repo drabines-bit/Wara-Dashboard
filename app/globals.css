@@ -150,8 +150,8 @@ body {
 }
 
 .intro-stagger {
-  animation: intro-rise 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(var(--intro-i, 0) * 260ms);
+  animation: intro-rise 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--intro-i, 0) * 140ms);
 }
 
 .intro-accent-line {
@@ -168,7 +168,7 @@ body {
 
 .intro-word {
   display: inline-block;
-  animation: intro-word 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: intro-word 450ms cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: var(--word-delay, 0ms);
 }
 
