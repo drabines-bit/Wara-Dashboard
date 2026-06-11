@@ -14,11 +14,12 @@ function toEmbedUrl(url) {
 }
 
 export default function MusicPlayer() {
-  const [embedUrl, setEmbedUrl] = useState(null);
-  const [abierto,  setAbierto]  = useState(false);
-  const [editando, setEditando] = useState(false);
-  const [inputUrl, setInputUrl] = useState('');
-  const [inputErr, setInputErr] = useState(false);
+  const [embedUrl,   setEmbedUrl]   = useState(null);
+  const [abierto,    setAbierto]    = useState(false);
+  const [minimizado, setMinimizado] = useState(false);
+  const [editando,   setEditando]   = useState(false);
+  const [inputUrl,   setInputUrl]   = useState('');
+  const [inputErr,   setInputErr]   = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('wara:musicEmbed');
@@ -60,25 +61,49 @@ export default function MusicPlayer() {
       </button>
 
       {abierto && (
-        <div className="absolute bottom-full right-0 mb-3 w-80 bg-white dark:bg-slate-800
+        <div className={`absolute bottom-full right-0 mb-3 bg-white dark:bg-slate-800
                         rounded-2xl border border-slate-200 dark:border-slate-700
-                        shadow-2xl p-4 z-50">
+                        shadow-2xl z-50 ${minimizado ? 'p-1.5' : 'w-80 p-4'}`}>
 
+          {/* Pastilla minimizada: el iframe sigue montado más abajo (oculto con CSS),
+              así la música no se corta y el panel deja de tapar el contenido. */}
+          {minimizado ? (
+            <button
+              onClick={() => setMinimizado(false)}
+              aria-label="Expandir reproductor"
+              className="flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium
+                         text-slate-500 dark:text-slate-400 hover:text-green-500 transition"
+            >
+              <i className="ti ti-brand-spotify text-green-500 text-base" aria-hidden="true"/>
+              Reproduciendo
+              <i className="ti ti-chevron-up text-sm" aria-hidden="true"/>
+            </button>
+          ) : (
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-semibold text-slate-700 dark:text-slate-300
                              flex items-center gap-1.5">
               <i className="ti ti-brand-spotify text-green-500 text-base" aria-hidden="true"/>
               Tu música
             </span>
-            <button onClick={() => setAbierto(false)}
-                    aria-label="Cerrar"
-                    className="text-slate-400 hover:text-slate-600 transition">
-              <i className="ti ti-x text-base" aria-hidden="true"/>
-            </button>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setMinimizado(true)}
+                      aria-label="Minimizar reproductor"
+                      title="Minimizar (la música sigue sonando)"
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition px-1">
+                <i className="ti ti-minus text-base" aria-hidden="true"/>
+              </button>
+              <button onClick={() => { setAbierto(false); setMinimizado(false); }}
+                      aria-label="Cerrar"
+                      title="Cerrar (detiene la música)"
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition px-1">
+                <i className="ti ti-x text-base" aria-hidden="true"/>
+              </button>
+            </div>
           </div>
+          )}
 
           {embedUrl && !editando ? (
-            <>
+            <div className={minimizado ? 'hidden' : ''}>
               <iframe
                 src={embedUrl}
                 width="100%"
@@ -103,9 +128,9 @@ export default function MusicPlayer() {
                   Quitar
                 </button>
               </div>
-            </>
+            </div>
           ) : (
-            <>
+            <div className={minimizado ? 'hidden' : ''}>
               <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3 mb-3">
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                   <span className="font-semibold text-slate-600 dark:text-slate-300">
@@ -161,7 +186,7 @@ export default function MusicPlayer() {
                 Spotify abierta escuchás temas completos; sin sesión, previews
                 de 30 segundos.
               </p>
-            </>
+            </div>
           )}
         </div>
       )}
