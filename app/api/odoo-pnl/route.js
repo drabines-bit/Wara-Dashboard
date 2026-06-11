@@ -116,7 +116,7 @@ export async function GET() {
         grupo:  acc.internal_group,
         monto:  monto(g.debit ?? 0, g.credit ?? 0, acc.internal_group),
       };
-    }).filter(Boolean).sort((a, b) => a.codigo.localeCompare(b.codigo));
+    }).filter(Boolean).sort((a, b) => b.monto - a.monto);
 
     const sum = (tipos) => cuentas
       .filter(c => tipos.includes(c.tipo))
