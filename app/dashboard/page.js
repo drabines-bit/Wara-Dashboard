@@ -5,7 +5,7 @@ import { getDashboardData, getDashboardConfig, getLastSync, getNotas } from "@/l
 import DashboardClient from "@/components/DashboardClient";
 import WelcomeBanner from "@/components/WelcomeBanner";
 import MacroContextStrip from "@/components/MacroContextStrip";
-import WelcomeVideoModal from "@/components/WelcomeVideoModal";
+import IntroScreen from "@/components/IntroScreen";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardFooter from "@/components/DashboardFooter";
 
@@ -34,7 +34,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dashboard-bg">
-      <WelcomeVideoModal userName={session.user.name} />
+      <IntroScreen userName={session.user.name} />
       <DashboardHeader
         user={session.user}
         isAdmin={session.user.role === "admin"}

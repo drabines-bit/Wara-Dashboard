@@ -137,6 +137,37 @@ body {
   .chip-glow           { animation: none; }
 }
 
+/* ── Pantalla de bienvenida (misión / visión) ─────────────────────────────── */
+
+@keyframes intro-rise {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes intro-line-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+.intro-stagger {
+  animation: intro-rise 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--intro-i, 0) * 260ms);
+}
+
+.intro-accent-line {
+  transform-origin: left;
+  animation: intro-line-grow 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-stagger,
+  .intro-accent-line {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+  }
+}
+
 /* ── Temas personalizables ─────────────────────────────────────── */
 /* Oscuro (default de los temas dark): el fondo de página acompaña al tema
    en lugar de quedar en bg-slate-50 con tarjetas oscuras encima. */
