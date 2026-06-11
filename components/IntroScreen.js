@@ -117,12 +117,12 @@ export default function IntroScreen({ userName }) {
           </p>
         </div>
 
-        <div className="intro-stagger mt-8 flex flex-col lg:flex-row items-stretch gap-4"
+        <div className="intro-stagger mt-8 grid gap-4 lg:grid-cols-3 w-full items-stretch"
              style={{ '--intro-i': 8 }}>
           <button
             onClick={entrar}
             className="chip-glow group flex items-center gap-4
-                       bg-slate-800/80 hover:bg-slate-800 rounded-2xl px-7 py-5
+                       bg-slate-800/80 hover:bg-slate-800 rounded-2xl px-5 py-5
                        ring-1 ring-slate-700 hover:ring-indigo-400
                        transition-all duration-300 hover:-translate-y-0.5
                        focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
@@ -150,7 +150,7 @@ export default function IntroScreen({ userName }) {
             aria-disabled="true"
             title="Disponible próximamente"
             className="group flex items-center gap-4 cursor-default
-                       bg-slate-800/50 rounded-2xl px-7 py-5
+                       bg-slate-800/50 rounded-2xl px-5 py-5
                        ring-1 ring-slate-700/70 transition-all duration-300"
           >
             <span className="flex items-center justify-center w-11 h-11 rounded-xl
@@ -171,6 +171,33 @@ export default function IntroScreen({ userName }) {
               Próximamente
             </span>
           </button>
+
+          <a
+            href="https://wara.dev/salas/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-4
+                       bg-slate-800/80 hover:bg-slate-800 rounded-2xl px-5 py-5
+                       ring-1 ring-slate-700 hover:ring-emerald-400
+                       transition-all duration-300 hover:-translate-y-0.5
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+          >
+            <span className="flex items-center justify-center w-11 h-11 rounded-xl
+                             bg-emerald-600/20 text-emerald-300 flex-shrink-0">
+              <i className="ti ti-calendar-event text-2xl" aria-hidden="true" />
+            </span>
+            <span className="text-center flex-1">
+              <span className="block text-white font-semibold text-base sm:text-lg">
+                Quiero reservar una sala de reunión
+              </span>
+              <span className="block text-slate-400 text-xs mt-0.5">
+                Agenda de salas en wara.dev
+              </span>
+            </span>
+            <i className="ti ti-external-link text-xl text-emerald-300 ml-2
+                          transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+               aria-hidden="true" />
+          </a>
         </div>
 
         {/* Pie institucional */}
