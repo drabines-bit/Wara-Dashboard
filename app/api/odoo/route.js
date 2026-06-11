@@ -52,7 +52,7 @@ export async function GET() {
       searchRead(uid, 'account.move',
         [['move_type', '=', 'out_invoice'], ['state', '=', 'posted'],
          ['invoice_date', '>=', `${year}-01-01`], ['invoice_date', '<=', `${year}-12-31`]],
-        ['partner_id', 'partner_shipping_id', 'amount_total'], 5000),
+        ['partner_id', 'partner_shipping_id', 'amount_total'], 10000),
       searchRead(uid, 'account.move',
         [['move_type', '=', 'out_invoice'], ['state', '=', 'posted'],
          ['payment_state', 'in', ['not_paid', 'partial']], ['amount_residual', '>', 0]],
@@ -92,8 +92,10 @@ export async function GET() {
     outstanding.forEach(inv => {
       const id = inv.partner_id?.[0];
       if (!id) return;
-      if (!deudorMap[id]) deudorMap[id] = { nombre: inv.partner_id?.[1] ?? '–', deuda: 0 };
-      deudorMap[id].deuda += inv.amount_residual ?? 0;
+      if (!deudorMap[id])
+        deudorMap[id] = { nombre: inv.partner_id?.[1] ?? '–', deuda: 0, facturas: 0 };
+      deudorMap[id].deuda    += inv.amount_residual ?? 0;
+      deudorMap[id].facturas += 1;
     });
 
     const topDeudores = Object.values(deudorMap)

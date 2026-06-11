@@ -220,6 +220,9 @@ export default function OdooPanel() {
                                'text-slate-700 dark:text-slate-300'
                     }`}>
                       {fmtCurrency(d.deuda)}
+                      <span className="text-xs font-normal text-slate-400 ml-1">
+                        ({d.facturas ?? 0} fact.)
+                      </span>
                     </td>
                   </tr>
                 ))}
