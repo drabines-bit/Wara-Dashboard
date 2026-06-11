@@ -156,7 +156,7 @@ export default function ScoreGlobal({ companyData, selectedMonthIdx, variant = '
       {/* Tooltip explicativo del cálculo */}
       <div
         role="tooltip"
-        className="absolute left-4 right-4 top-full mt-2 z-50
+        className="absolute left-4 right-4 bottom-full mb-2 z-50
                    bg-slate-900 dark:bg-slate-950 text-white rounded-xl
                    px-5 py-4 shadow-2xl border border-slate-700
                    opacity-0 invisible group-hover:opacity-100 group-hover:visible
