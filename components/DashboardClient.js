@@ -13,6 +13,7 @@ import PnlPanel from '@/components/PnlPanel';
 import ScoreGlobal from '@/components/ScoreGlobal';
 import PresentationMode from '@/components/PresentationMode';
 import TVMode from '@/components/TVMode';
+import RevealOnScroll from '@/components/RevealOnScroll';
 import {
   DollarSign, CreditCard, Percent, Activity, LayoutDashboard,
   TrendingUp, TrafficCone, Table2, PieChart, Wallet, LineChart,
@@ -829,6 +830,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
       )}
 
       {/* Quick metrics */}
+      <RevealOnScroll delay={80}>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
           { title: "Facturación Real",          value: cvt(factReal, 'currency'), subtitle: factObj ? `Objetivo: ${cvt(factObj, 'currency')}` : "Objetivo sin definir", badge: isExcelError(factCumpl) ? "trabajando datos" : `${factCumpl || "0,00%"} Cumplimiento`, badgeClass: factSem.color, Icon: DollarSign,  iconColor: "text-sky-500 bg-sky-50 dark:bg-sky-950/50" },
@@ -851,8 +853,10 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
           </div>
         ))}
       </div>
+      </RevealOnScroll>
 
       {/* ── KPI Cards de variables custom ── */}
+      <RevealOnScroll>
       {(config?.customVariables ?? []).filter(cv => cv.enabled && cv.showAsKPI).length > 0 && (() => {
         const kpis = (config?.customVariables ?? []).filter(cv => cv.enabled && cv.showAsKPI);
         const kpisOrdenados = kpiOrder
@@ -933,6 +937,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
         </div>
         );
       })()}
+      </RevealOnScroll>
 
       {/* Tab navigation */}
       <div className="border-b border-slate-200 dark:border-slate-800 mb-8">
@@ -958,7 +963,9 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
       {/* ── TAB 1: Vista General ─────────────────────────────────────────── */}
       {activeTab === "tab-general" && (
       <section className="animate-tab-enter">
-        <ScoreGlobal companyData={companyData} selectedMonthIdx={selectedMonthIdx} />
+        <RevealOnScroll>
+          <ScoreGlobal companyData={companyData} selectedMonthIdx={selectedMonthIdx} />
+        </RevealOnScroll>
 
         {/* Nota del período */}
         <NotaMensual
@@ -970,6 +977,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
           onSaved={handleNotaSaved}
         />
 
+        <RevealOnScroll delay={80}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             {/* Análisis operativo */}
@@ -1138,12 +1146,21 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
             </div>
           </div>
         </div>
+        </RevealOnScroll>
 
         {/* Proyección anual */}
-        <ProyeccionAnual companyData={companyData} config={config} />
-        <OdooPanel />
-        <FacturacionMixPanel />
-        <PnlPanel />
+        <RevealOnScroll>
+          <ProyeccionAnual companyData={companyData} config={config} />
+        </RevealOnScroll>
+        <RevealOnScroll delay={80}>
+          <OdooPanel />
+        </RevealOnScroll>
+        <RevealOnScroll>
+          <FacturacionMixPanel />
+        </RevealOnScroll>
+        <RevealOnScroll delay={80}>
+          <PnlPanel />
+        </RevealOnScroll>
       </section>
       )}
 
