@@ -8,6 +8,7 @@ import MacroContextStrip from "@/components/MacroContextStrip";
 import IntroScreen from "@/components/IntroScreen";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardFooter from "@/components/DashboardFooter";
+import ScrollToTop from "@/components/ScrollToTop";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -57,6 +58,7 @@ export default async function DashboardPage() {
         />
       </main>
       <DashboardFooter links={config?.links} />
+      <ScrollToTop />
     </div>
   );
 }
