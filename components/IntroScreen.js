@@ -141,7 +141,7 @@ export default function IntroScreen({ userName }) {
           </p>
         </div>
 
-        <div className="intro-stagger mt-8 grid gap-4 lg:grid-cols-3 w-full items-stretch"
+        <div className="intro-stagger mt-8 grid gap-4 md:grid-cols-2 w-full items-stretch"
              style={{ '--intro-i': 8 }}>
           <button
             onClick={entrar}
@@ -217,6 +217,33 @@ export default function IntroScreen({ userName }) {
               </span>
             </span>
             <i className="ti ti-external-link text-xl text-teal-300 ml-2
+                          transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+               aria-hidden="true" />
+          </a>
+
+          <a
+            href="https://wara-eos.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-4
+                       bg-slate-800/80 hover:bg-slate-800 rounded-2xl px-5 py-5
+                       ring-1 ring-slate-700 hover:ring-fuchsia-400
+                       transition-all duration-300 hover:-translate-y-0.5
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400"
+          >
+            <span className="flex items-center justify-center w-11 h-11 rounded-xl
+                             bg-fuchsia-600/20 text-fuchsia-300 flex-shrink-0">
+              <i className="ti ti-target-arrow text-2xl" aria-hidden="true" />
+            </span>
+            <span className="text-center flex-1">
+              <span className="block text-white font-semibold text-base">
+                Voy a trabajar con el EOS de WARA
+              </span>
+              <span className="block text-slate-400 text-xs mt-0.5">
+                Abre el sistema EOS en una pestaña nueva
+              </span>
+            </span>
+            <i className="ti ti-external-link text-xl text-fuchsia-300 ml-2
                           transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                aria-hidden="true" />
           </a>
