@@ -29,7 +29,7 @@ export default function DashboardFooter({ links }) {
 
   return (
     <footer className="border-t border-slate-200 dark:border-slate-800 mt-10 py-5 px-4">
-      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:flex-wrap items-center sm:justify-between gap-4">
 
         <div className="flex items-center gap-2">
           {enabledSocial.map(key => (
@@ -48,7 +48,7 @@ export default function DashboardFooter({ links }) {
         </div>
 
         {enabledAccess.length > 0 && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             {enabledAccess.map(key => (
               <a
                 key={key}
@@ -65,9 +65,9 @@ export default function DashboardFooter({ links }) {
           </div>
         )}
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
           <MusicPlayer />
-          <p className="text-slate-400 dark:text-slate-600 text-xs">
+          <p className="text-slate-400 dark:text-slate-600 text-xs text-center">
             © {new Date().getFullYear()} Blo, bienestar, logística y organización S.A.
           </p>
         </div>
