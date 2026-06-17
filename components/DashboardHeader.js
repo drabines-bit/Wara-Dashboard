@@ -47,7 +47,7 @@ export default function DashboardHeader({ user, isAdmin, companyData, selectedMo
               priority
             />
             <div>
-              <span className="text-lg sm:text-2xl font-bold tracking-tight text-white">
+              <span className="hidden sm:block text-lg sm:text-2xl font-bold tracking-tight text-white">
                 WARA GPS
               </span>
               <p className="hidden sm:block text-xs text-sky-200/70 font-medium">
