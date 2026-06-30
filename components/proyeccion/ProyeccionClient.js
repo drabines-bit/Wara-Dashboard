@@ -1,14 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import TablaProyeccion from "@/components/proyeccion/TablaProyeccion";
 import GraficoProyeccion from "@/components/proyeccion/GraficoProyeccion";
 import PanelSupuestos from "@/components/proyeccion/PanelSupuestos";
+import ExportProyeccion from "@/components/proyeccion/ExportProyeccion";
 
 export default function ProyeccionClient({ isAdmin }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [cargando, setCargando] = useState(true);
+  const chartCanvasRef = useRef(null);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -46,7 +48,14 @@ export default function ProyeccionClient({ isAdmin }) {
           {error}
         </div>
       )}
-      <GraficoProyeccion detalle={data?.detalle} />
+      {isAdmin && (
+        <ExportProyeccion
+          detalle={data?.detalle}
+          subtotalesAnuales={data?.subtotalesAnuales}
+          chartCanvasRef={chartCanvasRef}
+        />
+      )}
+      <GraficoProyeccion detalle={data?.detalle} canvasRef={chartCanvasRef} />
       <TablaProyeccion detalle={data?.detalle} subtotalesAnuales={data?.subtotalesAnuales} />
       {isAdmin && <PanelSupuestos onRecalcular={cargar} />}
     </div>

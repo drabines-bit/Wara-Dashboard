@@ -13,8 +13,9 @@ function labelMes(mes) {
   return `${MESES_ABR[m - 1]} '${String(y).slice(2)}`;
 }
 
-export default function GraficoProyeccion({ detalle }) {
-  const canvasRef = useRef(null);
+export default function GraficoProyeccion({ detalle, canvasRef: canvasRefProp }) {
+  const ownCanvasRef = useRef(null);
+  const canvasRef = canvasRefProp ?? ownCanvasRef;
   const chartRef = useRef(null);
   const [isDark, setIsDark] = useState(false);
 
