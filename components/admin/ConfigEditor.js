@@ -147,6 +147,35 @@ export default function ConfigEditor({ initialConfig }) {
         </div>
       </Section>
 
+      {/* SECCIONES / PÁGINAS */}
+      <Section
+        title="Páginas del Dashboard"
+        desc="Activá o desactivá páginas completas. Si se desactiva, los usuarios son redirigidos al Dashboard."
+      >
+        <div className="space-y-3">
+          {[
+            { path: "secciones.proyeccion", label: "Proyección (Ventas, Cobranzas, Costos a 18 meses)" },
+          ].map(({ path, label }) => {
+            const [section, field] = path.split(".");
+            const value = config[section][field];
+            return (
+              <label
+                key={path}
+                className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 border border-slate-200 dark:border-slate-800 cursor-pointer"
+              >
+                <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">{label}</span>
+                <input
+                  type="checkbox"
+                  checked={value}
+                  onChange={(e) => updateConfig(path, e.target.checked)}
+                  className="w-4 h-4 accent-indigo-600"
+                />
+              </label>
+            );
+          })}
+        </div>
+      </Section>
+
       {/* OBJETIVOS MENSUALES */}
       <Section
         title="Objetivos Mensuales"
