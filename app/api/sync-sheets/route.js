@@ -3,6 +3,7 @@ import { Receiver }      from '@upstash/qstash';
 import { getServerSession } from 'next-auth';
 import { NextResponse }  from 'next/server';
 import { setDashboardData, getDashboardConfig, setLastSync, setAutoSyncStatus } from '@/lib/kv';
+import { importarRemDesdeSheet } from '@/lib/proyeccion/inflacion';
 
 export async function POST(req) {
   // ── Autenticación: sesión admin O firma QStash ────────────────────
@@ -55,10 +56,12 @@ export async function POST(req) {
 
     const sheetsApi = google.sheets({ version: 'v4', auth });
 
+    const sheetTab = '2026';             // nombre de la hoja — ajustar si es diferente
+
     // Leer la primera hoja con valores sin formatear (números como números, no strings)
     const response = await sheetsApi.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: '2026',                   // nombre de la hoja — ajustar si es diferente
+      range: sheetTab,
       valueRenderOption: 'UNFORMATTED_VALUE',
       dateTimeRenderOption: 'SERIAL_NUMBER',
     });
@@ -74,6 +77,15 @@ export async function POST(req) {
     const data = parseSheetRows(rows, customVariables);
     await setDashboardData(data);
     await setLastSync();
+
+    // Fila "Inflación del Mes (IPC total/INDEC/REM)" → motor de proyección.
+    // No fatal: un problema acá no debe tumbar la sincronización del dashboard.
+    try {
+      const inflacion = parseInflacionRow(rows, sheetTab);
+      await importarRemDesdeSheet(inflacion);
+    } catch (err) {
+      console.error('[sync-sheets] Error importando inflación:', err.message);
+    }
 
     if (isAutoSync) {
       await setAutoSyncStatus({ lastRun: new Date().toISOString(), success: true, error: null });
@@ -97,6 +109,32 @@ export async function POST(req) {
       : 'Error al sincronizar con Google Sheets.';
     return NextResponse.json({ error: msg }, { status: 500 });
   }
+}
+
+// Fila "Inflación del Mes (IPC total/INDEC/REM)" de la hoja → { "YYYY-MM": pct, ... }
+// para proy:inflacion:rem (lib/proyeccion/inflacion.js). Valores en la hoja son
+// fracción (0.029 = 2,9%), se convierten a porcentaje para el formato del hash REM.
+function parseInflacionRow(rows, anio) {
+  const monthNames = ['enero','febrero','marzo','abril','mayo','junio',
+                      'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const monthMap = {};
+  (rows[0] || []).forEach((h, idx) => {
+    const m = monthNames.indexOf(String(h ?? '').toLowerCase().trim());
+    if (m !== -1) monthMap[m] = idx;
+  });
+
+  const sinAcentos = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const fila = rows.find((r) => sinAcentos(String(r?.[0] ?? '').toLowerCase().trim()).startsWith('inflacion del mes'));
+  if (!fila) return {};
+
+  const valores = {};
+  for (const [mIdxStr, colIdx] of Object.entries(monthMap)) {
+    const raw = fila[colIdx];
+    if (typeof raw !== 'number' || isNaN(raw)) continue;
+    const mes = `${anio}-${String(Number(mIdxStr) + 1).padStart(2, '0')}`;
+    valores[mes] = Math.round(raw * 10000) / 100; // fracción → porcentaje, 2 decimales
+  }
+  return valores;
 }
 
 // Parser de filas — misma lógica que parseAndExtractXLSX en ImportPanel.js
