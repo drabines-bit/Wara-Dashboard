@@ -33,23 +33,26 @@ export default function PanelSupuestos({ onRecalcular }) {
   const [senda, setSenda] = useState([]);
   const [cuentas, setCuentas] = useState([]);
   const [curva, setCurva] = useState(null);
+  const [cfo, setCfo] = useState({});
 
   async function cargarTodo() {
     setCargando(true);
     setError(null);
     try {
-      const [v, p, i, c, cob] = await Promise.all([
+      const [v, p, i, c, cob, cfoRes] = await Promise.all([
         fetchJson("/api/proyeccion/ventas/supuestos"),
         fetchJson("/api/proyeccion/proyectos"),
         fetchJson("/api/proyeccion/inflacion"),
         fetchJson("/api/proyeccion/costos/mapeo"),
         fetchJson("/api/proyeccion/cobranzas").catch(() => ({ curva: null })),
+        fetchJson("/api/proyeccion/backtest/cfo"),
       ]);
       setOverridesVentas(v.overrides ?? {});
       setProyectos(p.proyectos ?? []);
       setSenda(i.senda ?? []);
       setCuentas(c.cuentas ?? []);
       setCurva(cob.curva ?? null);
+      setCfo(cfoRes.cfo ?? {});
     } catch (e) {
       setError(e.message);
     } finally {
@@ -93,6 +96,7 @@ export default function PanelSupuestos({ onRecalcular }) {
           { id: "ventas", label: "Ventas" },
           { id: "inflacion", label: "Inflación" },
           { id: "costos", label: "Costos" },
+          { id: "cfo", label: "Proyección CFO" },
         ].map((t) => (
           <button
             key={t.id}
@@ -160,6 +164,18 @@ export default function PanelSupuestos({ onRecalcular }) {
                   method: "POST", headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ accountId, mes, monto }),
                 }), "Override de costo guardado")
+              }
+            />
+          )}
+
+          {tab === "cfo" && (
+            <CfoTab
+              cfo={cfo}
+              onGuardar={(mes, valores) =>
+                accion(() => fetchJson("/api/proyeccion/backtest/cfo", {
+                  method: "POST", headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ mes, ...valores }),
+                }), "Proyección CFO guardada")
               }
             />
           )}
@@ -408,6 +424,74 @@ function CostosTab({ cuentas, onGuardarTipo, onGuardarOverride }) {
             Guardar override
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CfoTab({ cfo, onGuardar }) {
+  const [form, setForm] = useState({ mes: "", facturacion: "", cobranzas: "", resultado: "" });
+  const meses = proximosMeses();
+
+  return (
+    <div>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+        Proyección manual del CFO por mes, para comparar contra el modelo y lo real en el backtesting (<code>/proyeccion/backtest</code>).
+      </p>
+      <div className="overflow-x-auto custom-scrollbar mb-4">
+        <table className="text-sm w-full">
+          <thead>
+            <tr className="text-left text-slate-500 dark:text-slate-400">
+              <th className="pb-2 font-medium">Mes</th>
+              <th className="pb-2 font-medium">Facturación</th>
+              <th className="pb-2 font-medium">Cobranzas</th>
+              <th className="pb-2 font-medium">Resultado</th>
+              <th className="pb-2 font-medium">Cargado el</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.entries(cfo).sort(([a], [b]) => a.localeCompare(b)).map(([mes, v]) => (
+              <tr key={mes} className="border-t border-slate-100 dark:border-slate-800">
+                <td className="py-1.5 pr-4 text-slate-500">{mes}</td>
+                <td className="py-1.5 pr-4 text-slate-700 dark:text-slate-300">{fmtCurrency(v.facturacion)}</td>
+                <td className="py-1.5 pr-4 text-slate-700 dark:text-slate-300">{fmtCurrency(v.cobranzas)}</td>
+                <td className="py-1.5 pr-4 text-slate-700 dark:text-slate-300">{fmtCurrency(v.resultado)}</td>
+                <td className="py-1.5 text-xs text-slate-400">{v.cargadoEl}</td>
+              </tr>
+            ))}
+            {Object.keys(cfo).length === 0 && (
+              <tr><td colSpan={5} className="py-3 text-xs text-slate-400">Sin proyecciones del CFO cargadas todavía.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex flex-wrap items-end gap-2">
+        <select value={form.mes} onChange={(e) => setForm((p) => ({ ...p, mes: e.target.value }))}
+          className="text-sm rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-2 py-1.5">
+          <option value="">Mes…</option>
+          {meses.map((m) => <option key={m} value={m}>{m}</option>)}
+        </select>
+        <input type="number" placeholder="Facturación" value={form.facturacion}
+          onChange={(e) => setForm((p) => ({ ...p, facturacion: e.target.value }))}
+          className="text-sm rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-2 py-1.5 w-36" />
+        <input type="number" placeholder="Cobranzas" value={form.cobranzas}
+          onChange={(e) => setForm((p) => ({ ...p, cobranzas: e.target.value }))}
+          className="text-sm rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-2 py-1.5 w-36" />
+        <input type="number" placeholder="Resultado" value={form.resultado}
+          onChange={(e) => setForm((p) => ({ ...p, resultado: e.target.value }))}
+          className="text-sm rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-2 py-1.5 w-36" />
+        <button
+          onClick={() => {
+            const { mes, facturacion, cobranzas, resultado } = form;
+            if (mes && facturacion !== "" && cobranzas !== "" && resultado !== "") {
+              onGuardar(mes, { facturacion: Number(facturacion), cobranzas: Number(cobranzas), resultado: Number(resultado) });
+              setForm({ mes: "", facturacion: "", cobranzas: "", resultado: "" });
+            }
+          }}
+          className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg font-medium"
+        >
+          Guardar
+        </button>
       </div>
     </div>
   );
