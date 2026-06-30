@@ -12,6 +12,10 @@ function labelMes(mes) {
 
 const FILAS_DEVENGADO = [
   { key: "facturacionNeta", label: "Facturación neta",          get: (d) => d.facturacionNeta, bold: true },
+  { key: "abonos",          label: "Abonos",                     get: (d) => d.facturacionMix?.abonos, indent: true },
+  { key: "instalaciones",   label: "Instalaciones",               get: (d) => d.facturacionMix?.instalaciones, indent: true },
+  { key: "otrosMix",        label: "Otros",                       get: (d) => d.facturacionMix?.otros, indent: true },
+  { key: "proyectosMix",    label: "Proyectos",                   get: (d) => d.facturacionMix?.proyectos, indent: true },
   { key: "costosFijos",     label: "Costos fijos",               get: (d) => d.costos.fijos },
   { key: "costosVariables", label: "Costos variables (unidades)", get: (d) => d.costos.variables },
   { key: "costosIibb",      label: "IIBB (% facturación)",        get: (d) => d.costos.iibb },
@@ -68,9 +72,9 @@ function Grupo({ titulo, filas, detalle, columnas, abierto, onToggle }) {
               {filas.map((f) => (
                 <tr key={f.key} className="border-t border-slate-100 dark:border-slate-800">
                   <td
-                    className={`sticky left-0 bg-white dark:bg-slate-900 px-3 py-2 whitespace-nowrap z-10 ${
-                      f.bold ? "font-semibold text-slate-800 dark:text-slate-100" : "text-slate-500 dark:text-slate-400"
-                    }`}
+                    className={`sticky left-0 bg-white dark:bg-slate-900 py-2 whitespace-nowrap z-10 ${
+                      f.indent ? "pl-6 pr-3 text-xs" : "px-3"
+                    } ${f.bold ? "font-semibold text-slate-800 dark:text-slate-100" : "text-slate-500 dark:text-slate-400"}`}
                   >
                     {f.label}
                   </td>
@@ -90,8 +94,8 @@ function Grupo({ titulo, filas, detalle, columnas, abierto, onToggle }) {
                       <td
                         key={i}
                         className={`px-3 py-2 text-right whitespace-nowrap tabular-nums ${colorDestacado} ${f.bold ? "font-semibold" : ""} ${
-                          c.tipo === "subtotal" ? "bg-slate-50 dark:bg-slate-800/60 font-medium" : ""
-                        }`}
+                          f.indent ? "text-xs" : ""
+                        } ${c.tipo === "subtotal" ? "bg-slate-50 dark:bg-slate-800/60 font-medium" : ""}`}
                       >
                         {fmtCurrency(valor)}
                       </td>
