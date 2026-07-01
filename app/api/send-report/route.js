@@ -1,36 +1,29 @@
 import { NextResponse }     from 'next/server';
 import { getServerSession } from 'next-auth';
 import { Resend }           from 'resend';
-import { del }              from '@vercel/blob';
 
 export async function POST(req) {
   let session;
   try { session = await getServerSession(); } catch {}
   if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  // Solo administradores pueden enviar reportes por email
   const adminEmails = (process.env.ADMIN_EMAILS ?? '')
     .split(',').map(e => e.trim()).filter(Boolean);
   if (!adminEmails.includes(session.user?.email ?? ''))
     return NextResponse.json({ error: 'Solo administradores pueden enviar reportes' }, { status: 403 });
 
-  // Instanciado dentro del handler: a nivel de módulo rompe el build cuando
-  // RESEND_API_KEY no está definida en el entorno.
   if (!process.env.RESEND_API_KEY)
     return NextResponse.json({ error: 'RESEND_API_KEY no configurada' }, { status: 500 });
   const resend = new Resend(process.env.RESEND_API_KEY);
 
-  const { to, blobUrl, mes, year } = await req.json();
+  const { to, pdfBase64, mes, year } = await req.json();
 
-  if (!to?.trim() || !blobUrl)
-    return NextResponse.json({ error: 'Faltan parámetros: to y blobUrl' }, { status: 400 });
+  if (!to?.trim() || !pdfBase64)
+    return NextResponse.json({ error: 'Faltan parámetros: to y pdfBase64' }, { status: 400 });
 
-  // Descargar el PDF desde Vercel Blob (no pasa por el límite de request body)
-  const pdfRes = await fetch(blobUrl);
-  if (!pdfRes.ok) throw new Error('No se pudo obtener el PDF del almacén temporal');
-  const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
+  const pdfBuffer = Buffer.from(pdfBase64, 'base64');
 
-  const from = process.env.REPORT_FROM_EMAIL ?? 'onboarding@resend.dev';
+  const from   = process.env.REPORT_FROM_EMAIL ?? 'onboarding@resend.dev';
   const asunto = `Reporte Financiero Wara GPS · ${mes ?? ''} ${year ?? ''}`.trim();
 
   try {
@@ -71,14 +64,9 @@ export async function POST(req) {
       }],
     });
 
-    // Limpiar el blob temporal tras enviar con éxito
-    del(blobUrl).catch(() => {});
-
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('[send-report]', err);
-    // Intentar limpiar el blob incluso en caso de error
-    del(blobUrl).catch(() => {});
     return NextResponse.json(
       { error: err.message ?? 'Error al enviar el email' },
       { status: 500 }
