@@ -1,6 +1,7 @@
 import { NextResponse }     from 'next/server';
 import { getServerSession } from 'next-auth';
 import { Resend }           from 'resend';
+import { del }              from '@vercel/blob';
 
 export async function POST(req) {
   let session;
@@ -19,16 +20,15 @@ export async function POST(req) {
     return NextResponse.json({ error: 'RESEND_API_KEY no configurada' }, { status: 500 });
   const resend = new Resend(process.env.RESEND_API_KEY);
 
-  const formData = await req.formData();
-  const to      = formData.get('to');
-  const pdfFile = formData.get('pdf');
-  const mes     = formData.get('mes');
-  const year    = formData.get('year');
+  const { to, blobUrl, mes, year } = await req.json();
 
-  if (!to?.trim() || !pdfFile)
-    return NextResponse.json({ error: 'Faltan parámetros: to y pdf' }, { status: 400 });
+  if (!to?.trim() || !blobUrl)
+    return NextResponse.json({ error: 'Faltan parámetros: to y blobUrl' }, { status: 400 });
 
-  const pdfBuffer = Buffer.from(await pdfFile.arrayBuffer());
+  // Descargar el PDF desde Vercel Blob (no pasa por el límite de request body)
+  const pdfRes = await fetch(blobUrl);
+  if (!pdfRes.ok) throw new Error('No se pudo obtener el PDF del almacén temporal');
+  const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
 
   const from = process.env.REPORT_FROM_EMAIL ?? 'onboarding@resend.dev';
   const asunto = `Reporte Financiero Wara GPS · ${mes ?? ''} ${year ?? ''}`.trim();
@@ -71,9 +71,14 @@ export async function POST(req) {
       }],
     });
 
+    // Limpiar el blob temporal tras enviar con éxito
+    del(blobUrl).catch(() => {});
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('[send-report]', err);
+    // Intentar limpiar el blob incluso en caso de error
+    del(blobUrl).catch(() => {});
     return NextResponse.json(
       { error: err.message ?? 'Error al enviar el email' },
       { status: 500 }

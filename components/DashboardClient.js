@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { upload as blobUpload } from '@vercel/blob/client';
 import { generateMonthlyReport } from '@/lib/generatePDF';
 import { renderChartSnapshots } from '@/lib/chartSnapshots';
 import { Chart, registerables } from "chart.js";
@@ -591,15 +592,21 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
         throw new Error('generatePDF no retornó el PDF. Verificar lib/generatePDF.js');
       }
 
-      const formData = new FormData();
-      formData.append('to', emailDest.trim());
-      formData.append('pdf', pdfBlob, 'reporte.pdf');
-      formData.append('mes', companyData.months[selectedMonthIdx]);
-      formData.append('year', String(new Date().getFullYear()));
+      // Subir el PDF directamente a Vercel Blob (bypassa el límite de 4.5MB de las funciones serverless)
+      const { url: blobUrl } = await blobUpload('reporte.pdf', pdfBlob, {
+        access: 'public',
+        handleUploadUrl: '/api/blob-upload',
+      });
 
       const res = await fetch('/api/send-report', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to:      emailDest.trim(),
+          blobUrl,
+          mes:     companyData.months[selectedMonthIdx],
+          year:    String(new Date().getFullYear()),
+        }),
       });
       let json;
       try { json = await res.json(); } catch {
