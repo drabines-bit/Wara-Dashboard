@@ -574,7 +574,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
     // sin importar qué pestaña esté activa ni el tema elegido.
     const snapshots = renderChartSnapshots(companyData, config);
     try {
-      const pdfBase64 = await generateMonthlyReport({
+      const pdfBlob = await generateMonthlyReport({
         companyData,
         config,
         selectedMonthIdx,
@@ -584,24 +584,27 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
           composition: snapshots.composition,
         },
         odooData: { pnlData: null, comercialData: null },
-        mode: 'base64',
+        mode: 'blob',
       });
 
-      if (!pdfBase64) {
-        throw new Error('generatePDF no retornó el PDF en base64. Verificar lib/generatePDF.js');
+      if (!pdfBlob) {
+        throw new Error('generatePDF no retornó el PDF. Verificar lib/generatePDF.js');
       }
+
+      const formData = new FormData();
+      formData.append('to', emailDest.trim());
+      formData.append('pdf', pdfBlob, 'reporte.pdf');
+      formData.append('mes', companyData.months[selectedMonthIdx]);
+      formData.append('year', String(new Date().getFullYear()));
 
       const res = await fetch('/api/send-report', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to:       emailDest.trim(),
-          pdfBase64,
-          mes:      companyData.months[selectedMonthIdx],
-          year:     new Date().getFullYear(),
-        }),
+        body: formData,
       });
-      const json = await res.json();
+      let json;
+      try { json = await res.json(); } catch {
+        throw new Error(res.ok ? 'Respuesta inesperada del servidor' : `Error del servidor (${res.status})`);
+      }
       if (!res.ok) throw new Error(json.error ?? 'Error al enviar');
       setEmailEstado('ok');
       setTimeout(() => { setEmailModal(false); setEmailEstado(null); }, 2500);

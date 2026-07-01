@@ -19,9 +19,16 @@ export async function POST(req) {
     return NextResponse.json({ error: 'RESEND_API_KEY no configurada' }, { status: 500 });
   const resend = new Resend(process.env.RESEND_API_KEY);
 
-  const { to, pdfBase64, mes, year } = await req.json();
-  if (!to?.trim() || !pdfBase64)
-    return NextResponse.json({ error: 'Faltan parámetros: to y pdfBase64' }, { status: 400 });
+  const formData = await req.formData();
+  const to      = formData.get('to');
+  const pdfFile = formData.get('pdf');
+  const mes     = formData.get('mes');
+  const year    = formData.get('year');
+
+  if (!to?.trim() || !pdfFile)
+    return NextResponse.json({ error: 'Faltan parámetros: to y pdf' }, { status: 400 });
+
+  const pdfBuffer = Buffer.from(await pdfFile.arrayBuffer());
 
   const from = process.env.REPORT_FROM_EMAIL ?? 'onboarding@resend.dev';
   const asunto = `Reporte Financiero Wara GPS · ${mes ?? ''} ${year ?? ''}`.trim();
@@ -60,7 +67,7 @@ export async function POST(req) {
       `,
       attachments: [{
         filename: `reporte-wara-gps-${(mes ?? 'reporte').toLowerCase().replace(/ /g,'-')}-${year ?? ''}.pdf`,
-        content:  Buffer.from(pdfBase64, 'base64'),
+        content:  pdfBuffer,
       }],
     });
 

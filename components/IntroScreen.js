@@ -252,7 +252,7 @@ export default function IntroScreen({ userName }) {
             href="https://wara-pagos.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
-            className="group md:col-span-2 flex items-center gap-4
+            className="group flex items-center gap-4
                        bg-slate-800/80 hover:bg-slate-800 rounded-2xl px-5 py-5
                        ring-1 ring-slate-700 hover:ring-violet-400
                        transition-all duration-300 hover:-translate-y-0.5
@@ -271,6 +271,33 @@ export default function IntroScreen({ userName }) {
               </span>
             </span>
             <i className="ti ti-external-link text-xl text-violet-300 ml-2
+                          transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+               aria-hidden="true" />
+          </a>
+
+          <a
+            href="https://wara-mkt.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-4
+                       bg-slate-800/80 hover:bg-slate-800 rounded-2xl px-5 py-5
+                       ring-1 ring-slate-700 hover:ring-orange-400
+                       transition-all duration-300 hover:-translate-y-0.5
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+          >
+            <span className="flex items-center justify-center w-11 h-11 rounded-xl
+                             bg-orange-600/20 text-orange-300 flex-shrink-0">
+              <i className="ti ti-speakerphone text-2xl" aria-hidden="true" />
+            </span>
+            <span className="text-center flex-1">
+              <span className="block text-white font-semibold text-base">
+                Quiero profundizar en la Gestión Comercial de Wara
+              </span>
+              <span className="block text-slate-400 text-xs mt-0.5">
+                Abre el portal comercial en una pestaña nueva
+              </span>
+            </span>
+            <i className="ti ti-external-link text-xl text-orange-300 ml-2
                           transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                aria-hidden="true" />
           </a>
