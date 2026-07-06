@@ -25,6 +25,41 @@ import {
 
 Chart.register(...registerables);
 
+// Barra de progreso estilo osciloscopio digital: una senoidal animada con
+// glow recorre el tramo completado; el frente de la señal late como cursor.
+function OscilloBar({ pct, stroke }) {
+  const width = Math.min(Math.max(pct || 0, 0), 100);
+  // Onda de 100 períodos de 24px (2400px), amplitud 4px sobre un riel de 16px.
+  // El scroll de -96px (4 períodos exactos) hace el loop imperceptible.
+  const P = 24, H = 16, A = 4, mid = H / 2;
+  let d = `M 0 ${mid}`;
+  for (let i = 0; i < 100; i++) d += ` q ${P / 4} ${-A * 2} ${P / 2} 0 q ${P / 4} ${A * 2} ${P / 2} 0`;
+  return (
+    <div className="oscillo-track relative w-full h-4 rounded-full overflow-hidden
+                    bg-slate-100 dark:bg-slate-900/70 ring-1 ring-inset
+                    ring-slate-200/60 dark:ring-slate-700/50">
+      <div className="absolute inset-y-0 left-0 overflow-hidden transition-[width] duration-500"
+           style={{ width: `${width}%` }}>
+        <div className="oscillo-wave absolute inset-y-0 left-0" style={{ width: '2400px' }}>
+          <svg width="2400" height="100%" viewBox={`0 0 2400 ${H}`}
+               preserveAspectRatio="none" aria-hidden="true">
+            <path d={d} fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round"
+                  style={{ filter: `drop-shadow(0 0 3px ${stroke})` }} />
+          </svg>
+        </div>
+        {/* Velo de relleno: el área completada sigue leyéndose como barra */}
+        <div className="absolute inset-0"
+             style={{ background: `linear-gradient(90deg, transparent, ${stroke}26)` }} />
+      </div>
+      {width > 0 && (
+        <span className="oscillo-dot absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full"
+              style={{ left: `calc(${width}% - 6px)`, background: stroke,
+                       boxShadow: `0 0 6px 1px ${stroke}` }} aria-hidden="true" />
+      )}
+    </div>
+  );
+}
+
 const TV_CARDS_DEFAULT = [
   'scoreGlobal',
   'cumplimientoFacturacion', 'cumplimientoCobranza', 'variacionFacturacion',
@@ -1039,9 +1074,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
                     <span className="font-medium text-slate-600 dark:text-slate-400">Facturación Real vs. Objetivo</span>
                     <span className="font-bold text-sky-500">{factReal === null ? "Sin datos" : fmtPercent(factPct)}</span>
                   </div>
-                  <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
-                    <div className="bg-sky-500 h-3 rounded-full transition-all duration-500" style={{ width: `${Math.min(factPct, 100)}%` }} />
-                  </div>
+                  <OscilloBar pct={factPct} stroke="#0ea5e9" />
                   <div className="flex justify-between items-center mt-2 text-xs text-slate-500">
                     <span>{cvt(factReal, 'currency')}</span>
                     <span>{factObj ? `Meta: ${cvt(factObj, 'currency')}` : "Meta no presupuestada"}</span>
@@ -1053,9 +1086,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
                     <span className="font-medium text-slate-600 dark:text-slate-400">Cobranza Real vs. Objetivo</span>
                     <span className="font-bold text-emerald-500">{cobReal === null ? "Sin datos" : fmtPercent(cobPct)}</span>
                   </div>
-                  <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
-                    <div className="bg-emerald-500 h-3 rounded-full transition-all duration-500" style={{ width: `${Math.min(cobPct, 100)}%` }} />
-                  </div>
+                  <OscilloBar pct={cobPct} stroke="#10b981" />
                   <div className="flex justify-between items-center mt-2 text-xs text-slate-500">
                     <span>{cvt(cobReal, 'currency')}</span>
                     <span>{cobObj ? `Meta: ${cvt(cobObj, 'currency')}` : "Meta no presupuestada"}</span>
