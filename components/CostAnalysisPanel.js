@@ -55,11 +55,13 @@ export default function CostAnalysisPanel() {
   const modelo = useMemo(() => {
     if (!data) return null;
     const ventas = data.resumen?.ingresos ?? 0;
-    if (ventas <= 0) return { ventas, costos: [], criticos: [], totalCostos: 0, escala: 100 };
+    // Meses cerrados en el año: el desglose mensual va de enero al mes en curso
+    const mesesCerrados = data.mensual?.length || 1;
+    if (ventas <= 0) return { ventas, costos: [], criticos: [], totalCostos: 0, escala: 100, mesesCerrados };
 
     const costos = data.cuentas
       .filter(c => GRUPOS[c.tipo] && c.monto > 0)
-      .map(c => ({ ...c, pct: (c.monto / ventas) * 100 }))
+      .map(c => ({ ...c, pct: (c.monto / ventas) * 100, promedioMensual: c.monto / mesesCerrados }))
       .sort((a, b) => b.pct - a.pct);
 
     const totalCostos = costos.reduce((s, c) => s + c.monto, 0);
@@ -69,7 +71,7 @@ export default function CostAnalysisPanel() {
     const maxPct = Math.max(...costos.map(c => c.pct), UMBRAL_PCT);
     const escala = Math.ceil((maxPct * 1.15) / 5) * 5;
 
-    return { ventas, costos, criticos, totalCostos, escala };
+    return { ventas, costos, criticos, totalCostos, escala, mesesCerrados };
   }, [data]);
 
   if (loading && !data)
@@ -94,7 +96,7 @@ export default function CostAnalysisPanel() {
     );
 
   if (!modelo) return null;
-  const { ventas, costos, criticos, totalCostos, escala } = modelo;
+  const { ventas, costos, criticos, totalCostos, escala, mesesCerrados } = modelo;
   const visibles = grupo === 'todos' ? costos : costos.filter(c => c.tipo === grupo);
   const umbralPos = (UMBRAL_PCT / escala) * 100;
   const top5Pct = costos.slice(0, 5).reduce((s, c) => s + c.pct, 0);
@@ -137,10 +139,14 @@ export default function CostAnalysisPanel() {
                     {GRUPOS[c.tipo].label} · {fmtCurrency(c.monto)}
                   </p>
                 </div>
-                <span className="text-base font-bold tabular-nums text-amber-600 dark:text-amber-400
-                                 flex-shrink-0">
-                  {c.pct.toFixed(1)}%
-                </span>
+                <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+                  <span className="text-base font-bold tabular-nums text-amber-600 dark:text-amber-400">
+                    {c.pct.toFixed(1)}%
+                  </span>
+                  <span className="text-[10px] text-slate-400 tabular-nums whitespace-nowrap">
+                    {fmtCurrency(c.promedioMensual)}/mes
+                  </span>
+                </div>
               </div>
             ))}
           </div>
@@ -168,11 +174,24 @@ export default function CostAnalysisPanel() {
           </div>
         </div>
 
+        {/* Cabecera de columnas */}
+        <div className="hidden sm:grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)_9rem_7rem] items-center
+                        gap-3 px-2 pb-1.5 mb-1 border-b border-slate-100 dark:border-slate-700/60">
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Cuenta</span>
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Participación</span>
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 text-right">
+            Monto YTD / %
+          </span>
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 text-right">
+            Prom. mensual
+          </span>
+        </div>
+
         <div className="space-y-1">
           {visibles.map(c => {
             const excede = c.pct > UMBRAL_PCT;
             return (
-              <div key={c.id} className="group grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)_auto] items-center
+              <div key={c.id} className="group grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)_9rem_7rem] items-center
                                          gap-3 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/30
                                          px-2 -mx-2 transition-colors">
                 <div className="min-w-0 text-xs text-slate-600 dark:text-slate-300 truncate"
@@ -192,7 +211,7 @@ export default function CostAnalysisPanel() {
                   <div className="absolute inset-y-0 w-px bg-slate-400/70 dark:bg-slate-300/50"
                        style={{ left: `${umbralPos}%` }} aria-hidden="true"/>
                 </div>
-                <div className="flex items-center gap-2 justify-end w-40 flex-shrink-0">
+                <div className="flex items-center gap-2 justify-end flex-shrink-0">
                   <span className="text-[11px] text-slate-400 tabular-nums hidden sm:inline">
                     {fmtCurrency(c.monto)}
                   </span>
@@ -200,6 +219,11 @@ export default function CostAnalysisPanel() {
                     excede ? 'text-amber-600 dark:text-amber-400' : 'text-slate-600 dark:text-slate-300'
                   }`}>
                     {c.pct.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <span className="text-xs font-medium tabular-nums text-slate-500 dark:text-slate-400">
+                    {fmtCurrency(c.promedioMensual)}
                   </span>
                 </div>
               </div>
@@ -215,7 +239,8 @@ export default function CostAnalysisPanel() {
         <p className="text-[11px] text-slate-400 mt-4 flex items-center gap-1.5">
           <span className="inline-block w-px h-3 bg-slate-400/70" aria-hidden="true"/>
           La línea vertical marca el umbral del {UMBRAL_PCT}% sobre ventas.
-          Escala del eje: 0–{escala}%.
+          Escala del eje: 0–{escala}%. Promedio mensual = monto YTD / {mesesCerrados}{' '}
+          {mesesCerrados === 1 ? 'mes cerrado' : 'meses cerrados'}.
         </p>
       </div>
     </div>
