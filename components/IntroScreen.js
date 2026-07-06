@@ -35,6 +35,16 @@ export default function IntroScreen({ userName }) {
     }
   }, []);
 
+  // Reapertura a pedido (desde el menú de accesos rápidos)
+  useEffect(() => {
+    function reabrir() {
+      setSaliendo(false);
+      setVisible(true);
+    }
+    window.addEventListener('wara:show-intro', reabrir);
+    return () => window.removeEventListener('wara:show-intro', reabrir);
+  }, []);
+
   // Bloquear el scroll del dashboard mientras la intro está visible
   useEffect(() => {
     if (!visible) return;

@@ -7,7 +7,31 @@ const COGS_TYPES   = ['expense_direct_cost'];
 const OPEX_TYPES   = ['expense'];
 const DEPR_TYPES   = ['expense_depreciation'];
 
-function SectionRow({ label, amount, expanded, onToggle, colorClass = '' }) {
+// Umbral de participación sobre ventas a partir del cual un costo se
+// destaca para análisis posterior
+const UMBRAL_PCT = 15;
+
+// Celda de participación sobre ventas: % con un decimal y resaltado
+// ámbar cuando un costo supera el umbral
+function PctCell({ amount, ventas, isCost = false, strong = false }) {
+  if (!ventas || ventas <= 0) return <td className="py-1.5 pr-3"/>;
+  const pct = (amount / ventas) * 100;
+  const excede = isCost && pct > UMBRAL_PCT;
+  return (
+    <td className="py-1.5 pr-3 text-right whitespace-nowrap">
+      <span className={`inline-flex items-center gap-1 tabular-nums rounded-md px-1.5 py-0.5
+                        ${excede
+                          ? 'text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 ring-1 ring-amber-500/30'
+                          : `${strong ? 'text-xs font-semibold' : 'text-[11px]'} text-slate-400 dark:text-slate-500`}`}
+            title={excede ? `Supera el ${UMBRAL_PCT}% de las ventas` : undefined}>
+        {excede && <i className="ti ti-alert-triangle text-[11px]" aria-hidden="true"/>}
+        {pct.toFixed(1)}%
+      </span>
+    </td>
+  );
+}
+
+function SectionRow({ label, amount, expanded, onToggle, colorClass = '', ventas, isCost = false }) {
   return (
     <tr className="bg-slate-50 dark:bg-slate-700/40 cursor-pointer select-none"
         onClick={onToggle}>
@@ -17,42 +41,45 @@ function SectionRow({ label, amount, expanded, onToggle, colorClass = '' }) {
                        text-xs mr-1.5`} aria-hidden="true"/>
         {label}
       </td>
-      <td className={`py-2 pr-3 text-right text-sm font-semibold
+      <td className={`py-2 pr-2 text-right text-sm font-semibold
                       tabular-nums ${colorClass}`}>
         {fmtCurrency(amount)}
       </td>
+      <PctCell amount={amount} ventas={ventas} isCost={isCost} strong />
     </tr>
   );
 }
 
-function AccountRow({ cuenta }) {
+function AccountRow({ cuenta, ventas, isCost = false }) {
   return (
     <tr className="border-b border-slate-50 dark:border-slate-700/30 last:border-0">
       <td className="py-1.5 pl-8 text-xs text-slate-500 dark:text-slate-400">
         <span className="font-mono text-slate-400 mr-1.5">{cuenta.codigo}</span>
         {cuenta.nombre}
       </td>
-      <td className="py-1.5 pr-3 text-right text-xs text-slate-600
+      <td className="py-1.5 pr-2 text-right text-xs text-slate-600
                      dark:text-slate-400 tabular-nums">
         {fmtCurrency(cuenta.monto)}
       </td>
+      <PctCell amount={cuenta.monto} ventas={ventas} isCost={isCost} />
     </tr>
   );
 }
 
-function TotalRow({ label, amount, border = false }) {
+function TotalRow({ label, amount, border = false, ventas }) {
   const isPos = amount >= 0;
   return (
     <tr className={border ? 'border-t-2 border-slate-200 dark:border-slate-600' : ''}>
       <td className="py-2.5 pl-3 font-semibold text-slate-800 dark:text-white text-sm">
         {label}
       </td>
-      <td className={`py-2.5 pr-3 text-right font-bold tabular-nums text-sm ${
+      <td className={`py-2.5 pr-2 text-right font-bold tabular-nums text-sm ${
         isPos ? 'text-emerald-600 dark:text-emerald-400'
               : 'text-red-600 dark:text-red-400'
       }`}>
         {fmtCurrency(amount)}
       </td>
+      <PctCell amount={amount} ventas={ventas} strong />
     </tr>
   );
 }
@@ -120,6 +147,7 @@ export default function PnlPanel() {
 
   const { year, resumen, cuentas } = data;
   const porTipo = (tipos) => cuentas.filter(c => tipos.includes(c.tipo));
+  const ventas = resumen.ingresos;
 
   return (
     <div className="mb-6">
@@ -188,9 +216,19 @@ export default function PnlPanel() {
       {/* Estado de resultados YTD — ancho completo */}
       <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100
                       dark:border-slate-700 p-5 shadow-sm">
-        <h4 className="font-semibold text-slate-800 dark:text-white text-sm mb-4">
-          Estado de resultados YTD
-        </h4>
+        <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+          <h4 className="font-semibold text-slate-800 dark:text-white text-sm">
+            Estado de resultados YTD
+          </h4>
+          <span className="text-[11px] text-slate-400 flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400
+                             bg-amber-500/10 ring-1 ring-amber-500/30 rounded-md px-1.5 py-0.5 font-semibold">
+              <i className="ti ti-alert-triangle text-[11px]" aria-hidden="true"/>
+              &gt;{UMBRAL_PCT}%
+            </span>
+            costos que superan el {UMBRAL_PCT}% de las ventas
+          </span>
+        </div>
         <table className="w-full">
           <tbody>
 
@@ -199,9 +237,10 @@ export default function PnlPanel() {
               amount={resumen.ingresos}
               expanded={expanded.ingresos}
               onToggle={() => toggle('ingresos')}
+              ventas={ventas}
             />
             {expanded.ingresos &&
-              porTipo(INCOME_TYPES).map(c => <AccountRow key={c.id} cuenta={c}/>)}
+              porTipo(INCOME_TYPES).map(c => <AccountRow key={c.id} cuenta={c} ventas={ventas}/>)}
 
             <SectionRow
               label="− Costo de ventas"
@@ -209,12 +248,13 @@ export default function PnlPanel() {
               expanded={expanded.costos}
               onToggle={() => toggle('costos')}
               colorClass="text-red-600 dark:text-red-400"
+              ventas={ventas} isCost
             />
             {expanded.costos &&
-              porTipo(COGS_TYPES).map(c => <AccountRow key={c.id} cuenta={c}/>)}
+              porTipo(COGS_TYPES).map(c => <AccountRow key={c.id} cuenta={c} ventas={ventas} isCost/>)}
 
             <TotalRow label="Resultado bruto"
-                      amount={resumen.resultadoBruto} border />
+                      amount={resumen.resultadoBruto} border ventas={ventas} />
 
             <SectionRow
               label="− Gastos operativos"
@@ -222,9 +262,10 @@ export default function PnlPanel() {
               expanded={expanded.gastos}
               onToggle={() => toggle('gastos')}
               colorClass="text-red-600 dark:text-red-400"
+              ventas={ventas} isCost
             />
             {expanded.gastos &&
-              porTipo(OPEX_TYPES).map(c => <AccountRow key={c.id} cuenta={c}/>)}
+              porTipo(OPEX_TYPES).map(c => <AccountRow key={c.id} cuenta={c} ventas={ventas} isCost/>)}
 
             {resumen.depreciaciones > 0 && (
               <>
@@ -234,14 +275,15 @@ export default function PnlPanel() {
                   expanded={expanded.depreciaciones}
                   onToggle={() => toggle('depreciaciones')}
                   colorClass="text-red-600 dark:text-red-400"
+                  ventas={ventas} isCost
                 />
                 {expanded.depreciaciones &&
-                  porTipo(DEPR_TYPES).map(c => <AccountRow key={c.id} cuenta={c}/>)}
+                  porTipo(DEPR_TYPES).map(c => <AccountRow key={c.id} cuenta={c} ventas={ventas} isCost/>)}
               </>
             )}
 
             <TotalRow label="Resultado neto"
-                      amount={resumen.resultadoNeto} border />
+                      amount={resumen.resultadoNeto} border ventas={ventas} />
 
           </tbody>
         </table>

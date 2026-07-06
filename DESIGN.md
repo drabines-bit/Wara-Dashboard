@@ -222,7 +222,7 @@ La unidad compositiva central del dashboard.
 - **Corner Style:** Softly rounded (16px / `rounded-2xl`)
 - **Background:** White en modo claro (`#ffffff`), Slate-800 en dark (`#1e293b`)
 - **Shadow:** Ambient Resting por defecto; Ambient Hover en cards interactivos
-- **Border:** 1px Subtle (`#f1f5f9` claro / slate-700 oscuro)
+- **Border:** 1px Subtle (`#f1f5f9` claro / `slate-700/60` oscuro — un solo token de borde en dark, sin variantes slate-800 que desaparecen sobre la página)
 - **Internal Padding:** 20px (`p-5`) estándar; reducir a 12px (`p-3`) solo en subcomponentes internos
 - **Nested cards:** Prohibido. Si el contenido requiere separación interna, usar dividers (`border-b`) o background tints, nunca un card dentro de un card.
 
@@ -253,14 +253,29 @@ Encabezados de sección dentro de cards y panels. Patrón: dot de color + headin
 - **Structure:** `flex items-center gap-2` con un `w-1 h-5 rounded-full bg-[accent]` como identificador visual de la sección, seguido de `h3 text-sm font-semibold`
 - **El dot no es una side-stripe.** Es un elemento independiente de 4px de ancho, no un `border-left`. No aplicar el patrón invertido (border-left > 1px).
 
-### Navigation / Tabs
+### Navigation / Tabs (píldoras)
 
-Tabs horizontales para alternar vistas del dashboard.
+Píldoras horizontales sobre un riel sutil para alternar vistas del dashboard
+(dirección "Pulso", reemplaza al patrón de subrayado).
 
-- **Default:** Texto `text-slate-500` + icon + padding `px-3 py-4`
-- **Active:** `text-indigo-600 border-b-2 border-indigo-600 font-medium`
-- **Hover:** `text-slate-700`
-- **Mobile:** Scroll horizontal con `overflow-x-auto`
+- **Riel:** `inline-flex gap-1 p-1 rounded-full bg-slate-100/80 dark:bg-slate-800/60 ring-1 ring-slate-200/80 dark:ring-slate-700/60`
+- **Default:** `text-slate-500 font-medium rounded-full px-4 py-2` + icon
+- **Active:** `bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-300 font-semibold shadow-sm ring-1 ring-indigo-200 dark:ring-indigo-500/30`
+- **Hover (inactiva):** `text-slate-700 bg-white/60 dark:bg-slate-700/40`
+- **Mobile:** Scroll horizontal con `overflow-x-auto` en el contenedor del riel
+
+### KPI Hero Card
+
+La métrica protagonista del mes (Facturación Real) no compite en igualdad con
+el resto: ocupa el doble de columnas y lleva superficie teñida con el brand.
+
+- **Grid:** fila de KPIs en `lg:grid-cols-5`; el héroe usa `lg:col-span-2`
+- **Superficie:** `bg-gradient-to-br from-sky-50 via-white to-white`
+  (dark: `from-sky-950/40 via-slate-800 to-slate-800`)
+- **Borde:** `border-sky-200/70 dark:border-sky-500/25` — el único card con borde brand
+- **Número:** un paso mayor que el resto (`text-3xl sm:text-4xl`), siempre `tabular-nums`
+- **Label:** uppercase tracking-wide en color brand
+- **Un solo héroe por vista.** Si todo es héroe, nada lo es.
 
 ### Chart.js Integration
 

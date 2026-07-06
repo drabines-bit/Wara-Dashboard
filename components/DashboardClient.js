@@ -11,6 +11,7 @@ import NotaMensual from '@/components/NotaMensual';
 import FacturacionMixPanel from '@/components/FacturacionMixPanel';
 import OdooPanel from '@/components/OdooPanel';
 import PnlPanel from '@/components/PnlPanel';
+import CostAnalysisPanel from '@/components/CostAnalysisPanel';
 import ScoreGlobal from '@/components/ScoreGlobal';
 import PresentationMode from '@/components/PresentationMode';
 import TVMode from '@/components/TVMode';
@@ -564,6 +565,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
     { id: "tab-charts",     label: "Gráficos y Tendencias",                                shortLabel: "Gráficos",   Icon: TrendingUp      },
     { id: "tab-semaphores", label: "Reglas de Semáforos",                                  shortLabel: "Semáforos",  Icon: TrafficCone     },
     { id: "tab-table",      label: `Matriz de Datos ${year ?? new Date().getFullYear()}`,  shortLabel: "Matriz",     Icon: Table2          },
+    { id: "tab-costs",      label: "Análisis de Costos",                                   shortLabel: "Costos",     Icon: PieChart        },
   ];
 
   async function handleSendEmail() {
@@ -861,25 +863,29 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
         </div>
       )}
 
-      {/* Quick metrics */}
+      {/* Quick metrics: la facturación es la tarjeta héroe del mes */}
       <RevealOnScroll delay={80}>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         {[
           { title: "Facturación Real",          value: cvt(factReal, 'currency'), subtitle: factObj ? `Objetivo: ${cvt(factObj, 'currency')}` : "Objetivo sin definir", badge: isExcelError(factCumpl) ? "trabajando datos" : `${factCumpl || "0,00%"} Cumplimiento`, badgeClass: factSem.color, Icon: DollarSign,  iconColor: "text-sky-500 bg-sky-50 dark:bg-sky-950/50" },
           { title: "Cobranza Real",              value: cvt(cobReal, 'currency'),  subtitle: cobObj  ? `Objetivo: ${cvt(cobObj, 'currency')}`  : "Objetivo sin definir", badge: isExcelError(cobCumpl) ? "trabajando datos"  : `${cobCumpl || "0,00%"} Cumplimiento`,  badgeClass: cobSem.color,  Icon: CreditCard,  iconColor: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/50" },
           { title: "Variación m/m Facturación",  value: isExcelError(varFact) ? "trabajando datos" : (varFact || "0,00%"), subtitle: "Vs. mes anterior", badge: isExcelError(varFact) ? "Revisando" : (parseFloat(varFact) < 0 ? "Contracción" : "Aumento"), badgeClass: varSem.color, Icon: Percent,    iconColor: "text-amber-500 bg-amber-50 dark:bg-amber-950/50" },
           { title: "Ratio Liquidez Corriente",   value: isExcelError(actCorr) || isExcelError(pasCorr) ? "trabajando datos" : fmtNumber(ratioLiquidez, 2) + "x", subtitle: "Activo Corriente / Pasivo Corriente", badge: isExcelError(actCorr) || isExcelError(pasCorr) ? "trabajando datos" : liqSem.label, badgeClass: liqSem.color, Icon: Activity, iconColor: "text-indigo-500 bg-indigo-50 dark:bg-indigo-950/50" },
         ].map((m, idx) => (
-          <div key={m.title} style={{ '--kpi-i': idx }} className={`animate-kpi-stagger bg-white dark:bg-slate-800 rounded-2xl flex flex-col justify-between hover:shadow-md transition-all ${idx === 0 ? 'p-6 shadow-sm border border-sky-100 dark:border-sky-900/30' : 'p-5 shadow-sm border border-slate-100 dark:border-slate-800/80'}`}>
+          <div key={m.title} style={{ '--kpi-i': idx }} className={`animate-kpi-stagger rounded-2xl flex flex-col justify-between hover:shadow-md transition-all ${
+            idx === 0
+              ? 'md:col-span-2 lg:col-span-2 p-6 shadow-sm border border-sky-200/70 dark:border-sky-500/25 bg-gradient-to-br from-sky-50 via-white to-white dark:from-sky-950/40 dark:via-slate-800 dark:to-slate-800'
+              : 'p-5 shadow-sm bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/60'
+          }`}>
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-medium text-slate-500">{m.title}</span>
+              <span className={`text-xs font-semibold uppercase tracking-wide ${idx === 0 ? 'text-brand-500 dark:text-sky-400' : 'text-slate-500'}`}>{m.title}</span>
               <div className={`${m.iconColor} p-2.5 rounded-xl`}><m.Icon className="w-5 h-5" /></div>
             </div>
             <div className="mb-4">
-              <h4 className={`${idx === 0 ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'} font-bold tracking-tight text-slate-900 dark:text-white`}>{m.value}</h4>
+              <h4 className={`${idx === 0 ? 'text-3xl sm:text-4xl' : 'text-xl sm:text-2xl'} font-bold tracking-tight tabular-nums text-slate-900 dark:text-white`}>{m.value}</h4>
               <p className="text-xs text-slate-500 mt-1">{m.subtitle}</p>
             </div>
-            <div className="pt-3 border-t border-slate-50 dark:border-slate-700/50">
+            <div className={`pt-3 border-t ${idx === 0 ? 'border-sky-100 dark:border-sky-500/15' : 'border-slate-50 dark:border-slate-700/50'}`}>
               <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${m.badgeClass}`}>{m.badge}</span>
             </div>
           </div>
@@ -924,7 +930,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
                     setDragId(null);
                   }}
                   onDragEnd={() => setDragId(null)}
-                  className={`relative group animate-kpi-stagger bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800/80 flex flex-col justify-between hover:shadow-md transition-all cursor-grab active:cursor-grabbing ${
+                  className={`relative group animate-kpi-stagger bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700/60 flex flex-col justify-between hover:shadow-md transition-all cursor-grab active:cursor-grabbing ${
                     dragId === cv.id ? 'opacity-40 scale-95' : ''
                   }`}
                 >
@@ -971,17 +977,20 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
       })()}
       </RevealOnScroll>
 
-      {/* Tab navigation */}
-      <div className="border-b border-slate-200 dark:border-slate-800 mb-8">
-        <nav className="flex overflow-x-auto scrollbar-hide -mb-px">
+      {/* Tab navigation: píldoras sobre un riel sutil */}
+      <div className="mb-8 overflow-x-auto scrollbar-hide">
+        <nav className="inline-flex items-center gap-1 p-1 rounded-full
+                        bg-slate-100/80 dark:bg-slate-800/60
+                        ring-1 ring-slate-200/80 dark:ring-slate-700/60">
           {TABS.map(({ id, label, shortLabel, Icon }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id)}
-              className={`pb-4 px-3 sm:px-4 flex-shrink-0 text-sm flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
+              className={`px-3 sm:px-4 py-2 flex-shrink-0 text-sm flex items-center gap-2
+                          rounded-full transition-all whitespace-nowrap ${
                 activeTab === id
-                  ? "border-brand-500 text-brand-600 dark:text-sky-400 font-semibold"
-                  : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-medium"
+                  ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-300 font-semibold shadow-sm ring-1 ring-indigo-200 dark:ring-indigo-500/30"
+                  : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-medium hover:bg-white/60 dark:hover:bg-slate-700/40"
               }`}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
@@ -1013,7 +1022,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             {/* Análisis operativo */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700/60">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-bold flex items-center space-x-2">
                   <PieChart className="text-sky-500 w-5 h-5" />
@@ -1056,7 +1065,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
             </div>
 
             {/* Composición patrimonial */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700/60">
               <h3 className="text-lg font-bold mb-6 flex items-center space-x-2">
                 <Wallet className="text-indigo-500 w-5 h-5" />
                 <span>Composición Patrimonial del Mes</span>
@@ -1067,7 +1076,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
                   { label: "Cheques Cartera",    value: cheques,    note: "Instrumentos negociables",          semColor: "bg-green-500" },
                   { label: "Cuentas por Cobrar", value: deudores,   note: `Top 20 Deudores: ${cvt(companyData.activoCorriente.top20Deudores[selectedMonthIdx], 'currency')}`, semColor: deudColor },
                 ].map(({ label, value, note, semColor }) => (
-                  <div key={label} className="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <div key={label} className="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-xl border border-slate-100 dark:border-slate-700/60">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-semibold text-slate-500 uppercase">{label}</span>
                       <span className={`w-3 h-3 rounded-full ${semColor}`} />
@@ -1079,7 +1088,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
               </div>
 
               {/* Doughnut + breakdown */}
-              <div className="mt-6 flex flex-col md:flex-row items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-100 dark:border-slate-800/50">
+              <div className="mt-6 flex flex-col md:flex-row items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-100 dark:border-slate-700/60">
                 <div className="w-full md:w-1/2 h-56 flex items-center justify-center">
                   <canvas ref={assetCanvasRef} />
                 </div>
@@ -1109,7 +1118,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
           {/* Right column */}
           <div className="space-y-8">
             {/* Diagnóstico */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700/60">
               <div className="flex items-center space-x-2 mb-4 text-brand-500">
                 <ClipboardCheck className="w-5 h-5" />
                 <h3 className="text-lg font-bold">Diagnóstico Financiero</h3>
@@ -1200,7 +1209,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
       {activeTab === "tab-charts" && (
       <section className="animate-tab-enter">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700/60">
             <h3 className="text-lg font-bold mb-4 flex items-center space-x-2">
               <LineChart className="text-sky-500 w-5 h-5" />
               <span>Tendencia de Facturación vs Cobranzas (2026)</span>
@@ -1209,7 +1218,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
             <p className="text-xs text-slate-500 mt-4 italic">* Los errores del excel de los primeros meses se filtraron para mantener la integridad de la curva.</p>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700/60">
             <h3 className="text-lg font-bold mb-4 flex items-center space-x-2">
               <ShieldCheck className="text-emerald-500 w-5 h-5" />
               <span>Estructura de Capital y Solvencia</span>
@@ -1219,7 +1228,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
           </div>
         </div>
 
-        <div className="mt-8 bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+        <div className="mt-8 bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700/60">
           <h3 className="text-lg font-bold mb-4 flex items-center space-x-2">
             <Layers className="text-amber-500 w-5 h-5" />
             <span>Composición de Facturación por Canal (2026)</span>
@@ -1242,7 +1251,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
       {/* ── TAB 3: Semáforos ─────────────────────────────────────────────── */}
       {activeTab === "tab-semaphores" && (
       <section className="animate-tab-enter">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 mb-8">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700/60 mb-8">
           <div className="flex items-center space-x-3 mb-6">
             <TrafficCone className="w-6 h-6 text-sky-500" />
             <div>
@@ -1279,7 +1288,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
       {/* ── TAB 4: Matriz ────────────────────────────────────────────────── */}
       {activeTab === "tab-table" && (
       <section className="animate-tab-enter">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/60 overflow-hidden">
           <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
             <div>
               <h3 className="text-lg font-bold">Matriz de Datos Financieros 2026</h3>
@@ -1353,6 +1362,19 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
             </table>
           </div>
         </div>
+      </section>
+      )}
+
+      {/* ── TAB 5: Análisis de Costos ────────────────────────────────────── */}
+      {activeTab === "tab-costs" && (
+      <section className="animate-tab-enter">
+        <div className="mb-5">
+          <h3 className="text-lg font-bold">Análisis de Costos sobre Ventas</h3>
+          <p className="text-sm text-slate-500">
+            Participación de cada cuenta de costo y gasto sobre los ingresos YTD (Odoo, en tiempo real).
+          </p>
+        </div>
+        <CostAnalysisPanel />
       </section>
       )}
 
