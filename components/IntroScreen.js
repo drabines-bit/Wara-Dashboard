@@ -205,6 +205,31 @@ export default function IntroScreen({ userName }) {
                aria-hidden="true" />
           </a>
 
+          <div
+            title="Disponible próximamente"
+            className="flex items-center gap-4 cursor-default
+                       bg-slate-800/50 rounded-2xl px-5 py-5
+                       ring-1 ring-slate-700/70"
+          >
+            <span className="flex items-center justify-center w-11 h-11 rounded-xl
+                             bg-cyan-600/15 text-cyan-300/80 flex-shrink-0">
+              <i className="ti ti-code text-2xl" aria-hidden="true" />
+            </span>
+            <span className="text-center flex-1">
+              <span className="block text-slate-300 font-semibold text-base">
+                Quiero conocer el estado de Desarrollo
+              </span>
+              <span className="block text-slate-500 text-xs mt-0.5">
+                Próximo dashboard
+              </span>
+            </span>
+            <span className="ml-2 flex-shrink-0 text-[10px] font-bold uppercase tracking-wider
+                             text-cyan-300/90 bg-cyan-500/10 ring-1 ring-cyan-500/30
+                             px-2.5 py-1 rounded-full">
+              Próximamente
+            </span>
+          </div>
+
           <a
             href="https://wara.dev/salas/"
             target="_blank"

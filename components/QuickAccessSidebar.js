@@ -21,6 +21,14 @@ const ACCESOS = [
     href: 'https://tableroodoo.onrender.com/',
   },
   {
+    titulo: 'Estado de Desarrollo',
+    sub: 'Próximo dashboard',
+    icono: 'ti-code',
+    color: 'text-cyan-400 bg-cyan-500/15',
+    href: null,
+    proximamente: true,
+  },
+  {
     titulo: 'Reservar sala de reunión',
     sub: 'wara.dev',
     icono: 'ti-calendar-event',
