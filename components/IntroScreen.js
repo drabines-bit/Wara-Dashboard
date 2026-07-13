@@ -178,31 +178,32 @@ export default function IntroScreen({ userName }) {
                aria-hidden="true" />
           </button>
 
-          {/* TODO: convertir en enlace cuando esté definido el destino del panel de operación */}
-          <div
-            title="Disponible próximamente"
-            className="flex items-center gap-4 cursor-default
-                       bg-slate-800/50 rounded-2xl px-5 py-5
-                       ring-1 ring-slate-700/70"
+          <a
+            href="https://tableroodoo.onrender.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-4
+                       bg-slate-800/80 hover:bg-slate-800 rounded-2xl px-5 py-5
+                       ring-1 ring-slate-700 hover:ring-sky-400
+                       transition-all duration-300 hover:-translate-y-0.5
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
           >
             <span className="flex items-center justify-center w-11 h-11 rounded-xl
-                             bg-sky-600/15 text-sky-300/80 flex-shrink-0">
+                             bg-sky-600/20 text-sky-300 flex-shrink-0">
               <i className="ti ti-route text-2xl" aria-hidden="true" />
             </span>
             <span className="text-center flex-1">
-              <span className="block text-slate-300 font-semibold text-base">
+              <span className="block text-white font-semibold text-base">
                 Quiero saber cómo está la operación de la empresa
               </span>
-              <span className="block text-slate-500 text-xs mt-0.5">
+              <span className="block text-slate-400 text-xs mt-0.5">
                 Flota, logística y servicio
               </span>
             </span>
-            <span className="ml-2 flex-shrink-0 text-[10px] font-bold uppercase tracking-wider
-                             text-sky-300/90 bg-sky-500/10 ring-1 ring-sky-500/30
-                             px-2.5 py-1 rounded-full">
-              Próximamente
-            </span>
-          </div>
+            <i className="ti ti-external-link text-xl text-sky-300 ml-2
+                          transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+               aria-hidden="true" />
+          </a>
 
           <a
             href="https://wara.dev/salas/"

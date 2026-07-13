@@ -18,8 +18,7 @@ const ACCESOS = [
     sub: 'Flota, logística y servicio',
     icono: 'ti-route',
     color: 'text-sky-400 bg-sky-500/15',
-    href: null,
-    proximamente: true,
+    href: 'https://tableroodoo.onrender.com/',
   },
   {
     titulo: 'Reservar sala de reunión',
