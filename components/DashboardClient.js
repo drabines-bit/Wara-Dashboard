@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { generateMonthlyReport } from '@/lib/generatePDF';
 import { renderChartSnapshots } from '@/lib/chartSnapshots';
 import { Chart, registerables } from "chart.js";
@@ -146,6 +146,18 @@ function getSemaphoreColor(type, value) {
   return { color: "text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800", label: "Neutro", bg: "bg-slate-400" };
 }
 
+// Agrupa una categoría de producto de Odoo (nombre libre, definido en el
+// árbol de categorías) en uno de los tres canales del gráfico de
+// composición. El orden de los checks importa: "instalaciones menores"
+// contiene "instalac" pero pertenece a Otros, no a Instalaciones.
+function canalDeCategoria(cat) {
+  const n = (cat ?? '').toLowerCase();
+  if (n.includes('envio') || (n.includes('instalac') && n.includes('menor'))) return 'otros';
+  if (n.includes('abono')) return 'abonos';
+  if (n.includes('instalac')) return 'instalaciones';
+  return 'otros';
+}
+
 // Matrix cell component — renders "trabajando datos" badge or formatted value
 function MatrixCell({ val, type = "currency", isActive, fmt = formatValueText }) {
   const base = "p-3 text-center text-xs text-slate-600 dark:text-slate-300";
@@ -204,7 +216,7 @@ const MATRIX_ROWS = [
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function DashboardClient({ initialData, config, isAdmin, initialNotas, year, lastSync }) {
-  const companyData = initialData || getEmptyData();
+  const baseData = initialData || getEmptyData();
 
   const getInitialMonth = (d) => {
     let last = 0;
@@ -214,7 +226,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
     return last;
   };
 
-  const [selectedMonthIdx, setSelectedMonthIdx] = useState(() => getInitialMonth(companyData));
+  const [selectedMonthIdx, setSelectedMonthIdx] = useState(() => getInitialMonth(baseData));
   const [activeTab, setActiveTab] = useState("tab-general");
   const [isDark, setIsDark] = useState(false);
   const [alert, setAlert] = useState(null);
@@ -232,6 +244,19 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
   const [pinned,   setPinned]   = useState(false);
   const [kpiOrder, setKpiOrder] = useState(null);
   const [dragId,   setDragId]   = useState(null);
+  const [odooMix,      setOdooMix]      = useState(null);
+  const [odooMixError, setOdooMixError] = useState(null);
+
+  // Facturación real por mes, con Odoo como fuente de verdad: sobrescribe
+  // facturacion.real (enero → mes en curso, según /api/odoo-mix) sobre el
+  // dato del Excel/sheet. Objetivo, cumplimiento y variación m/m siguen
+  // viniendo del sheet, que es el único lugar donde existe el presupuesto.
+  const companyData = useMemo(() => {
+    if (!odooMix?.meses?.length) return baseData;
+    const real = baseData.facturacion.real.slice();
+    odooMix.meses.forEach((m, i) => { if (i < real.length) real[i] = m.total; });
+    return { ...baseData, facturacion: { ...baseData.facturacion, real } };
+  }, [baseData, odooMix]);
 
   function handleNotaSaved(mes, texto) {
     setNotas(prev => {
@@ -280,6 +305,27 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setRates(d); })
       .catch(() => {});
+  }, []);
+
+  // Mix de facturación por categoría (Odoo): alimenta tanto la facturación
+  // real fusionada en companyData como el gráfico de composición por canal.
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const res  = await fetch('/api/odoo-mix', { cache: 'no-store' });
+        const json = await res.json();
+        if (cancelled) return;
+        if (!res.ok) throw new Error(json.error ?? 'Error desconocido');
+        setOdooMix(json);
+        setOdooMixError(null);
+      } catch (e) {
+        if (!cancelled) setOdooMixError(e.message);
+      }
+    }
+    load();
+    const id = setInterval(load, 30 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(id); };
   }, []);
 
   // Restore saved initial period from localStorage
@@ -456,17 +502,24 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
       });
     }
 
-    // Composition
+    // Composition — desde Odoo (mix de facturación por categoría), no del sheet
     if (compositionCanvasRef.current) {
       if (compositionChart.current) compositionChart.current.destroy();
       const labels = [], abonosArr = [], instalArr = [], otrosArr = [];
-      companyData.months.forEach((month, i) => {
-        const abonos = companyData.facturacionMix?.ratioAbonos?.[i];
-        if (abonos !== null && abonos !== undefined) {
-          labels.push(month);
-          abonosArr.push(parseFloat(abonos.toFixed(2)));
-          instalArr.push(parseFloat((companyData.facturacionMix?.ratioInstalaciones?.[i] || 0).toFixed(2)));
-          otrosArr.push(parseFloat((companyData.facturacionMix?.ratioOtros?.[i] || 0).toFixed(2)));
+      (odooMix?.meses ?? []).forEach((m) => {
+        let abonos = 0, instalaciones = 0, otros = 0;
+        Object.entries(m.data ?? {}).forEach(([cat, monto]) => {
+          const canal = canalDeCategoria(cat);
+          if (canal === 'abonos')             abonos        += monto;
+          else if (canal === 'instalaciones') instalaciones += monto;
+          else                                 otros         += monto;
+        });
+        const total = abonos + instalaciones + otros;
+        if (total > 0) {
+          labels.push(companyData.months[m.mes - 1] ?? m.nombre);
+          abonosArr.push(parseFloat((abonos / total * 100).toFixed(2)));
+          instalArr.push(parseFloat((instalaciones / total * 100).toFixed(2)));
+          otrosArr.push(parseFloat((otros / total * 100).toFixed(2)));
         }
       });
       if (labels.length > 0) {
@@ -477,7 +530,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
             datasets: [
               { label: "Abonos Recurrentes", data: abonosArr,  backgroundColor: "#0284c7", borderRadius: 4, stack: "total" },
               { label: "Instalaciones",      data: instalArr,  backgroundColor: "#f59e0b", borderRadius: 4, stack: "total" },
-              { label: "Envíos / Otros",      data: otrosArr,   backgroundColor: "#14b8a6", borderRadius: 4, stack: "total" },
+              { label: "Reparaciones / Envíos / Otros", data: otrosArr, backgroundColor: "#14b8a6", borderRadius: 4, stack: "total" },
             ],
           },
           options: {
@@ -507,7 +560,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
         if (ref.current) { ref.current.destroy(); ref.current = null; }
       });
     };
-  }, [companyData, selectedMonthIdx, isDark, activeTab]);
+  }, [companyData, selectedMonthIdx, isDark, activeTab, odooMix]);
 
   const activeRate = currency === 'USD_OFICIAL' ? rates?.ars?.venta
                    : currency === 'USD_MEP'     ? rates?.mep?.venta
@@ -529,7 +582,6 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
   const monthName      = companyData.months[selectedMonthIdx];
   const factReal       = companyData.facturacion.real[selectedMonthIdx];
   const factObj        = companyData.facturacion.objetivo[selectedMonthIdx];
-  const factCumpl      = companyData.facturacion.cumplimiento[selectedMonthIdx];
   const cobReal        = companyData.cobranza.real[selectedMonthIdx];
   const cobObj         = companyData.cobranza.objetivo[selectedMonthIdx];
   const cobCumpl       = companyData.cobranza.cumplimiento[selectedMonthIdx];
@@ -538,13 +590,16 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
   const varFact        = companyData.facturacion.variacion[selectedMonthIdx];
   const ratioLiquidez  = actCorr && pasCorr ? actCorr / pasCorr : 0;
 
-  const factSem  = getSemaphoreColor("cumplimiento", factCumpl);
+  // factReal ahora puede venir de Odoo (siempre numérico) o, para meses sin
+  // cierre en Odoo, del sheet (que puede traer un string de error de Excel).
+  const factRealNum = typeof factReal === 'number' ? factReal : null;
+  const factPct  = factObj && factRealNum !== null ? (factRealNum / factObj) * 100 : 0;
+  const cobPct   = cobObj  && cobReal  ? (cobReal  / cobObj)  * 100 : 0;
+
+  const factSem  = getSemaphoreColor("cumplimiento", isExcelError(factReal) ? factReal : factPct);
   const cobSem   = getSemaphoreColor("cumplimiento", cobCumpl);
   const varSem   = getSemaphoreColor("variacion", varFact);
   const liqSem   = getSemaphoreColor("liquidez", ratioLiquidez);
-
-  const factPct  = factObj && factReal ? (factReal / factObj) * 100 : 0;
-  const cobPct   = cobObj  && cobReal  ? (cobReal  / cobObj)  * 100 : 0;
 
   const caja      = companyData.activoCorriente.cajaBancos[selectedMonthIdx] || 0;
   const fci       = companyData.activoCorriente.fci[selectedMonthIdx] || 0;
@@ -560,7 +615,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
   const deudColor   = deudPct > 50 ? "bg-rose-500" : deudPct > 30 ? "bg-amber-500" : "bg-emerald-500";
 
   const hasAnyData    = companyData.facturacion.real.some((v) => v !== null);
-  const hasCompMix    = companyData.facturacionMix?.ratioAbonos?.some((v) => v !== null);
+  const hasCompMix    = (odooMix?.meses?.length ?? 0) > 0;
 
   const recDesc = (() => {
     if (factReal === null) return null;
@@ -902,7 +957,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
       <RevealOnScroll delay={80}>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         {[
-          { title: "Facturación Real",          value: cvt(factReal, 'currency'), subtitle: factObj ? `Objetivo: ${cvt(factObj, 'currency')}` : "Objetivo sin definir", badge: isExcelError(factCumpl) ? "trabajando datos" : `${factCumpl || "0,00%"} Cumplimiento`, badgeClass: factSem.color, Icon: DollarSign,  iconColor: "text-sky-500 bg-sky-50 dark:bg-sky-950/50" },
+          { title: "Facturación Real",          value: cvt(factReal, 'currency'), subtitle: factObj ? `Objetivo: ${cvt(factObj, 'currency')}` : "Objetivo sin definir", badge: isExcelError(factReal) ? "trabajando datos" : `${fmtPercent(factPct)} Cumplimiento`, badgeClass: factSem.color, Icon: DollarSign,  iconColor: "text-sky-500 bg-sky-50 dark:bg-sky-950/50" },
           { title: "Cobranza Real",              value: cvt(cobReal, 'currency'),  subtitle: cobObj  ? `Objetivo: ${cvt(cobObj, 'currency')}`  : "Objetivo sin definir", badge: isExcelError(cobCumpl) ? "trabajando datos"  : `${cobCumpl || "0,00%"} Cumplimiento`,  badgeClass: cobSem.color,  Icon: CreditCard,  iconColor: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/50" },
           { title: "Variación m/m Facturación",  value: isExcelError(varFact) ? "trabajando datos" : (varFact || "0,00%"), subtitle: "Vs. mes anterior", badge: isExcelError(varFact) ? "Revisando" : (parseFloat(varFact) < 0 ? "Contracción" : "Aumento"), badgeClass: varSem.color, Icon: Percent,    iconColor: "text-amber-500 bg-amber-50 dark:bg-amber-950/50" },
           { title: "Ratio Liquidez Corriente",   value: isExcelError(actCorr) || isExcelError(pasCorr) ? "trabajando datos" : fmtNumber(ratioLiquidez, 2) + "x", subtitle: "Activo Corriente / Pasivo Corriente", badge: isExcelError(actCorr) || isExcelError(pasCorr) ? "trabajando datos" : liqSem.label, badgeClass: liqSem.color, Icon: Activity, iconColor: "text-indigo-500 bg-indigo-50 dark:bg-indigo-950/50" },
@@ -1168,7 +1223,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
                     <p className="leading-relaxed">Durante <strong>{monthName}</strong>, la empresa presenta el siguiente comportamiento:</p>
                     <div className="space-y-3">
                       {[
-                        { sem: factSem, title: `Facturación: ${factSem.label}`, detail: `Facturado: ${cvt(factReal, 'currency')} frente a objetivo de ${cvt(factObj, 'currency')}. Cumplimiento del ${factCumpl || "0,00%"}.` },
+                        { sem: factSem, title: `Facturación: ${factSem.label}`, detail: `Facturado: ${cvt(factReal, 'currency')} frente a objetivo de ${cvt(factObj, 'currency')}. Cumplimiento del ${fmtPercent(factPct)}.` },
                         { sem: cobSem,  title: `Cobranzas: ${cobSem.label}`,    detail: `Recaudado: ${cvt(cobReal, 'currency')} frente a objetivo de ${cvt(cobObj, 'currency')}. Cumplimiento del ${cobCumpl || "0,00%"}.` },
                         { sem: { bg: ratioLiquidez >= 1.5 ? "bg-emerald-500" : "bg-rose-500" }, title: `Ratio Liquidez: ${ratioLiquidez >= 1.5 ? "Fuerte" : "Ajustado"} (${fmtNumber(ratioLiquidez, 2)}x)`, detail: `Activo corriente de ${cvt(actCorr, 'currency')} respalda el pasivo de ${cvt(pasCorr, 'currency')}.` },
                       ].map(({ sem, title, detail }, i) => (
@@ -1260,21 +1315,34 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
         </div>
 
         <div className="mt-8 bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700/60">
-          <h3 className="text-lg font-bold mb-4 flex items-center space-x-2">
-            <Layers className="text-amber-500 w-5 h-5" />
-            <span>Composición de Facturación por Canal (2026)</span>
-          </h3>
-          {hasCompMix ? (
-            <div className="h-80 w-full"><canvas ref={compositionCanvasRef} /></div>
-          ) : (
-            <div className="h-80 flex items-center justify-center text-slate-400 dark:text-slate-600 text-sm">
-              <div className="text-center">
-                <p className="font-semibold">Sin datos de composición disponibles</p>
-                <p className="text-xs mt-1">Importá un Excel que incluya las filas &quot;Ratio Abonos&quot;, &quot;Ratio Instalaciones&quot; y &quot;Ratio Otros&quot;.</p>
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <h3 className="text-lg font-bold flex items-center space-x-2">
+              <Layers className="text-amber-500 w-5 h-5" />
+              <span>Composición de Facturación por Canal ({odooMix?.year ?? new Date().getFullYear()})</span>
+            </h3>
+            <span className="inline-flex items-center gap-1 text-xs bg-emerald-50 dark:bg-emerald-950
+                             text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full
+                             border border-emerald-200 dark:border-emerald-800">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block"/>
+              Odoo · en tiempo real
+            </span>
+          </div>
+          {odooMixError ? (
+            <div className="h-80 flex items-center justify-center text-center">
+              <div>
+                <i className="ti ti-alert-circle text-red-500 text-xl" aria-hidden="true"/>
+                <p className="font-semibold text-red-600 dark:text-red-400 text-sm mt-2">
+                  Error al cargar la composición desde Odoo
+                </p>
+                <p className="text-xs text-slate-500 mt-1">{odooMixError}</p>
               </div>
             </div>
+          ) : hasCompMix ? (
+            <div className="h-80 w-full"><canvas ref={compositionCanvasRef} /></div>
+          ) : (
+            <div className="h-80 bg-slate-100 dark:bg-slate-700/40 rounded-xl animate-pulse"/>
           )}
-          <p className="text-xs text-slate-500 mt-4 italic">* Distribución porcentual de la facturación por canal: Abonos recurrentes, Instalaciones y Envíos/Otros.</p>
+          <p className="text-xs text-slate-500 mt-4 italic">* Distribución porcentual de la facturación por canal (Odoo): Abonos recurrentes, Instalaciones y Reparaciones/Envíos/Otros.</p>
         </div>
       </section>
       )}
