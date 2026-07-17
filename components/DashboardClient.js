@@ -587,7 +587,6 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
   const cobCumpl       = companyData.cobranza.cumplimiento[selectedMonthIdx];
   const actCorr        = companyData.activoCorriente.total[selectedMonthIdx] || 0;
   const pasCorr        = companyData.pasivoCorriente.total[selectedMonthIdx] || 0;
-  const varFact        = companyData.facturacion.variacion[selectedMonthIdx];
   const ratioLiquidez  = actCorr && pasCorr ? actCorr / pasCorr : 0;
 
   // factReal ahora puede venir de Odoo (siempre numérico) o, para meses sin
@@ -595,6 +594,20 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
   const factRealNum = typeof factReal === 'number' ? factReal : null;
   const factPct  = factObj && factRealNum !== null ? (factRealNum / factObj) * 100 : 0;
   const cobPct   = cobObj  && cobReal  ? (cobReal  / cobObj)  * 100 : 0;
+
+  // Variación m/m de Facturación: recalculada contra el mes anterior de Odoo
+  // cuando ambos meses están cubiertos por /api/odoo-mix (mismo criterio que
+  // factReal). Si el mes o el anterior no tienen cierre en Odoo (ej. enero,
+  // que no tiene diciembre previo en la consulta), cae al valor del sheet.
+  const odooMonthsCount = odooMix?.meses?.length ?? 0;
+  const varFactOdoo = (() => {
+    if (selectedMonthIdx <= 0 || selectedMonthIdx >= odooMonthsCount) return null;
+    const cur  = companyData.facturacion.real[selectedMonthIdx];
+    const prev = companyData.facturacion.real[selectedMonthIdx - 1];
+    if (typeof cur !== 'number' || typeof prev !== 'number' || prev === 0) return null;
+    return ((cur - prev) / prev) * 100;
+  })();
+  const varFact = varFactOdoo !== null ? varFactOdoo : companyData.facturacion.variacion[selectedMonthIdx];
 
   const factSem  = getSemaphoreColor("cumplimiento", isExcelError(factReal) ? factReal : factPct);
   const cobSem   = getSemaphoreColor("cumplimiento", cobCumpl);
@@ -959,7 +972,7 @@ export default function DashboardClient({ initialData, config, isAdmin, initialN
         {[
           { title: "Facturación Real",          value: cvt(factReal, 'currency'), subtitle: factObj ? `Objetivo: ${cvt(factObj, 'currency')}` : "Objetivo sin definir", badge: isExcelError(factReal) ? "trabajando datos" : `${fmtPercent(factPct)} Cumplimiento`, badgeClass: factSem.color, Icon: DollarSign,  iconColor: "text-sky-500 bg-sky-50 dark:bg-sky-950/50" },
           { title: "Cobranza Real",              value: cvt(cobReal, 'currency'),  subtitle: cobObj  ? `Objetivo: ${cvt(cobObj, 'currency')}`  : "Objetivo sin definir", badge: isExcelError(cobCumpl) ? "trabajando datos"  : `${cobCumpl || "0,00%"} Cumplimiento`,  badgeClass: cobSem.color,  Icon: CreditCard,  iconColor: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/50" },
-          { title: "Variación m/m Facturación",  value: isExcelError(varFact) ? "trabajando datos" : (varFact || "0,00%"), subtitle: "Vs. mes anterior", badge: isExcelError(varFact) ? "Revisando" : (parseFloat(varFact) < 0 ? "Contracción" : "Aumento"), badgeClass: varSem.color, Icon: Percent,    iconColor: "text-amber-500 bg-amber-50 dark:bg-amber-950/50" },
+          { title: "Variación m/m Facturación",  value: isExcelError(varFact) ? "trabajando datos" : fmtPercent(varFact, 1), subtitle: "Vs. mes anterior", badge: isExcelError(varFact) ? "Revisando" : (parseFloat(varFact) < 0 ? "Contracción" : "Aumento"), badgeClass: varSem.color, Icon: Percent,    iconColor: "text-amber-500 bg-amber-50 dark:bg-amber-950/50" },
           { title: "Ratio Liquidez Corriente",   value: isExcelError(actCorr) || isExcelError(pasCorr) ? "trabajando datos" : fmtNumber(ratioLiquidez, 2) + "x", subtitle: "Activo Corriente / Pasivo Corriente", badge: isExcelError(actCorr) || isExcelError(pasCorr) ? "trabajando datos" : liqSem.label, badgeClass: liqSem.color, Icon: Activity, iconColor: "text-indigo-500 bg-indigo-50 dark:bg-indigo-950/50" },
         ].map((m, idx) => (
           <div key={m.title} style={{ '--kpi-i': idx }} className={`animate-kpi-stagger rounded-2xl flex flex-col justify-between hover:shadow-md transition-all ${
