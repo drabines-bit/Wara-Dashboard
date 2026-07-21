@@ -13,6 +13,11 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata = {
   title: "Wara GPS — Dashboard Financiero",
   description: "Business Intelligence & Finance — Blo S.A.",
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export default function RootLayout({ children }) {
