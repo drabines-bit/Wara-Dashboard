@@ -56,6 +56,13 @@ const ACCESOS = [
     color: 'text-orange-400 bg-orange-500/15',
     href: 'https://wara-mkt.vercel.app',
   },
+  {
+    titulo: 'Capital Humano',
+    sub: 'Wara People',
+    icono: 'ti-users',
+    color: 'text-blue-400 bg-blue-500/15',
+    href: 'https://wara-people.vercel.app/',
+  },
 ];
 
 export default function QuickAccessSidebar() {
